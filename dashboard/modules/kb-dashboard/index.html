@@ -167,6 +167,27 @@ html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var
   background:transparent;color:var(--m);cursor:pointer;transition:all .12s;font-family:inherit;white-space:nowrap;
 }
 .back-btn:hover{border-color:var(--bh);color:var(--t)}
+.translate-btn{
+  padding:4px 10px;font-size:10px;border:1px solid rgba(0,217,255,0.3);border-radius:5px;
+  background:rgba(0,217,255,0.06);color:var(--c);cursor:pointer;transition:all .15s;
+  font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:4px;
+  margin-left:auto;
+}
+.translate-btn:hover{background:rgba(0,217,255,0.12);border-color:var(--c)}
+.translate-btn:disabled{opacity:.4;cursor:not-allowed}
+.translate-btn.active{background:rgba(0,217,255,0.15);border-color:var(--c);color:var(--ts)}
+.translate-badge{
+  font-size:8px;padding:1px 5px;border-radius:3px;background:rgba(0,217,255,0.2);
+  color:var(--c);font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+}
+.translate-notice{
+  display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:rgba(0,217,255,0.05);border-bottom:1px solid rgba(0,217,255,0.1);
+  font-size:10px;color:var(--c);flex-shrink:0;
+}
+.translate-notice .tn-lang{font-weight:700}
+.translate-notice .tn-close{margin-left:auto;cursor:pointer;opacity:.6;font-size:12px}
+.translate-notice .tn-close:hover{opacity:1}
 .reader-body{flex:1;overflow-y:auto;padding:20px 24px;font-size:13px;line-height:1.7}
 .reader-body::-webkit-scrollbar{width:5px}
 .reader-body::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
@@ -635,6 +656,12 @@ function renderReader(cat, filename, content, sizeHuman, lines) {
     bodyHtml = `<div class="raw-view">${escH(content)}</div>`;
   }
 
+  // zapisz oryginał do tłumaczenia
+  S.readerOrigContent = content;
+  S.readerOrigHtml = bodyHtml;
+  S.readerExt = ext;
+  S.translated = false;
+
   bc.innerHTML = `
     <div class="reader" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
       <div class="reader-hdr">
@@ -642,8 +669,16 @@ function renderReader(cat, filename, content, sizeHuman, lines) {
         <span class="reader-ext">${ext}</span>
         <span class="reader-name" title="${escH(filename)}">${escH(filename)}</span>
         <span class="reader-meta">${sizeHuman || ''} · ${lines || '?'} linii</span>
+        <button class="translate-btn" id="translateBtn" onclick="toggleTranslate()" title="Tłumacz na polski (Google Translate)">
+          🌐 <span id="translateBtnLabel">Tłumacz PL</span>
+        </button>
       </div>
-      <div class="reader-body">${bodyHtml}</div>
+      <div id="translateNotice" style="display:none" class="translate-notice">
+        <span>🤖 Tłumaczenie maszynowe (Google) · </span>
+        <span class="tn-lang">EN → PL</span>
+        <span class="tn-close" onclick="revertTranslate()" title="Pokaż oryginał">✕ Pokaż oryginał</span>
+      </div>
+      <div class="reader-body" id="readerBody">${bodyHtml}</div>
     </div>`;
 }
 
@@ -758,6 +793,96 @@ function mdToHtml(md) {
   html += closeLists() + closeTable();
   if (inPre) html += '</code></pre>';
   return html;
+}
+
+// ================================================================
+// TRANSLATE — Google Translate (bez klucza, limit ~5000 znaków/req)
+// ================================================================
+
+async function toggleTranslate() {
+  if (S.translated) {
+    revertTranslate();
+    return;
+  }
+  await translateContent();
+}
+
+function revertTranslate() {
+  S.translated = false;
+  const body = document.getElementById('readerBody');
+  const btn  = document.getElementById('translateBtn');
+  const lbl  = document.getElementById('translateBtnLabel');
+  const note = document.getElementById('translateNotice');
+  if (!body) return;
+  body.innerHTML = S.readerOrigHtml;
+  btn.classList.remove('active');
+  btn.disabled = false;
+  lbl.textContent = 'Tłumacz PL';
+  if (note) note.style.display = 'none';
+}
+
+async function translateContent() {
+  const btn  = document.getElementById('translateBtn');
+  const lbl  = document.getElementById('translateBtnLabel');
+  const body = document.getElementById('readerBody');
+  const note = document.getElementById('translateNotice');
+  if (!btn || !body) return;
+
+  btn.disabled = true;
+  lbl.textContent = '⏳ Tłumaczę...';
+
+  try {
+    // Pobierz czysty tekst z HTML readera (zachowaj akapity)
+    const raw = S.readerOrigContent || '';
+
+    // Podziel na chunki max 4800 znaków (limit Google)
+    const CHUNK = 4800;
+    const chunks = [];
+    for (let i = 0; i < raw.length; i += CHUNK) {
+      chunks.push(raw.slice(i, i + CHUNK));
+    }
+
+    // Tłumacz każdy chunk przez Google Translate (nieoficjalne API, działa bez klucza)
+    const translated = [];
+    for (const chunk of chunks) {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=pl&dt=t&q=${encodeURIComponent(chunk)}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      // json[0] = tablica [przetłumaczony_kawałek, oryginał, ...]
+      const text = (json[0] || []).map(s => (s && s[0]) ? s[0] : '').join('');
+      translated.push(text);
+    }
+
+    const fullTranslated = translated.join('');
+
+    // Wyrenderuj przetłumaczony tekst (jako MD lub plain)
+    let bodyHtml;
+    if (S.readerExt === 'md') {
+      bodyHtml = `<div class="md">${mdToHtml(fullTranslated)}</div>`;
+    } else if (S.readerExt === 'json') {
+      bodyHtml = `<div class="raw-view">${escH(fullTranslated)}</div>`;
+    } else {
+      bodyHtml = `<div class="raw-view">${escH(fullTranslated)}</div>`;
+    }
+
+    body.innerHTML = bodyHtml;
+    S.translated = true;
+    btn.classList.add('active');
+    btn.disabled = false;
+    lbl.textContent = '↩ Oryginał';
+    if (note) note.style.display = 'flex';
+
+  } catch(e) {
+    btn.disabled = false;
+    lbl.textContent = 'Tłumacz PL';
+    // Pokaż błąd inline
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText = 'padding:8px 14px;font-size:11px;color:var(--r);border-bottom:1px solid rgba(248,113,113,0.2);flex-shrink:0';
+    errDiv.textContent = `⚠ Błąd tłumaczenia: ${e.message}. Sprawdź połączenie z internetem.`;
+    body.parentNode.insertBefore(errDiv, body);
+    setTimeout(() => errDiv.remove(), 5000);
+  }
 }
 
 // ================================================================
