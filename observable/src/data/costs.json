@@ -1,0 +1,29 @@
+{
+  "budget": {
+    "total": 500,
+    "ai_models": 300,
+    "cloudflare": 100,
+    "buffer": 100
+  },
+  "spending": {
+    "ai_models": 187,
+    "cloudflare": 42,
+    "buffer": 0
+  },
+  "monthly_tasks": [
+    {"month": "2025-09", "seo": 120, "content": 45, "coding": 30, "research": 15},
+    {"month": "2025-10", "seo": 145, "content": 52, "coding": 38, "research": 22},
+    {"month": "2025-11", "seo": 168, "content": 61, "coding": 45, "research": 28},
+    {"month": "2025-12", "seo": 190, "content": 70, "coding": 52, "research": 35},
+    {"month": "2026-01", "seo": 210, "content": 78, "coding": 58, "research": 42},
+    {"month": "2026-02", "seo": 135, "content": 48, "coding": 40, "research": 30}
+  ],
+  "cost_per_task": [
+    {"type": "SEO masowe", "model": "DeepSeek R1", "cost_per_1k": 0.55, "tasks_per_month": 200},
+    {"type": "Content premium", "model": "Claude Sonnet", "cost_per_1k": 15.00, "tasks_per_month": 70},
+    {"type": "Kodowanie", "model": "Claude Sonnet", "cost_per_1k": 15.00, "tasks_per_month": 50},
+    {"type": "Research", "model": "Claude Opus", "cost_per_1k": 75.00, "tasks_per_month": 35},
+    {"type": "Embedding", "model": "text-embed-3", "cost_per_1k": 0.02, "tasks_per_month": 500},
+    {"type": "Walidacja", "model": "Gemini Flash", "cost_per_1k": 0.40, "tasks_per_month": 300}
+  ]
+}

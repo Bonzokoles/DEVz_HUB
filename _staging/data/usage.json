@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "created": "2026-02-16T19:34:00",
+    "last_updated": "2026-02-16T19:34:00"
+  },
+  "moa_pipeline": {
+    "total_runs": 0,
+    "successful": 0,
+    "failed": 0,
+    "avg_latency_seconds": 0,
+    "total_products_generated": 0,
+    "by_content_type": {
+      "product_descriptions": 0,
+      "category_pages": 0,
+      "blog_posts": 0,
+      "faq_sections": 0
+    }
+  },
+  "models": {
+    "deepseek_r1_8b": {
+      "calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "avg_latency_ms": 0,
+      "errors": 0
+    },
+    "claude_sonnet_4": {
+      "calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "avg_latency_ms": 0,
+      "errors": 0
+    },
+    "gpt_4o": {
+      "calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "avg_latency_ms": 0,
+      "errors": 0
+    },
+    "qwen_2_5_14b": {
+      "calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "avg_latency_ms": 0,
+      "errors": 0
+    },
+    "gemini_2_0_flash": {
+      "calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "avg_latency_ms": 0,
+      "errors": 0
+    },
+    "claude_sonnet_4_5": {
+      "calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "avg_latency_ms": 0,
+      "errors": 0
+    }
+  },
+  "cloudflare": {
+    "workers": {
+      "whitecat-api": {
+        "requests": 0,
+        "errors": 0,
+        "avg_cpu_ms": 0
+      },
+      "moa-orchestrator": {
+        "requests": 0,
+        "errors": 0,
+        "avg_cpu_ms": 0
+      },
+      "x402-payment": {
+        "requests": 0,
+        "errors": 0,
+        "revenue": 0.0
+      },
+      "content-delivery": {
+        "requests": 0,
+        "cache_hits": 0,
+        "bandwidth_gb": 0
+      }
+    },
+    "d1": {
+      "whitecat-products": {
+        "queries": 0,
+        "rows_read": 0,
+        "rows_written": 0
+      },
+      "moa-cache": {
+        "queries": 0,
+        "cache_hits": 0
+      }
+    },
+    "r2": {
+      "whitecat-images": {
+        "objects": 0,
+        "size_bytes": 0,
+        "operations": 0
+      },
+      "generated-content": {
+        "objects": 0,
+        "size_bytes": 0,
+        "operations": 0
+      }
+    }
+  },
+  "whitecat": {
+    "products_total": 0,
+    "products_with_ai_content": 63,
+    "products_pending": 437,
+    "categories_total": 0,
+    "categories_with_content": 0
+  },
+  "quality_metrics": {
+    "avg_flesch_score": 0,
+    "avg_keyword_density": 0,
+    "avg_brand_voice_score": 0,
+    "avg_factual_accuracy": 0,
+    "avg_polish_grammar": 0
+  }
+}

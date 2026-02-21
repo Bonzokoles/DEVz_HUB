@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloudflare Infrastructure</title>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--b:rgba(255,255,255,0.07);--a:#00d9ff;--a2:#7c3aed;--g:#4ade80;--y:#facc15;--r:#f87171;--t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252;--cf-orange:#f6821f}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:20px;min-height:100vh}
+h2{font-size:1.3rem;font-weight:700;color:var(--ts);margin-bottom:4px}
+.sub{color:var(--m);font-size:12px;margin-bottom:16px}
+.section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--d);margin:20px 0 10px}
+.glass{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.card{padding:16px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.card.worker::before{background:linear-gradient(90deg,transparent,var(--cf-orange),transparent)}
+.card.d1::before{background:linear-gradient(90deg,transparent,#6366f1,transparent)}
+.card.r2::before{background:linear-gradient(90deg,transparent,var(--g),transparent)}
+.card.kv::before{background:linear-gradient(90deg,transparent,var(--a),transparent)}
+.card.hyper::before{background:linear-gradient(90deg,transparent,var(--a2),transparent)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge.worker{background:rgba(246,130,31,.15);color:var(--cf-orange)}
+.badge.d1{background:rgba(99,102,241,.15);color:#818cf8}
+.badge.r2{background:rgba(74,222,128,.15);color:var(--g)}
+.badge.kv{background:rgba(0,217,255,.15);color:var(--a)}
+.badge.hyper{background:rgba(124,58,237,.15);color:#a78bfa}
+.card-name{font-size:14px;font-weight:700;color:var(--ts);margin:8px 0 4px}
+.card-desc{font-size:11px;color:var(--m);margin-bottom:8px}
+.card-route{font-size:10px;color:var(--a);font-family:monospace;background:var(--bg2);padding:3px 6px;border-radius:3px;display:inline-block;margin-bottom:8px}
+.stat-row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.stat-row:last-child{border:none}
+.stat-label{color:var(--m)}
+.stat-value{color:var(--ts);font-weight:600}
+.stat-value.cost{color:var(--a)}
+.chart-box{max-height:280px;position:relative}
+table{width:100%;border-collapse:separate;border-spacing:0 3px}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--d);text-align:left;padding:6px 10px}
+th.r{text-align:right}
+td{padding:8px 10px;font-size:12px;background:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.03)}
+td:first-child{border-left:1px solid rgba(255,255,255,0.03);border-radius:6px 0 0 6px}
+td:last-child{border-right:1px solid rgba(255,255,255,0.03);border-radius:0 6px 6px 0}
+td.r{text-align:right}
+td.w{color:var(--ts);font-weight:600}
+td.cost{color:var(--a);font-weight:600}
+.summary-bar{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.sum-item{text-align:center;min-width:120px}
+.sum-val{font-size:24px;font-weight:700}
+.sum-lab{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--d);margin-top:2px}
+.zone{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--bg2);border:1px solid var(--b);border-radius:6px;font-size:12px;margin:4px}
+.zone-dot{width:6px;height:6px;border-radius:50%;background:var(--g)}
+</style>
+</head>
+<body>
+<h2>☁️ Cloudflare Infrastructure</h2>
+<p class="sub">Dane z <code style="color:var(--a)">data/cloudflare.yaml</code></p>
+
+<div id="zones" class="glass" style="text-align:center"></div>
+
+<div class="glass">
+  <div class="summary-bar" id="summaryBar"></div>
+</div>
+
+<div class="section-label">WORKERS</div>
+<div class="grid" id="workersGrid"></div>
+
+<div class="section-label">D1 DATABASES</div>
+<div class="grid" id="d1Grid"></div>
+
+<div class="section-label">R2 STORAGE</div>
+<div class="grid" id="r2Grid"></div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div>
+    <div class="section-label">KV NAMESPACES</div>
+    <div id="kvGrid"></div>
+  </div>
+  <div>
+    <div class="section-label">HYPERDRIVE</div>
+    <div id="hyperGrid"></div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+  <div class="glass">
+    <div class="section-label" style="margin-top:0">COST BREAKDOWN</div>
+    <div class="chart-box"><canvas id="costChart"></canvas></div>
+  </div>
+  <div class="glass">
+    <div class="section-label" style="margin-top:0">REQUESTS / DAY</div>
+    <div class="chart-box"><canvas id="reqChart"></canvas></div>
+  </div>
+</div>
+
+<div class="glass" style="margin-top:16px">
+  <div class="section-label" style="margin-top:0">NOTATKI</div>
+  <div id="notes" style="font-size:12px;color:var(--m);white-space:pre-line"></div>
+</div>
+
+<script>
+async function init() {
+  try {
+    const res = await fetch('../../data/cloudflare.yaml');
+    const text = await res.text();
+    const cf = jsyaml.load(text);
+    render(cf);
+  } catch(e) {
+    document.body.innerHTML += '<p style="color:#f87171;padding:20px">Blad ladowania cloudflare.yaml: ' + e.message + '</p>';
+  }
+}
+
+function render(cf) {
+  // Zones
+  if (cf.zones) {
+    document.getElementById('zones').innerHTML = '<div class="section-label" style="margin:0 0 8px">ZONES & DOMAINS</div>' +
+      cf.zones.map(z => '<span class="zone"><span class="zone-dot"></span>' + z.domain + ' <span style="color:var(--d);font-size:10px">(' + z.plan + ')</span></span>').join('');
+  }
+
+  // Summary
+  const cs = cf.cost_summary || {};
+  const bd = cs.breakdown || {};
+  document.getElementById('summaryBar').innerHTML = `
+    <div class="sum-item"><div class="sum-val" style="color:var(--cf-orange)">${cs.total_estimated || '--'}</div><div class="sum-lab">Total Szacowany</div></div>
+    <div class="sum-item"><div class="sum-val" style="color:var(--a)">$${cs.monthly_budget || 100}</div><div class="sum-lab">Budzet</div></div>
+    <div class="sum-item"><div class="sum-val" style="color:var(--g)">${cs.remaining_budget || '--'}</div><div class="sum-lab">Pozostalo</div></div>
+    <div class="sum-item"><div class="sum-val" style="color:var(--ts)">${cf.account?.plan || 'Workers Paid'}</div><div class="sum-lab">Plan</div></div>
+  `;
+
+  // Workers
+  if (cf.workers) {
+    document.getElementById('workersGrid').innerHTML = Object.entries(cf.workers).map(([k, w]) => `
+      <div class="glass card worker">
+        <span class="badge worker">Worker</span>
+        <div class="card-name">${w.name || k}</div>
+        <div class="card-desc">${w.description || ''}</div>
+        ${w.route ? '<div class="card-route">' + w.route + '</div>' : ''}
+        <div class="stat-row"><span class="stat-label">Runtime</span><span class="stat-value">${w.runtime || 'nodejs'}</span></div>
+        <div class="stat-row"><span class="stat-label">Memory</span><span class="stat-value">${w.memory || '?'} MB</span></div>
+        <div class="stat-row"><span class="stat-label">Timeout</span><span class="stat-value">${w.timeout || '?'}s</span></div>
+        <div class="stat-row"><span class="stat-label">Req/day</span><span class="stat-value">${(w.usage?.requests_daily || 0).toLocaleString()}</span></div>
+        <div class="stat-row"><span class="stat-label">Est. koszt/mies.</span><span class="stat-value cost">${w.usage?.estimated_monthly || '$0'}</span></div>
+      </div>
+    `).join('');
+  }
+
+  // D1
+  if (cf.d1_databases) {
+    document.getElementById('d1Grid').innerHTML = Object.entries(cf.d1_databases).map(([k, d]) => `
+      <div class="glass card d1">
+        <span class="badge d1">D1</span>
+        <div class="card-name">${d.name || k}</div>
+        <div class="card-desc">${d.description || ''}</div>
+        <div class="stat-row"><span class="stat-label">Rozmiar</span><span class="stat-value">${d.usage?.size_mb || '?'} MB</span></div>
+        <div class="stat-row"><span class="stat-label">Wiersze</span><span class="stat-value">${(d.usage?.rows_total || 0).toLocaleString()}</span></div>
+        <div class="stat-row"><span class="stat-label">Queries/day</span><span class="stat-value">${(d.usage?.queries_daily || 0).toLocaleString()}</span></div>
+        <div class="stat-row"><span class="stat-label">Est. koszt/mies.</span><span class="stat-value cost">${d.usage?.estimated_monthly || '$0'}</span></div>
+      </div>
+    `).join('');
+  }
+
+  // R2
+  if (cf.r2_buckets) {
+    document.getElementById('r2Grid').innerHTML = Object.entries(cf.r2_buckets).map(([k, r]) => `
+      <div class="glass card r2">
+        <span class="badge r2">R2</span>
+        <div class="card-name">${r.name || k}</div>
+        <div class="card-desc">${r.description || ''}</div>
+        <div class="stat-row"><span class="stat-label">Rozmiar</span><span class="stat-value">${r.usage?.size_gb || '?'} GB</span></div>
+        <div class="stat-row"><span class="stat-label">Obiektow</span><span class="stat-value">${(r.usage?.objects || 0).toLocaleString()}</span></div>
+        <div class="stat-row"><span class="stat-label">Ops/day</span><span class="stat-value">${(r.usage?.operations_daily || 0).toLocaleString()}</span></div>
+        <div class="stat-row"><span class="stat-label">Est. koszt/mies.</span><span class="stat-value cost">${r.usage?.estimated_monthly || '$0'}</span></div>
+      </div>
+    `).join('');
+  }
+
+  // KV
+  if (cf.kv_namespaces) {
+    document.getElementById('kvGrid').innerHTML = Object.entries(cf.kv_namespaces).map(([k, kv]) => `
+      <div class="glass card kv">
+        <span class="badge kv">KV</span>
+        <div class="card-name">${kv.name || k}</div>
+        <div class="card-desc">${kv.description || ''}</div>
+        <div class="stat-row"><span class="stat-label">Keys</span><span class="stat-value">${(kv.usage?.keys || 0).toLocaleString()}</span></div>
+        <div class="stat-row"><span class="stat-label">Est. koszt/mies.</span><span class="stat-value cost">${kv.usage?.estimated_monthly || '$0'}</span></div>
+      </div>
+    `).join('');
+  }
+
+  // Hyperdrive
+  if (cf.hyperdrive) {
+    document.getElementById('hyperGrid').innerHTML = Object.entries(cf.hyperdrive).map(([k, h]) => `
+      <div class="glass card hyper">
+        <span class="badge hyper">Hyperdrive</span>
+        <div class="card-name">${h.name || k}</div>
+        <div class="card-desc">${h.description || ''}</div>
+        <div class="stat-row"><span class="stat-label">Host</span><span class="stat-value">${h.connection?.host || '?'}</span></div>
+        <div class="stat-row"><span class="stat-label">DB</span><span class="stat-value">${h.connection?.database || '?'}</span></div>
+        <div class="stat-row"><span class="stat-label">Connections</span><span class="stat-value">${h.usage?.connections || '?'}</span></div>
+        <div class="stat-row"><span class="stat-label">Req/day</span><span class="stat-value">${(h.usage?.requests_daily || 0).toLocaleString()}</span></div>
+        <div class="stat-row"><span class="stat-label">Est. koszt/mies.</span><span class="stat-value cost">${h.usage?.estimated_monthly || '$0'}</span></div>
+      </div>
+    `).join('');
+  }
+
+  // Notes
+  if (cs.notes) {
+    document.getElementById('notes').textContent = cs.notes;
+  }
+
+  // Charts
+  renderCharts(cf);
+}
+
+function renderCharts(cf) {
+  const cats = [];
+  const vals = [];
+  const cs = cf.cost_summary?.breakdown || {};
+  Object.entries(cs).forEach(([k, v]) => {
+    cats.push(k.replace(/_/g,' '));
+    vals.push(parseFloat(String(v).replace('$','')) || 0);
+  });
+  const colors = ['#f6821f','#6366f1','#4ade80','#00d9ff','#7c3aed'];
+
+  new Chart(document.getElementById('costChart'), {
+    type: 'doughnut',
+    data: {
+      labels: cats,
+      datasets: [{ data: vals, backgroundColor: colors, borderColor: '#07090f', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { position: 'bottom', labels: { color: '#9898b0', font: { size: 10 }, padding: 8 } } }
+    }
+  });
+
+  // Requests chart
+  const reqLabels = [];
+  const reqVals = [];
+  if (cf.workers) Object.entries(cf.workers).forEach(([k, w]) => {
+    reqLabels.push(k); reqVals.push(w.usage?.requests_daily || 0);
+  });
+  
+  new Chart(document.getElementById('reqChart'), {
+    type: 'bar',
+    data: {
+      labels: reqLabels,
+      datasets: [{ label: 'Req/day', data: reqVals, backgroundColor: '#f6821f80', borderColor: '#f6821f', borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#737373', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#737373', callback: v => v >= 1000 ? (v/1000)+'k' : v }, grid: { color: 'rgba(255,255,255,0.03)' } }
+      }
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

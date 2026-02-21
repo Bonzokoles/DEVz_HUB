@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOA Pipeline</title>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--b:rgba(255,255,255,0.07);--a:#00d9ff;--a2:#7c3aed;--g:#4ade80;--y:#facc15;--r:#f87171;--t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:20px;min-height:100vh}
+h2{font-size:1.3rem;font-weight:700;color:var(--ts);margin-bottom:4px}
+.sub{color:var(--m);font-size:12px;margin-bottom:16px}
+.section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--d);margin:20px 0 10px}
+.glass{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-bottom:16px}
+
+/* Pipeline flow */
+.pipeline-flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.stage-box{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:14px 18px;text-align:center;min-width:140px;position:relative}
+.stage-num{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.stage-name{font-size:12px;font-weight:700;color:var(--ts);margin-bottom:4px}
+.stage-desc{font-size:10px;color:var(--m)}
+.stage-time{font-size:9px;color:var(--a);margin-top:4px;font-family:monospace}
+.stage-parallel{font-size:8px;color:var(--g);text-transform:uppercase;letter-spacing:.5px}
+.arrow{color:var(--d);font-size:20px;padding:0 4px}
+
+/* Writer cards */
+.writer-card{padding:16px;position:relative;overflow:hidden}
+.writer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.writer-card.seo::before{background:linear-gradient(90deg,transparent,#6366f1,transparent)}
+.writer-card.tech::before{background:linear-gradient(90deg,transparent,var(--g),transparent)}
+.writer-card.mktg::before{background:linear-gradient(90deg,transparent,var(--y),transparent)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge.seo{background:rgba(99,102,241,.15);color:#818cf8}
+.badge.tech{background:rgba(74,222,128,.15);color:var(--g)}
+.badge.mktg{background:rgba(250,204,21,.15);color:var(--y)}
+.badge.critic{background:rgba(248,113,113,.15);color:var(--r)}
+.badge.agg{background:rgba(0,217,255,.15);color:var(--a)}
+.card-title{font-size:14px;font-weight:700;color:var(--ts);margin:8px 0 6px}
+.prompt-box{background:var(--bg2);border:1px solid var(--b);border-radius:6px;padding:10px;font-size:11px;color:var(--m);white-space:pre-wrap;max-height:120px;overflow-y:auto;margin-top:8px;line-height:1.5}
+
+/* Criteria */
+.criteria-row{display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.criteria-row:last-child{border:none}
+.criteria-bar{flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.criteria-fill{height:100%;border-radius:3px}
+.criteria-name{min-width:140px;font-size:12px;font-weight:600;color:var(--ts)}
+.criteria-target{font-size:10px;color:var(--a);min-width:60px;text-align:right}
+.criteria-weight{font-size:10px;color:var(--m);min-width:40px;text-align:right}
+
+/* Config tables */
+.config-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px}
+.config-row:last-child{border:none}
+.config-key{color:var(--m)}
+.config-val{color:var(--ts);font-weight:600;font-family:monospace}
+
+/* Output structure */
+.output-line{padding:4px 8px;font-family:monospace;font-size:11px;border-left:2px solid var(--a2);margin:4px 0;color:var(--m)}
+.output-line.heading{color:var(--ts);font-weight:700;border-left-color:var(--a)}
+
+/* Alert */
+.alert-item{display:flex;align-items:center;gap:8px;padding:8px;margin:4px 0;border-radius:6px;font-size:11px}
+.alert-item.warn{background:rgba(250,204,21,.06);border:1px solid rgba(250,204,21,.15)}
+.alert-icon{font-size:14px}
+</style>
+</head>
+<body>
+<h2>MOA Pipeline</h2>
+<p class="sub">Dane z <code style="color:var(--a)">data/moa.yaml</code> — Mixture of Agents Content Generation</p>
+
+<div class="glass" style="text-align:center" id="metaBar"></div>
+
+<!-- Pipeline Flow -->
+<div class="section-label">PIPELINE FLOW</div>
+<div class="glass">
+  <div class="pipeline-flow" id="pipelineFlow"></div>
+</div>
+
+<!-- Writers -->
+<div class="section-label">WRITERZY (PARALLEL)</div>
+<div class="grid" id="writersGrid"></div>
+
+<!-- Critic -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div>
+    <div class="section-label">KRYTYK</div>
+    <div class="glass" id="criticSection"></div>
+  </div>
+  <div>
+    <div class="section-label">AGREGATOR</div>
+    <div class="glass" id="aggregatorSection"></div>
+  </div>
+</div>
+
+<!-- Quality Criteria -->
+<div class="section-label">KRYTERIA JAKOSCI</div>
+<div class="glass" id="criteriaSection"></div>
+
+<!-- Output Structure -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+  <div>
+    <div class="section-label">STRUKTURA WYJSCIA</div>
+    <div class="glass" id="outputSection"></div>
+  </div>
+  <div>
+    <div class="section-label">OPTIMIZATION & MONITORING</div>
+    <div class="glass" id="optimSection"></div>
+  </div>
+</div>
+
+<!-- Alerts -->
+<div class="section-label">ALERTY</div>
+<div class="glass" id="alertsSection"></div>
+
+<script>
+async function init() {
+  try {
+    const res = await fetch('../../data/moa.yaml');
+    const text = await res.text();
+    const moa = jsyaml.load(text);
+    render(moa);
+  } catch(e) {
+    document.body.innerHTML += '<p style="color:#f87171;padding:20px">Blad ladowania moa.yaml: ' + e.message + '</p>';
+  }
+}
+
+function render(moa) {
+  // Meta
+  const m = moa.metadata || {};
+  document.getElementById('metaBar').innerHTML = `
+    <div style="font-size:18px;font-weight:700;color:var(--ts)">${m.name || 'MOA Pipeline'}</div>
+    <div style="font-size:11px;color:var(--m);margin-top:4px">${m.description || ''}</div>
+    <div style="margin-top:8px;display:flex;justify-content:center;gap:20px;font-size:11px">
+      <span style="color:var(--d)">Version: <strong style="color:var(--a)">${m.version || '?'}</strong></span>
+      <span style="color:var(--d)">Owner: <strong style="color:var(--ts)">${m.owner || '?'}</strong></span>
+    </div>
+  `;
+
+  // Pipeline stages
+  const stages = moa.pipeline?.stages || [];
+  document.getElementById('pipelineFlow').innerHTML = stages.map((s, i) => `
+    ${i > 0 ? '<div class="arrow">→</div>' : ''}
+    <div class="stage-box">
+      <div class="stage-num">${i + 1}</div>
+      <div class="stage-name">${s.name?.replace(/_/g,' ') || 'Stage ' + (i+1)}</div>
+      <div class="stage-desc">${s.description || ''}</div>
+      <div class="stage-time">⏱ ${s.timeout || '?'}</div>
+      ${s.parallel ? '<div class="stage-parallel">⚡ parallel</div>' : ''}
+      ${s.iterations ? '<div class="stage-parallel">🔄 ' + s.iterations + ' iteracje</div>' : ''}
+    </div>
+  `).join('');
+
+  // Writers
+  const writerTypes = { seo_writer: 'seo', technical_writer: 'tech', marketing_writer: 'mktg' };
+  const writerNames = { seo_writer: 'SEO Writer', technical_writer: 'Technical Writer', marketing_writer: 'Marketing Writer' };
+  const prompts = moa.writers?.prompts || {};
+  document.getElementById('writersGrid').innerHTML = Object.entries(prompts).map(([k, w]) => {
+    const cls = writerTypes[k] || 'seo';
+    return `
+    <div class="glass writer-card ${cls}">
+      <span class="badge ${cls}">${writerNames[k] || k}</span>
+      <div class="card-title">${k.replace(/_/g,' ')}</div>
+      <div style="font-size:10px;color:var(--d);margin-bottom:4px">SYSTEM PROMPT:</div>
+      <div class="prompt-box">${escHtml(w.system || '')}</div>
+    </div>
+    `;
+  }).join('');
+
+  // Critic
+  const cr = moa.critic || {};
+  document.getElementById('criticSection').innerHTML = `
+    <span class="badge critic">Critic</span>
+    <div style="margin-top:8px">
+      <div class="config-row"><span class="config-key">Model</span><span class="config-val">${cr.model || '?'}</span></div>
+      <div class="config-row"><span class="config-key">Max iteracji</span><span class="config-val">${cr.max_iterations || '?'}</span></div>
+      <div class="config-row"><span class="config-key">Threshold</span><span class="config-val">${cr.threshold || '?'}</span></div>
+    </div>
+  `;
+
+  // Aggregator
+  const ag = moa.aggregator || {};
+  document.getElementById('aggregatorSection').innerHTML = `
+    <span class="badge agg">Aggregator</span>
+    <div style="margin-top:8px">
+      <div class="config-row"><span class="config-key">Model</span><span class="config-val">${ag.model || '?'}</span></div>
+      <div class="config-row"><span class="config-key">Metoda</span><span class="config-val">${ag.method || '?'}</span></div>
+    </div>
+    <div style="font-size:10px;color:var(--d);margin-top:8px">SYNTHESIS PROMPT:</div>
+    <div class="prompt-box" style="max-height:150px">${escHtml((ag.synthesis_prompt || '').substring(0, 300))}${(ag.synthesis_prompt || '').length > 300 ? '...' : ''}</div>
+  `;
+
+  // Quality criteria
+  const criteria = cr.criteria || [];
+  document.getElementById('criteriaSection').innerHTML = criteria.map(c => {
+    const weight = (c.weight || 0) * 100;
+    const colors = { 'flesch_readability': '#6366f1', 'keyword_density': '#00d9ff', 'brand_voice': '#fbbf24', 'factual_accuracy': '#4ade80', 'polish_grammar': '#a855f7' };
+    const color = colors[c.name] || '#00d9ff';
+    return `
+    <div class="criteria-row">
+      <div class="criteria-name">${c.name?.replace(/_/g,' ') || ''}</div>
+      <div class="criteria-bar"><div class="criteria-fill" style="width:${weight}%;background:${color}"></div></div>
+      <div class="criteria-weight">${weight.toFixed(0)}%</div>
+      <div class="criteria-target">target: ${c.target || '?'}</div>
+    </div>
+    <div style="font-size:10px;color:var(--m);padding:0 8px 8px">${c.description || ''}</div>
+    `;
+  }).join('');
+
+  // Output structure
+  const out = moa.output || {};
+  const struct = out.structure || [];
+  document.getElementById('outputSection').innerHTML = `
+    <div class="config-row"><span class="config-key">Format</span><span class="config-val">${out.format || '?'}</span></div>
+    <div class="config-row"><span class="config-key">Jezyk</span><span class="config-val">${out.language || '?'}</span></div>
+    <div style="margin-top:10px;font-size:10px;color:var(--d)">STRUKTURA:</div>
+    ${struct.map(s => {
+      const isH = s.startsWith('#');
+      return '<div class="output-line ' + (isH ? 'heading' : '') + '">' + escHtml(s) + '</div>';
+    }).join('')}
+  `;
+
+  // Optimization & Monitoring
+  const opt = moa.optimization || {};
+  const mon = moa.monitoring || {};
+  document.getElementById('optimSection').innerHTML = `
+    <div style="font-size:10px;color:var(--d);margin-bottom:6px">CACHE</div>
+    <div class="config-row"><span class="config-key">Enabled</span><span class="config-val" style="color:${opt.cache?.enabled ? 'var(--g)' : 'var(--r)'}">${opt.cache?.enabled ? 'TAK' : 'NIE'}</span></div>
+    <div class="config-row"><span class="config-key">TTL</span><span class="config-val">${opt.cache?.ttl || '?'}s</span></div>
+    <div class="config-row"><span class="config-key">Backend</span><span class="config-val">${opt.cache?.backend || '?'}</span></div>
+    <div style="font-size:10px;color:var(--d);margin:10px 0 6px">RETRY</div>
+    <div class="config-row"><span class="config-key">Max attempts</span><span class="config-val">${opt.retry?.max_attempts || '?'}</span></div>
+    <div class="config-row"><span class="config-key">Backoff</span><span class="config-val">${opt.retry?.backoff || '?'}</span></div>
+    <div style="font-size:10px;color:var(--d);margin:10px 0 6px">RATE LIMITS</div>
+    <div class="config-row"><span class="config-key">Req/min</span><span class="config-val">${opt.rate_limiting?.requests_per_minute || '?'}</span></div>
+    <div class="config-row"><span class="config-key">Tokens/min</span><span class="config-val">${(opt.rate_limiting?.tokens_per_minute || 0).toLocaleString()}</span></div>
+    <div style="font-size:10px;color:var(--d);margin:10px 0 6px">METRICS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px">
+    ${(mon.metrics || []).map(m => '<span style="padding:2px 8px;background:var(--bg2);border:1px solid var(--b);border-radius:4px;font-size:10px;color:var(--a)">' + m + '</span>').join('')}
+    </div>
+  `;
+
+  // Alerts
+  const alerts = mon.alerts || [];
+  document.getElementById('alertsSection').innerHTML = alerts.map(a => `
+    <div class="alert-item warn">
+      <span class="alert-icon">⚠️</span>
+      <span style="color:var(--y);font-weight:600;min-width:80px">${a.action || '?'}</span>
+      <span style="color:var(--m)">${a.condition || ''}</span>
+    </div>
+  `).join('') || '<div style="color:var(--m);font-size:12px">Brak zdefiniowanych alertow</div>';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+init();
+</script>
+</body>
+</html>

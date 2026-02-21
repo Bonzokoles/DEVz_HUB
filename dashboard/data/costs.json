@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "created": "2026-02-16T19:34:00",
+    "last_updated": "2026-02-16T19:34:00",
+    "currency": "USD"
+  },
+  "budget": {
+    "monthly_total": 500.0,
+    "ai_models": 300.0,
+    "cloudflare": 100.0,
+    "buffer": 100.0
+  },
+  "current_month": {
+    "period": "2026-02",
+    "days_elapsed": 16,
+    "days_total": 28,
+    "spending": {
+      "ai_models": {
+        "deepseek_r1": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cost": 0.0
+        },
+        "claude_sonnet_4": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cost": 0.0
+        },
+        "gpt_4o": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cost": 0.0
+        },
+        "qwen_2_5": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cost": 0.0
+        },
+        "gemini_flash": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cost": 0.0
+        },
+        "claude_sonnet_4_5": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cost": 0.0
+        },
+        "total": 0.0
+      },
+      "cloudflare": {
+        "workers": 0.0,
+        "d1": 0.0,
+        "r2": 0.0,
+        "kv": 0.0,
+        "hyperdrive": 0.0,
+        "total": 0.0
+      },
+      "total": 0.0
+    },
+    "remaining": 500.0,
+    "on_track": true
+  },
+  "historical": {
+    "2026-01": {
+      "ai_models": 0.0,
+      "cloudflare": 0.0,
+      "total": 0.0
+    }
+  },
+  "projections": {
+    "end_of_month": {
+      "ai_models": 0.0,
+      "cloudflare": 0.0,
+      "total": 0.0
+    }
+  }
+}

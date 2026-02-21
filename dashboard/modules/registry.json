@@ -1,0 +1,195 @@
+{
+  "version": "3.0.0",
+  "name": "DEVz HUB — System Informacyjny",
+  "description": "Modularny dashboard informacyjny — wykresy, tabele porównawcze, wizualizacje wiedzy",
+  "modules": [
+    {
+      "id": "system-overview",
+      "name": "Przegląd Systemu",
+      "icon": "activity",
+      "color": "#00FF41",
+      "description": "Zasoby, infrastruktura, budżet — pełny przegląd",
+      "path": "modules/system-overview/index.html",
+      "enabled": true,
+      "order": 1
+    },
+    {
+      "id": "ai-models",
+      "name": "AI Modele & Ceny",
+      "icon": "cpu",
+      "color": "#6366f1",
+      "description": "Cennik modeli, kalkulator kosztów, porównanie jakości",
+      "path": "modules/ai-models/index.html",
+      "enabled": true,
+      "order": 2
+    },
+    {
+      "id": "ai-library",
+      "name": "Biblioteka AI",
+      "icon": "book-open",
+      "color": "#f97316",
+      "description": "56+ modeli eksperckich, 24 narzędzia, 15 providerów",
+      "path": "modules/ai-library/index.html",
+      "enabled": true,
+      "order": 3
+    },
+    {
+      "id": "costs-budget",
+      "name": "Koszty & Budżet",
+      "icon": "dollar-sign",
+      "color": "#fbbf24",
+      "description": "Śledzenie budżetu, wydatki, podział kosztów CF",
+      "path": "modules/costs-budget/index.html",
+      "enabled": true,
+      "order": 4
+    },
+    {
+      "id": "kb-dashboard",
+      "name": "Baza Wiedzy",
+      "icon": "database",
+      "color": "#a855f7",
+      "description": "ChromaDB — 4816 docs, 21 kategorii, wyszukiwanie wektorowe",
+      "path": "modules/kb-dashboard/index.html",
+      "enabled": true,
+      "order": 5
+    },
+    {
+      "id": "libraries-viz",
+      "name": "Biblioteki",
+      "icon": "book-open",
+      "color": "#00ff88",
+      "description": "Przeglądarka BIZ/PRV — 11 bibliotek, pliki .md/.json, reader",
+      "path": "modules/libraries-viz/index.html",
+      "enabled": true,
+      "order": 6
+    },
+    {
+      "id": "recipes",
+      "name": "Recepty & Instrukcje",
+      "icon": "book",
+      "color": "#f472b6",
+      "description": "Co z czym łączyć — 6 workflow z kosztami i jakością",
+      "path": "modules/recipes/index.html",
+      "enabled": true,
+      "order": 7
+    },
+    {
+      "id": "cloudflare-infra",
+      "name": "Cloudflare",
+      "icon": "cloud",
+      "color": "#f6821f",
+      "description": "Workers, D1, R2 — infrastruktura edge",
+      "path": "modules/cloudflare-infra/index.html",
+      "enabled": true,
+      "order": 8
+    },
+    {
+      "id": "agent-zero",
+      "name": "Agent Zero",
+      "icon": "terminal",
+      "color": "#00d9ff",
+      "description": "Architektura, providerzy, API, profile agentów",
+      "path": "modules/agent-zero/index.html",
+      "enabled": true,
+      "order": 9
+    },
+    {
+      "id": "moa-pipeline",
+      "name": "MOA Pipeline",
+      "icon": "git-merge",
+      "color": "#a855f7",
+      "description": "Mixture of Agents — pipeline generowania treści",
+      "path": "modules/moa-pipeline/index.html",
+      "enabled": true,
+      "order": 10
+    },
+    {
+      "id": "skills-commands",
+      "name": "Skills & Komendy",
+      "icon": "zap",
+      "color": "#4ade80",
+      "description": "48 umiejętności, 105+ komend, Definition of Done",
+      "path": "modules/skills-commands/index.html",
+      "enabled": true,
+      "order": 11
+    },
+    {
+      "id": "mit-ai-news",
+      "name": "MIT AI News",
+      "icon": "rss",
+      "color": "#ef4444",
+      "description": "Najnowsze wiadomości AI z MIT — RSS feed",
+      "path": "modules/mit-ai-news/index.html",
+      "enabled": true,
+      "order": 12
+    },
+    {
+      "id": "observable-viz",
+      "name": "Observable Wizualizacje",
+      "icon": "bar-chart-2",
+      "color": "#3b82f6",
+      "description": "Interaktywne wykresy Observable — modele, koszty, KB, architektura",
+      "path": "http://localhost:4300",
+      "enabled": true,
+      "order": 13
+    }
+  ],
+  "external_links": [
+    {
+      "id": "agent-zero-ui",
+      "name": "Agent Zero UI",
+      "icon": "terminal",
+      "color": "#00d9ff",
+      "description": "Interfejs Agent Zero — :50001",
+      "url": "http://localhost:50001"
+    },
+    {
+      "id": "observable-models",
+      "name": "Observable — Modele AI",
+      "icon": "cpu",
+      "color": "#6366f1",
+      "description": "Porównanie modeli — jakość, koszt, szybkość",
+      "url": "http://localhost:4300/ai-models"
+    },
+    {
+      "id": "observable-costs",
+      "name": "Observable — Koszty",
+      "icon": "dollar-sign",
+      "color": "#fbbf24",
+      "description": "Budżet, wydatki dzienne, per-model",
+      "url": "http://localhost:4300/costs-budget"
+    },
+    {
+      "id": "observable-kb",
+      "name": "Observable — Baza Wiedzy",
+      "icon": "database",
+      "color": "#a855f7",
+      "description": "ChromaDB kategorie, pokrycie, statystyki",
+      "url": "http://localhost:4300/knowledge-base"
+    },
+    {
+      "id": "observable-arch",
+      "name": "Observable — Architektura",
+      "icon": "git-merge",
+      "color": "#22c55e",
+      "description": "Mermaid diagramy, mapa portów, flow agentów",
+      "url": "http://localhost:4300/architecture"
+    },
+    {
+      "id": "info-dashboard",
+      "name": "Info Dashboard (static)",
+      "icon": "file-text",
+      "color": "#737373",
+      "description": "Statyczny dashboard informacyjny (bez backendu)",
+      "url": "index-info.html"
+    }
+  ],
+  "server": {
+    "port": 4200,
+    "host": "127.0.0.1"
+  },
+  "theme": {
+    "preset": "midnight",
+    "accent": "#00FF41"
+  }
+}

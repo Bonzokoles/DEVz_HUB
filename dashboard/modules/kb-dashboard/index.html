@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Base</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--sh:rgba(255,255,255,0.06);
+  --b:rgba(255,255,255,0.07);--bh:rgba(255,255,255,0.12);
+  --a:#a855f7;--a2:rgba(168,85,247,0.12);--ag:rgba(168,85,247,0.06);
+  --g:#4ade80;--r:#f87171;--y:#facc15;--c:#00d9ff;--pk:#ec4899;
+  --t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:13px;overflow:hidden}
+
+/* ── LAYOUT ── */
+.layout{display:flex;height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:240px;flex-shrink:0;
+  background:linear-gradient(180deg,#0c1020 0%,#080b14 100%);
+  border-right:1px solid var(--b);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-hdr{padding:12px 14px 8px;border-bottom:1px solid var(--b)}
+.sb-hdr h1{font-size:13px;font-weight:700;color:var(--ts);display:flex;align-items:center;gap:6px}
+.sb-status{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--d);margin-top:4px}
+.sb-dot{width:6px;height:6px;border-radius:50%;background:var(--d);flex-shrink:0}
+.sb-dot.ok{background:var(--g);box-shadow:0 0 5px var(--g)}
+.sb-dot.err{background:var(--r)}
+.sb-dot.wait{background:var(--y);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+.sb-search{padding:8px 12px;border-bottom:1px solid var(--b)}
+.sb-search input{
+  width:100%;padding:5px 9px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--b);border-radius:6px;color:var(--t);
+  font-size:11px;font-family:inherit;outline:none;
+}
+.sb-search input:focus{border-color:var(--a)}
+.sb-search input::placeholder{color:var(--d)}
+
+.sb-tree{flex:1;overflow-y:auto;padding:6px 0}
+.sb-tree::-webkit-scrollbar{width:3px}
+.sb-tree::-webkit-scrollbar-thumb{background:var(--b);border-radius:2px}
+
+.sb-section{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--d);padding:8px 14px 4px;display:flex;align-items:center;justify-content:space-between}
+.sb-section span{font-weight:400;color:var(--d)}
+
+.sb-cat{
+  padding:6px 14px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:7px;
+  border-left:2px solid transparent;transition:all .12s;color:var(--m);
+}
+.sb-cat:hover{background:rgba(255,255,255,0.03);color:var(--t)}
+.sb-cat.active{background:var(--ag);border-left-color:var(--a);color:var(--ts)}
+.sb-cat.empty{opacity:.45}
+.sb-cat .cat-ic{width:16px;height:16px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.sb-cat .cat-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-cat .cat-ct{font-size:9px;color:var(--d);flex-shrink:0}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* Topbar */
+.topbar{
+  display:flex;align-items:center;gap:10px;padding:8px 14px;
+  border-bottom:1px solid var(--b);background:rgba(11,15,26,0.8);flex-shrink:0;
+}
+.bc{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--d);flex:1;min-width:0}
+.bc .bc-root{color:var(--a);cursor:pointer;font-weight:600;white-space:nowrap}
+.bc .bc-root:hover{text-decoration:underline}
+.bc .bc-sep{color:var(--d)}
+.bc .bc-cur{color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-stat{font-size:10px;color:var(--d);white-space:nowrap}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--b);flex-shrink:0;background:rgba(7,9,15,0.5)}
+.tab{
+  padding:8px 16px;font-size:11px;cursor:pointer;color:var(--m);
+  border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;
+}
+.tab:hover{color:var(--t);background:rgba(255,255,255,0.02)}
+.tab.active{color:var(--a);border-bottom-color:var(--a);background:var(--ag)}
+
+/* Content area */
+.content{flex:1;overflow-y:auto;padding:14px}
+.content::-webkit-scrollbar{width:5px}
+.content::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
+
+/* ── OVERVIEW ── */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--s);border:1px solid var(--b);border-radius:8px;padding:12px;text-align:center}
+.stat-val{font-size:22px;font-weight:700;color:var(--ts)}
+.stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--d);margin-top:3px}
+
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.chart-box{background:var(--s);border:1px solid var(--b);border-radius:8px;padding:12px}
+.chart-box h3{font-size:11px;color:var(--m);margin-bottom:8px;font-weight:600}
+
+/* ── BROWSER (file list) ── */
+.browser-toolbar{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  border-bottom:1px solid var(--b);flex-shrink:0;background:rgba(7,9,15,0.4);
+}
+.bt-search{
+  flex:1;padding:5px 10px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--b);border-radius:6px;color:var(--t);
+  font-size:11px;font-family:inherit;outline:none;max-width:300px;
+}
+.bt-search:focus{border-color:var(--c)}
+.bt-search::placeholder{color:var(--d)}
+.bt-info{font-size:10px;color:var(--d);margin-left:auto}
+.page-btn{
+  padding:4px 9px;font-size:10px;border:1px solid var(--b);border-radius:5px;
+  background:transparent;color:var(--m);cursor:pointer;transition:all .12s;font-family:inherit;
+}
+.page-btn:hover:not(:disabled){border-color:var(--bh);color:var(--t)}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+.page-num{font-size:10px;color:var(--d);padding:0 4px;white-space:nowrap}
+
+.file-list{display:flex;flex-direction:column;gap:4px;padding:10px 14px}
+.file-row{
+  display:flex;align-items:center;gap:9px;padding:8px 12px;
+  background:var(--s);border:1px solid var(--b);border-radius:7px;
+  cursor:pointer;transition:all .12s;
+}
+.file-row:hover{border-color:var(--bh);background:var(--sh)}
+.file-row.active{border-color:var(--a);background:var(--ag)}
+.fr-ext{
+  width:32px;height:32px;border-radius:5px;display:flex;align-items:center;
+  justify-content:center;font-size:9px;font-weight:700;text-transform:uppercase;
+  background:rgba(255,255,255,0.04);color:var(--m);flex-shrink:0;
+}
+.fr-ext.md{background:rgba(168,85,247,0.12);color:var(--a)}
+.fr-ext.json{background:rgba(250,204,21,0.12);color:var(--y)}
+.fr-ext.txt{background:rgba(115,115,115,0.1);color:var(--m)}
+.fr-ext.py{background:rgba(59,130,246,0.12);color:#60a5fa}
+.fr-info{flex:1;min-width:0}
+.fr-name{font-size:12px;font-weight:600;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fr-sub{font-size:9px;color:var(--d);margin-top:1px}
+.fr-size{font-size:10px;color:var(--d);flex-shrink:0}
+.fr-date{font-size:9px;color:var(--d);flex-shrink:0;width:70px;text-align:right}
+
+.empty-state{text-align:center;padding:50px 20px;color:var(--d)}
+.empty-state .ei{font-size:36px;margin-bottom:10px;opacity:.5}
+
+.loading-state{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--d)}
+.spin{width:18px;height:18px;border:2px solid var(--b);border-top-color:var(--a);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── READER ── */
+.reader{display:flex;flex-direction:column;height:100%}
+.reader-hdr{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  border-bottom:1px solid var(--b);flex-shrink:0;
+}
+.reader-ext{font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:var(--a2);color:var(--a)}
+.reader-name{font-size:13px;font-weight:700;color:var(--ts);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.reader-meta{font-size:10px;color:var(--d);white-space:nowrap}
+.back-btn{
+  padding:4px 9px;font-size:10px;border:1px solid var(--b);border-radius:5px;
+  background:transparent;color:var(--m);cursor:pointer;transition:all .12s;font-family:inherit;white-space:nowrap;
+}
+.back-btn:hover{border-color:var(--bh);color:var(--t)}
+.reader-body{flex:1;overflow-y:auto;padding:20px 24px;font-size:13px;line-height:1.7}
+.reader-body::-webkit-scrollbar{width:5px}
+.reader-body::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
+
+/* Markdown styles inside reader */
+.md h1{font-size:20px;font-weight:700;color:var(--ts);border-bottom:1px solid var(--b);padding-bottom:8px;margin:0 0 14px}
+.md h2{font-size:16px;font-weight:700;color:var(--t);margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--b)}
+.md h3{font-size:13px;font-weight:700;color:var(--c);margin:14px 0 6px}
+.md h4{font-size:12px;font-weight:700;color:var(--a);margin:10px 0 4px}
+.md p{margin:6px 0;color:var(--t)}
+.md strong{color:var(--ts);font-weight:600}
+.md em{color:#cdd9e5;font-style:italic}
+.md a{color:var(--c);text-decoration:none;border-bottom:1px solid rgba(0,217,255,.3)}
+.md a:hover{border-bottom-color:var(--c)}
+.md code{background:rgba(255,255,255,0.06);color:var(--c);padding:1px 5px;border-radius:3px;font-family:Consolas,monospace;font-size:11px;border:1px solid var(--b)}
+.md pre{background:var(--bg2);border:1px solid var(--b);border-radius:7px;padding:12px;margin:8px 0;overflow-x:auto;font-family:Consolas,monospace;font-size:11px;line-height:1.5;color:var(--t);white-space:pre-wrap;word-break:break-word}
+.md pre code{background:none;border:none;padding:0;color:inherit}
+.md ul,.md ol{padding-left:20px;margin:6px 0}
+.md li{margin:3px 0}
+.md li::marker{color:var(--a)}
+.md blockquote{border-left:3px solid var(--a);padding:6px 12px;margin:8px 0;background:var(--ag);border-radius:0 5px 5px 0;color:var(--m)}
+.md hr{border:none;border-top:1px solid var(--b);margin:16px 0}
+.md table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.md th{padding:6px 10px;background:var(--s);border:1px solid var(--b);color:var(--d);font-size:9px;text-transform:uppercase;letter-spacing:.7px;text-align:left}
+.md td{padding:6px 10px;border:1px solid var(--b);color:var(--t)}
+.md tr:hover td{background:rgba(255,255,255,0.02)}
+.md del{color:var(--d);text-decoration:line-through}
+
+.json-view{font-family:Consolas,monospace;font-size:11px;line-height:1.6;color:var(--y);white-space:pre-wrap;word-break:break-word}
+.raw-view{font-family:Consolas,monospace;font-size:11px;line-height:1.6;color:var(--t);white-space:pre-wrap;word-break:break-word}
+
+/* ── SEARCH TAB ── */
+.search-area{padding:12px 14px;border-bottom:1px solid var(--b);flex-shrink:0}
+.search-row{display:flex;gap:8px;margin-bottom:8px}
+.s-input{
+  flex:1;padding:8px 12px;background:var(--bg2);border:1px solid var(--b);border-radius:7px;
+  color:var(--ts);font-size:13px;font-family:inherit;outline:none;
+}
+.s-input:focus{border-color:var(--a)}
+.s-input::placeholder{color:var(--d)}
+.s-btn{
+  padding:8px 18px;background:var(--a);border:none;border-radius:7px;
+  color:#fff;font-weight:700;font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap;
+}
+.s-btn:hover{background:#9333ea}
+.s-btn:disabled{opacity:.5;cursor:not-allowed}
+.s-opts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.s-opt-lbl{font-size:9px;color:var(--d);text-transform:uppercase;letter-spacing:.7px}
+.s-sel,.s-num{
+  padding:4px 8px;background:var(--bg2);border:1px solid var(--b);border-radius:5px;
+  color:var(--t);font-size:11px;font-family:inherit;outline:none;cursor:pointer;
+}
+.s-sel:focus,.s-num:focus{border-color:var(--a)}
+.s-num{width:55px;text-align:center}
+.s-api{font-size:10px;color:var(--d)}
+.conn-badge{display:flex;align-items:center;gap:5px;font-size:10px;padding:4px 9px;border-radius:5px;background:var(--bg2);border:1px solid var(--b);margin-left:auto}
+
+.results-area{flex:1;overflow-y:auto;padding:10px 14px}
+.results-area::-webkit-scrollbar{width:5px}
+.results-area::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
+
+.result-count{font-size:10px;color:var(--d);padding:4px 0 8px;border-bottom:1px solid var(--b);margin-bottom:8px}
+.result-count strong{color:var(--t)}
+.result-item{background:var(--s);border:1px solid var(--b);border-radius:7px;padding:11px 13px;margin-bottom:6px;transition:border-color .12s}
+.result-item:hover{border-color:var(--bh)}
+.result-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px}
+.result-src{font-size:10px;color:var(--a);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:65%}
+.result-rel{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600;white-space:nowrap}
+.result-rel.high{background:rgba(74,222,128,.1);color:var(--g)}
+.result-rel.medium{background:rgba(250,204,21,.1);color:var(--y)}
+.result-rel.low{background:rgba(248,113,113,.1);color:var(--r)}
+.result-text{font-size:11px;color:var(--t);line-height:1.55;max-height:100px;overflow:hidden;position:relative;white-space:pre-wrap;word-break:break-word}
+.result-text.expanded{max-height:none}
+.result-toggle{font-size:9px;color:var(--a);cursor:pointer;margin-top:4px;display:inline-block}
+.result-toggle:hover{text-decoration:underline}
+.result-cat{font-size:9px;color:var(--d);margin-top:5px}
+
+.offline-msg{background:var(--s);border:1px solid var(--b);border-radius:8px;padding:20px;text-align:center;color:var(--d)}
+.offline-msg .oi{font-size:28px;margin-bottom:8px;opacity:.5}
+.offline-msg code{background:var(--bg2);padding:3px 8px;border-radius:4px;color:var(--a);font-size:10px;font-family:monospace}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR — kategorie -->
+<aside class="sidebar">
+  <div class="sb-hdr">
+    <h1>🧠 Knowledge Base</h1>
+    <div class="sb-status">
+      <div class="sb-dot" id="sbDot"></div>
+      <span id="sbLabel">Sprawdzam...</span>
+    </div>
+  </div>
+  <div class="sb-search">
+    <input type="text" placeholder="Filtruj kategorie..." oninput="filterCats(this.value)" />
+  </div>
+  <div class="sb-tree" id="catList"></div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="bc" id="breadcrumb">
+      <span class="bc-root" onclick="showOverview()">Knowledge Base</span>
+    </div>
+    <div class="top-stat" id="topStat"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabsBar">
+    <div class="tab active" id="tabOv"   onclick="switchTab('overview')">📊 Przegląd</div>
+    <div class="tab"        id="tabBr"   onclick="switchTab('browser')">📂 Przeglądarka</div>
+    <div class="tab"        id="tabSr"   onclick="switchTab('search')">🔍 Wyszukaj</div>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div id="panelOverview" class="content">
+    <div class="stats-row">
+      <div class="stat"><div class="stat-val">4 816</div><div class="stat-lbl">Dokumentów</div></div>
+      <div class="stat"><div class="stat-val">20</div><div class="stat-lbl">Kategorii</div></div>
+      <div class="stat"><div class="stat-val">3 115</div><div class="stat-lbl">Pliki AI_SEO</div></div>
+      <div class="stat"><div class="stat-val">69 MB</div><div class="stat-lbl">ChromaDB</div></div>
+      <div class="stat"><div class="stat-val" id="connStatVal">—</div><div class="stat-lbl">API Status</div></div>
+    </div>
+    <div class="charts-row">
+      <div class="chart-box">
+        <h3>Dokumenty per kategoria</h3>
+        <canvas id="barChart" height="200"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Kolekcje specjalne</h3>
+        <canvas id="donutChart" height="180"></canvas>
+        <div style="margin-top:10px">
+          <div id="topCats"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BROWSER TAB -->
+  <div id="panelBrowser" style="display:none;flex:1;flex-direction:column;overflow:hidden;display:none">
+    <!-- toolbar renderowany dynamicznie -->
+    <div id="browserContent" style="display:flex;flex-direction:column;flex:1;overflow:hidden"></div>
+  </div>
+
+  <!-- SEARCH TAB -->
+  <div id="panelSearch" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+    <div class="search-area">
+      <div class="search-row">
+        <input type="text" class="s-input" id="searchQ" placeholder="Wpisz zapytanie semantyczne..." onkeydown="if(event.key==='Enter')doSearch()" />
+        <button class="s-btn" id="searchBtn" onclick="doSearch()">🔍 Szukaj</button>
+      </div>
+      <div class="s-opts">
+        <div>
+          <div class="s-opt-lbl">Kategoria</div>
+          <select class="s-sel" id="searchCat">
+            <option value="all">Wszystkie</option>
+            <option value="01">01 AI_SEO</option>
+            <option value="02">02 WHITECAT_SYSTEM</option>
+            <option value="03">03 PYTHON_AUTOMATION</option>
+            <option value="04">04 ECOMMERCE_SHOPS</option>
+            <option value="05">05 AGENTS_AND_RAG</option>
+            <option value="06">06 FINANCE</option>
+            <option value="07">07 B2B_SALES</option>
+            <option value="13">13 AI_NEWS</option>
+          </select>
+        </div>
+        <div>
+          <div class="s-opt-lbl">Limit</div>
+          <input type="number" class="s-num" id="searchLim" value="10" min="1" max="50" />
+        </div>
+        <div class="s-api">API: <span id="apiHost">localhost:7071</span></div>
+        <div class="conn-badge">
+          <div class="sb-dot" id="connDot"></div>
+          <span id="connLabel">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="results-area" id="resultsArea">
+      <div class="offline-msg">
+        <div class="oi">🔍</div>
+        <div style="margin-bottom:8px;font-size:12px">Wyszukiwanie wektorowe ChromaDB</div>
+        <div style="font-size:10px;margin-bottom:10px;color:var(--d)">Wymaga uruchomionego kb_server.py</div>
+        <code>python kb_server.py</code>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ================================================================
+// DANE KATEGORII
+// ================================================================
+const CATS = [
+  {id:'01',name:'AI_SEO',       icon:'🔍',color:'#6366f1',chunks:3912,files:3115},
+  {id:'02',name:'WHITECAT_SYSTEM',icon:'🖥️',color:'#8b5cf6',chunks:0,files:0},
+  {id:'03',name:'PYTHON_AUTOMATION',icon:'🐍',color:'#3b82f6',chunks:0,files:0},
+  {id:'04',name:'ECOMMERCE_SHOPS',icon:'🛒',color:'#10b981',chunks:23,files:4},
+  {id:'05',name:'AGENTS_AND_RAG',icon:'🤖',color:'#f59e0b',chunks:81,files:12},
+  {id:'06',name:'FINANCE',      icon:'💰',color:'#22c55e',chunks:26,files:4},
+  {id:'07',name:'B2B_SALES',    icon:'📈',color:'#ef4444',chunks:13,files:2},
+  {id:'08',name:'MARKETPLACE',  icon:'🛍️',color:'#ec4899',chunks:0,files:0},
+  {id:'09',name:'BUY_AND_SELL', icon:'🔄',color:'#14b8a6',chunks:0,files:0},
+  {id:'10',name:'MARKET_ANALYSIS',icon:'📊',color:'#f97316',chunks:0,files:0},
+  {id:'11',name:'OPPORTUNITIES',icon:'⚡',color:'#a855f7',chunks:0,files:0},
+  {id:'12',name:'FORECASTING',  icon:'🔮',color:'#06b6d4',chunks:0,files:0},
+  {id:'13',name:'AI_NEWS',      icon:'📰',color:'#64748b',chunks:12,files:2},
+  {id:'14',name:'BLOG_TOPICS',  icon:'✏️',color:'#84cc16',chunks:0,files:0},
+  {id:'15',name:'READY_ARTICLES',icon:'📝',color:'#d946ef',chunks:0,files:0},
+  {id:'16',name:'PROMPT_LIBRARY',icon:'💬',color:'#0ea5e9',chunks:0,files:0},
+  {id:'17',name:'AGENT_KNOWLEDGE',icon:'📦',color:'#f43f5e',chunks:0,files:0},
+  {id:'18',name:'MCP_TOOLS',    icon:'🔧',color:'#8b5cf6',chunks:0,files:0},
+  {id:'19',name:'PROJECT_PLANS',icon:'📋',color:'#eab308',chunks:0,files:0},
+  {id:'20',name:'TRAINING_CORPUS',icon:'🗄️',color:'#78716c',chunks:0,files:0},
+];
+
+const API   = 'http://localhost:4200';
+const KB_API= 'http://localhost:7071';
+const PAGE_SIZE = 50; // pliki na stronę
+
+// STATE
+const S = {
+  tab: 'overview',
+  activeCat: null,
+  page: 0,
+  allFiles: [],      // surowa lista plików z serwera
+  filtered: [],      // po filtrze tekstowym
+  filterQ: '',
+  apiOnline: false,
+  kbOnline: false,
+  openFile: null,    // {cat, name, content}
+  searchDocs: [],
+};
+
+// ================================================================
+// SIDEBAR INIT
+// ================================================================
+function initSidebar() {
+  const list = document.getElementById('catList');
+
+  // Sekcja: aktywne
+  const active = CATS.filter(c => c.chunks > 0);
+  const empty  = CATS.filter(c => c.chunks === 0);
+
+  let html = `<div class="sb-section">AKTYWNE <span>${active.length}</span></div>`;
+  active.forEach(c => {
+    html += catItem(c);
+  });
+  html += `<div class="sb-section" style="margin-top:6px">PUSTE <span>${empty.length}</span></div>`;
+  empty.forEach(c => {
+    html += catItem(c, true);
+  });
+  list.innerHTML = html;
+}
+
+function catItem(c, empty = false) {
+  const ct = c.chunks > 0 ? c.chunks.toLocaleString() : '—';
+  return `<div class="sb-cat ${empty ? 'empty' : ''}" data-id="${c.id}" onclick="openCat('${c.id}')">
+    <div class="cat-ic" style="background:${c.color}18;color:${c.color}">${c.icon}</div>
+    <span class="cat-nm">${c.id} ${c.name}</span>
+    <span class="cat-ct">${ct}</span>
+  </div>`;
+}
+
+function filterCats(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.sb-cat').forEach(el => {
+    el.style.display = el.dataset.id.includes(q) || el.querySelector('.cat-nm').textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function setActiveCat(id) {
+  document.querySelectorAll('.sb-cat').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+}
+
+// ================================================================
+// TAB SWITCHING
+// ================================================================
+function switchTab(tab) {
+  S.tab = tab;
+  ['overview','browser','search'].forEach(t => {
+    document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? (t === 'overview' ? 'block' : 'flex') : 'none';
+    document.getElementById('tab' + t.slice(0,2).replace('ov','Ov').replace('br','Br').replace('se','Sr')).classList.toggle('active', t === tab);
+  });
+  // fix tab IDs
+  document.getElementById('tabOv').classList.toggle('active', tab === 'overview');
+  document.getElementById('tabBr').classList.toggle('active', tab === 'browser');
+  document.getElementById('tabSr').classList.toggle('active', tab === 'search');
+}
+
+// ================================================================
+// OVERVIEW
+// ================================================================
+function showOverview() {
+  S.activeCat = null;
+  S.openFile = null;
+  setActiveCat(null);
+  switchTab('overview');
+  setBreadcrumb([]);
+}
+
+function setBreadcrumb(parts) {
+  const bc = document.getElementById('breadcrumb');
+  let html = '<span class="bc-root" onclick="showOverview()">Knowledge Base</span>';
+  parts.forEach((p, i) => {
+    html += '<span class="bc-sep"> / </span>';
+    if (p.onclick) html += `<span class="bc-root" onclick="${p.onclick}">${p.label}</span>`;
+    else html += `<span class="bc-cur">${p.label}</span>`;
+  });
+  bc.innerHTML = html;
+}
+
+// ================================================================
+// OPEN CATEGORY → BROWSER
+// ================================================================
+async function openCat(id) {
+  const cat = CATS.find(c => c.id === id);
+  if (!cat) return;
+  S.activeCat = cat;
+  S.openFile = null;
+  S.page = 0;
+  S.filterQ = '';
+  setActiveCat(id);
+  setBreadcrumb([{ label: cat.id + ' ' + cat.name }]);
+  switchTab('browser');
+  await loadCatFiles(cat);
+}
+
+async function loadCatFiles(cat) {
+  const bc = document.getElementById('browserContent');
+  bc.innerHTML = `<div class="loading-state"><div class="spin"></div> Ładowanie plików ${cat.name}...</div>`;
+
+  try {
+    const res = await fetch(`${API}/api/kb/files?cat=${encodeURIComponent(cat.id + '_' + cat.name)}`, {signal: AbortSignal.timeout(8000)});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    S.allFiles = data.files || [];
+    S.filtered = S.allFiles;
+    S.page = 0;
+    renderBrowser(cat);
+  } catch(e) {
+    // fallback — spróbuj bez numeru
+    try {
+      const res2 = await fetch(`${API}/api/browse/files?root=kb&cat=${encodeURIComponent(cat.id + '_' + cat.name)}`, {signal: AbortSignal.timeout(8000)});
+      if (!res2.ok) throw new Error('HTTP ' + res2.status);
+      const data2 = await res2.json();
+      S.allFiles = data2.files || [];
+      S.filtered = S.allFiles;
+      S.page = 0;
+      renderBrowser(cat);
+    } catch(e2) {
+      bc.innerHTML = `<div class="empty-state"><div class="ei">❌</div><div style="font-size:12px;color:var(--r)">Błąd: ${e2.message}</div></div>`;
+    }
+  }
+}
+
+function renderBrowser(cat) {
+  const bc = document.getElementById('browserContent');
+  const total = S.filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(S.page, totalPages - 1);
+  const start = page * PAGE_SIZE;
+  const slice = S.filtered.slice(start, start + PAGE_SIZE);
+
+  let html = `
+  <div class="browser-toolbar">
+    <input type="text" class="bt-search" placeholder="Filtruj ${total} plików..."
+      value="${escH(S.filterQ)}" oninput="filterFiles(this.value)" />
+    <button class="page-btn" onclick="changePage(-1)" ${page === 0 ? 'disabled' : ''}>‹ Poprz</button>
+    <span class="page-num">${page+1} / ${totalPages}</span>
+    <button class="page-btn" onclick="changePage(1)" ${page >= totalPages-1 ? 'disabled' : ''}>Nast ›</button>
+    <span class="bt-info">${total.toLocaleString()} plików · ${cat.files.toLocaleString()} łącznie</span>
+  </div>
+  <div class="file-list" id="fileListEl">`;
+
+  if (slice.length === 0) {
+    html += `<div class="empty-state"><div class="ei">📭</div><div>Brak plików pasujących do filtra</div></div>`;
+  } else {
+    slice.forEach(f => {
+      const ext = (f.ext || '').replace('.', '').toLowerCase();
+      const date = f.modified ? f.modified.slice(0, 10) : '';
+      html += `<div class="file-row" onclick="openFile('${escH(f.name)}')">
+        <div class="fr-ext ${ext}">${ext || '?'}</div>
+        <div class="fr-info">
+          <div class="fr-name">${escH(f.name)}</div>
+          <div class="fr-sub">${escH(cat.id + '_' + cat.name)} · ${f.sizeHuman || ''}</div>
+        </div>
+        <div class="fr-date">${date}</div>
+      </div>`;
+    });
+  }
+  html += '</div>';
+  bc.innerHTML = html;
+  bc.style.display = 'flex';
+  bc.style.flexDirection = 'column';
+  bc.style.flex = '1';
+  bc.style.overflow = 'hidden';
+}
+
+function filterFiles(q) {
+  S.filterQ = q;
+  S.page = 0;
+  if (q.trim() === '') {
+    S.filtered = S.allFiles;
+  } else {
+    const lq = q.toLowerCase();
+    S.filtered = S.allFiles.filter(f => f.name.toLowerCase().includes(lq));
+  }
+  renderBrowser(S.activeCat);
+}
+
+function changePage(delta) {
+  const totalPages = Math.ceil(S.filtered.length / PAGE_SIZE);
+  S.page = Math.max(0, Math.min(S.page + delta, totalPages - 1));
+  renderBrowser(S.activeCat);
+  document.getElementById('browserContent').scrollTop = 0;
+}
+
+// ================================================================
+// OPEN FILE → READER
+// ================================================================
+async function openFile(filename) {
+  const cat = S.activeCat;
+  if (!cat) return;
+
+  const catFolder = cat.id + '_' + cat.name;
+  const bc = document.getElementById('browserContent');
+  bc.innerHTML = `<div class="loading-state"><div class="spin"></div> Wczytuję ${escH(filename)}...</div>`;
+
+  try {
+    // Próbuj przez browse API
+    let url = `${API}/api/browse/read?root=kb&cat=${encodeURIComponent(catFolder)}&file=${encodeURIComponent(filename)}`;
+    let res = await fetch(url, {signal: AbortSignal.timeout(8000)});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    renderReader(cat, filename, data.content, data.sizeHuman, data.lines);
+  } catch(e) {
+    bc.innerHTML = `<div class="empty-state"><div class="ei">❌</div><div style="color:var(--r);font-size:12px">${escH(e.message)}</div>
+      <div style="margin-top:10px"><button class="back-btn" onclick="openCat('${cat.id}')">← Wróć do listy</button></div></div>`;
+  }
+}
+
+function renderReader(cat, filename, content, sizeHuman, lines) {
+  const ext = filename.split('.').pop().toLowerCase();
+  const bc = document.getElementById('browserContent');
+
+  setBreadcrumb([
+    { label: cat.id + ' ' + cat.name, onclick: `openCat('${cat.id}')` },
+    { label: filename }
+  ]);
+
+  let bodyHtml;
+  if (ext === 'md') {
+    bodyHtml = `<div class="md">${mdToHtml(content)}</div>`;
+  } else if (ext === 'json') {
+    let pretty;
+    try { pretty = JSON.stringify(JSON.parse(content), null, 2); }
+    catch(e) { pretty = content; }
+    bodyHtml = `<div class="json-view">${escH(pretty)}</div>`;
+  } else {
+    bodyHtml = `<div class="raw-view">${escH(content)}</div>`;
+  }
+
+  bc.innerHTML = `
+    <div class="reader" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      <div class="reader-hdr">
+        <button class="back-btn" onclick="openCat('${cat.id}')">← Lista</button>
+        <span class="reader-ext">${ext}</span>
+        <span class="reader-name" title="${escH(filename)}">${escH(filename)}</span>
+        <span class="reader-meta">${sizeHuman || ''} · ${lines || '?'} linii</span>
+      </div>
+      <div class="reader-body">${bodyHtml}</div>
+    </div>`;
+}
+
+// ================================================================
+// MARKDOWN RENDERER (szybki, bez regex globalnych na całym tekście)
+// ================================================================
+function mdToHtml(md) {
+  const lines = md.split('\n');
+  let html = '';
+  let inPre = false, inUl = false, inOl = false, inTable = false;
+
+  function closeLists() {
+    let c = '';
+    if (inUl) { c += '</ul>'; inUl = false; }
+    if (inOl) { c += '</ol>'; inOl = false; }
+    return c;
+  }
+  function closeTable() {
+    let c = '';
+    if (inTable) { c += '</tbody></table>'; inTable = false; }
+    return c;
+  }
+
+  function inline(t) {
+    t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+    t = t.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    t = t.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+    t = t.replace(/~~(.+?)~~/g, '<del>$1</del>');
+    t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    t = t.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2">$1</a>');
+    t = t.replace(/(^|[\s(])((https?:\/\/)[^\s<)"]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+    return t;
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const line = escH(raw);
+
+    // Fenced code
+    if (raw.startsWith('```') || raw.startsWith('~~~')) {
+      if (inPre) { html += '</code></pre>'; inPre = false; }
+      else {
+        html += closeLists() + closeTable();
+        const lang = raw.slice(3).trim();
+        html += `<pre><code class="lang-${lang}">`;
+        inPre = true;
+      }
+      continue;
+    }
+    if (inPre) { html += line + '\n'; continue; }
+
+    // Headings
+    const hm = raw.match(/^(#{1,4})\s+(.+)$/);
+    if (hm) {
+      html += closeLists() + closeTable();
+      const lvl = hm[1].length, txt = escH(hm[2].trim());
+      html += `<h${lvl}>${inline(txt)}</h${lvl}>\n`;
+      continue;
+    }
+
+    // HR
+    if (/^[-*_]{3,}$/.test(raw.trim())) { html += closeLists() + closeTable() + '<hr>\n'; continue; }
+
+    // Blockquote
+    if (raw.startsWith('> ')) {
+      html += closeLists() + closeTable() + `<blockquote>${inline(escH(raw.slice(2)))}</blockquote>\n`;
+      continue;
+    }
+
+    // Table
+    if (raw.includes('|') && raw.trim().startsWith('|')) {
+      const cells = raw.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+      if (!inTable) {
+        const next = lines[i+1] || '';
+        if (/^\|[\s|:-]+\|/.test(next)) {
+          html += closeLists();
+          html += '<table><thead><tr>' + cells.map(c => `<th>${inline(escH(c))}</th>`).join('') + '</tr></thead><tbody>\n';
+          inTable = true; i++;
+          continue;
+        }
+      } else {
+        if (cells.every(c => /^:?-+:?$/.test(c))) continue;
+        html += '<tr>' + cells.map(c => `<td>${inline(escH(c))}</td>`).join('') + '</tr>\n';
+        continue;
+      }
+    } else if (inTable) { html += closeTable(); }
+
+    // UL
+    const ulm = raw.match(/^(\s*)[-*+]\s+(.+)$/);
+    if (ulm) {
+      if (!inUl) { html += closeTable(); html += '<ul>'; inUl = true; }
+      html += `<li>${inline(escH(ulm[2]))}</li>\n`;
+      continue;
+    }
+
+    // OL
+    const olm = raw.match(/^\s*\d+[.)]\s+(.+)$/);
+    if (olm) {
+      if (!inOl) { html += closeLists() + closeTable(); html += '<ol>'; inOl = true; }
+      html += `<li>${inline(escH(olm[1]))}</li>\n`;
+      continue;
+    }
+
+    if (inUl || inOl) html += closeLists();
+
+    if (raw.trim() === '') { html += '\n'; continue; }
+
+    html += `<p>${inline(line)}</p>\n`;
+  }
+
+  html += closeLists() + closeTable();
+  if (inPre) html += '</code></pre>';
+  return html;
+}
+
+// ================================================================
+// SEARCH
+// ================================================================
+let isSearching = false;
+
+async function doSearch() {
+  if (isSearching) return;
+  const q = document.getElementById('searchQ').value.trim();
+  if (!q) { document.getElementById('searchQ').focus(); return; }
+
+  const cat = document.getElementById('searchCat').value;
+  const lim = parseInt(document.getElementById('searchLim').value) || 10;
+  const btn = document.getElementById('searchBtn');
+  const area = document.getElementById('resultsArea');
+
+  isSearching = true;
+  btn.disabled = true;
+  btn.textContent = '⏳ Szukam...';
+  area.innerHTML = `<div class="loading-state"><div class="spin"></div> Przeszukuję wektory...</div>`;
+
+  try {
+    const url = cat === 'all'
+      ? `${KB_API}/api/kb/search`
+      : `${KB_API}/api/kb/categories/${cat}/search`;
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({query: q, limit: lim}),
+      signal: AbortSignal.timeout(20000)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + res.statusText);
+    const data = await res.json();
+
+    if (data.warning) {
+      area.innerHTML = `<div class="offline-msg"><div class="oi">⚠️</div><div style="color:var(--y)">${escH(data.warning)}</div></div>`;
+      return;
+    }
+
+    const docs  = data.results?.documents?.[0] || [];
+    const metas = data.results?.metadatas?.[0] || [];
+    const dists = data.results?.distances?.[0] || [];
+    S.searchDocs = docs;
+
+    if (!docs.length) {
+      area.innerHTML = `<div class="offline-msg"><div class="oi">🤷</div><div>Brak wyników dla: <em>"${escH(q)}"</em></div></div>`;
+      return;
+    }
+
+    let html = `<div class="result-count">Znaleziono <strong>${docs.length}</strong> wyników dla <em>"${escH(q)}"</em></div>`;
+
+    // Event delegation — nie tworzymy listenerów per-item
+    docs.forEach((doc, i) => {
+      const meta = metas[i] || {};
+      const dist = dists[i] || 0;
+      const rel  = dist < 0.5 ? 'high' : dist < 1.0 ? 'medium' : 'low';
+      const relL = dist < 0.5 ? '▲ Wysoka' : dist < 1.0 ? '◆ Średnia' : '▼ Niska';
+      const src  = meta.source || meta.file || 'unknown';
+      const catN = meta.category || '';
+      const preview = doc.length > 400 ? doc.slice(0, 400) + '…' : doc;
+      const hasMore = doc.length > 400;
+
+      html += `<div class="result-item">
+        <div class="result-top">
+          <span class="result-src" title="${escH(src)}">📄 ${escH(src)}</span>
+          <span class="result-rel ${rel}" title="dist: ${dist.toFixed(4)}">${relL} (${dist.toFixed(2)})</span>
+        </div>
+        <div class="result-text" id="rxt${i}">${escH(preview)}</div>
+        ${hasMore ? `<span class="result-toggle" data-i="${i}" data-open="0">▸ Pokaż więcej</span>` : ''}
+        ${catN ? `<div class="result-cat">📂 ${escH(catN)}</div>` : ''}
+      </div>`;
+    });
+
+    area.innerHTML = html;
+
+    // event delegation — jeden listener na cały kontener
+    area.onclick = (e) => {
+      const tog = e.target.closest('.result-toggle');
+      if (!tog) return;
+      const i   = parseInt(tog.dataset.i);
+      const el  = document.getElementById('rxt' + i);
+      const open= tog.dataset.open === '1';
+      if (open) {
+        el.textContent = S.searchDocs[i].slice(0, 400) + '…';
+        el.classList.remove('expanded');
+        tog.textContent = '▸ Pokaż więcej';
+        tog.dataset.open = '0';
+      } else {
+        el.textContent = S.searchDocs[i];
+        el.classList.add('expanded');
+        tog.textContent = '▾ Schowaj';
+        tog.dataset.open = '1';
+      }
+    };
+
+  } catch(e) {
+    const isTimeout = e.name === 'AbortError' || e.name === 'TimeoutError';
+    const isNet = e.message.includes('fetch') || e.message.includes('Network');
+    const msg = isTimeout ? 'Timeout — serwer nie odpowiada (20s)' : isNet ? 'Brak połączenia z API :7071' : escH(e.message);
+    area.innerHTML = `<div class="offline-msg">
+      <div class="oi">❌</div>
+      <div style="margin-bottom:8px;color:var(--r)">${msg}</div>
+      <code>python kb_server.py</code>
+    </div>`;
+  } finally {
+    isSearching = false;
+    btn.disabled = false;
+    btn.textContent = '🔍 Szukaj';
+  }
+}
+
+// ================================================================
+// API STATUS CHECK
+// ================================================================
+async function checkApis() {
+  // dashboard API (port 4200)
+  try {
+    await fetch(API + '/api/kb/categories', {signal: AbortSignal.timeout(2000)});
+    S.apiOnline = true;
+    setDot('sbDot', 'sbLabel', true, 'Server OK');
+  } catch(e) {
+    S.apiOnline = false;
+    setDot('sbDot', 'sbLabel', false, 'Server offline :4200');
+  }
+
+  // KB vector API (port 7071)
+  try {
+    const r = await fetch(KB_API + '/', {signal: AbortSignal.timeout(3000)});
+    S.kbOnline = r.ok;
+  } catch(e) { S.kbOnline = false; }
+
+  setDot('connDot', 'connLabel', S.kbOnline, S.kbOnline ? 'ChromaDB Online' : 'KB API offline');
+  const statEl = document.getElementById('connStatVal');
+  if (statEl) { statEl.textContent = S.kbOnline ? 'Online' : 'Offline'; statEl.style.color = S.kbOnline ? 'var(--g)' : 'var(--r)'; }
+}
+
+function setDot(dotId, labelId, ok, label) {
+  const dot = document.getElementById(dotId);
+  const lbl = document.getElementById(labelId);
+  if (dot) dot.className = 'sb-dot ' + (ok ? 'ok' : 'err');
+  if (lbl) lbl.textContent = label;
+}
+
+// ================================================================
+// CHARTS
+// ================================================================
+function initCharts() {
+  const active = CATS.filter(c => c.chunks > 0);
+
+  new Chart(document.getElementById('barChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: active.map(c => c.id + ' ' + c.name),
+      datasets: [{
+        label: 'Chunks',
+        data: active.map(c => c.chunks),
+        backgroundColor: active.map(c => c.color + '80'),
+        borderColor: active.map(c => c.color),
+        borderWidth: 1, borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {legend:{display:false}},
+      scales: {
+        x: {ticks:{color:'#525252',font:{size:9},maxRotation:40}, grid:{color:'rgba(255,255,255,0.03)'}},
+        y: {ticks:{color:'#525252',font:{size:9}}, grid:{color:'rgba(255,255,255,0.03)'}},
+      }
+    }
+  });
+
+  new Chart(document.getElementById('donutChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['kb_docs','kb_ai_tools','kb_ml_datasets','kb_prompts','kb_agent_reports'],
+      datasets: [{
+        data: [96, 271, 142, 29, 211],
+        backgroundColor: ['#3b82f680','#10b98180','#f59e0b80','#ec489980','#ef444480'],
+        borderColor:     ['#3b82f6','#10b981','#f59e0b','#ec4899','#ef4444'],
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false, cutout:'55%',
+      plugins:{legend:{position:'bottom',labels:{color:'#737373',font:{size:10},padding:8}}}
+    }
+  });
+
+  // Top bar list
+  const sorted = [...CATS].filter(c=>c.chunks>0).sort((a,b)=>b.chunks-a.chunks);
+  const max = sorted[0]?.chunks || 1;
+  document.getElementById('topCats').innerHTML = sorted.slice(0,6).map((c,i) =>
+    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <span style="font-size:9px;color:var(--d);width:16px;text-align:right">#${i+1}</span>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px">
+          <span>${c.id} ${c.name}</span>
+          <span style="color:var(--d)">${c.chunks.toLocaleString()}</span>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,0.04);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${(c.chunks/max*100).toFixed(1)}%;background:${c.color};border-radius:2px"></div>
+        </div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+// ================================================================
+// UTILS
+// ================================================================
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ================================================================
+// BOOT
+// ================================================================
+initSidebar();
+initCharts();
+checkApis();
+setInterval(checkApis, 30000);
+
+// Czyść tab display przy inicjalizacji
+document.getElementById('panelBrowser').style.display = 'none';
+document.getElementById('panelSearch').style.display  = 'none';
+document.getElementById('panelOverview').style.display= 'block';
+</script>
+</body>
+</html>

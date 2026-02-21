@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills & Commands</title>
+<style>
+:root{--bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--b:rgba(255,255,255,0.07);--a:#00d9ff;--a2:#7c3aed;--g:#4ade80;--y:#facc15;--r:#f87171;--t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:20px;min-height:100vh}
+h2{font-size:1.3rem;font-weight:700;color:var(--ts);margin-bottom:4px}
+.sub{color:var(--m);font-size:12px;margin-bottom:16px}
+.section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--d);margin:20px 0 10px}
+.glass{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:12px}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:6px 14px;border:1px solid var(--b);border-radius:6px;background:var(--s);color:var(--m);font-size:11px;cursor:pointer;transition:all .2s}
+.tab.active,.tab:hover{background:rgba(0,217,255,.1);border-color:var(--a);color:var(--a)}
+.tab-content{display:none}.tab-content.active{display:block}
+.filter{width:100%;padding:8px 14px;background:var(--bg2);border:1px solid var(--b);border-radius:6px;color:var(--ts);font-size:12px;margin-bottom:12px;outline:none}
+.filter:focus{border-color:var(--a)}
+.counter-bar{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.counter-item{text-align:center;flex:1;min-width:80px}
+.counter-val{font-size:22px;font-weight:700;color:var(--a)}
+.counter-lab{font-size:9px;color:var(--d);text-transform:uppercase;letter-spacing:.8px}
+
+/* Accordion */
+.acc-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--s);border:1px solid var(--b);border-radius:8px;cursor:pointer;margin-bottom:4px;transition:all .2s}
+.acc-header:hover{border-color:var(--a);background:rgba(0,217,255,.03)}
+.acc-header.open{border-color:var(--a);border-radius:8px 8px 0 0;margin-bottom:0}
+.acc-title{font-size:13px;font-weight:700;color:var(--ts)}
+.acc-count{font-size:10px;color:var(--a);background:rgba(0,217,255,.1);padding:2px 8px;border-radius:10px}
+.acc-arrow{color:var(--d);transition:transform .2s;font-size:12px}
+.acc-header.open .acc-arrow{transform:rotate(90deg)}
+.acc-body{display:none;border:1px solid var(--b);border-top:none;border-radius:0 0 8px 8px;padding:8px 12px;margin-bottom:8px;background:var(--bg2)}
+.acc-body.open{display:block}
+
+/* Skill items */
+.skill-item{display:flex;align-items:center;gap:10px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px}
+.skill-item:last-child{border:none}
+.skill-name{color:var(--a);font-family:monospace;font-size:11px;min-width:200px}
+.skill-desc{color:var(--m);font-size:11px}
+
+/* Command items */
+.cmd-item{display:flex;align-items:flex-start;gap:8px;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px}
+.cmd-item:last-child{border:none}
+.cmd-code{font-family:'Cascadia Code','Consolas',monospace;color:var(--g);font-size:10px;background:var(--bg);padding:2px 6px;border-radius:3px;cursor:pointer;white-space:nowrap;max-width:60%;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.cmd-code:hover{color:var(--ts);background:rgba(0,217,255,.1)}
+.cmd-desc{color:var(--m);font-size:10px}
+.copied{position:fixed;top:20px;right:20px;background:var(--g);color:#000;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:700;z-index:999;display:none}
+
+/* DoD / Tasks */
+.dod-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px}
+.dod-check{width:14px;height:14px;border:2px solid var(--g);border-radius:3px;flex-shrink:0}
+.task-priority{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:700;text-transform:uppercase}
+.task-priority.high{background:rgba(248,113,113,.12);color:var(--r)}
+.task-priority.medium{background:rgba(250,204,21,.12);color:var(--y)}
+.task-priority.low{background:rgba(74,222,128,.12);color:var(--g)}
+</style>
+</head>
+<body>
+<h2>Skills, Commands & Tasks</h2>
+<p class="sub">Umiejetnosci agentow, komendy systemowe, Definition of Done</p>
+<div id="copiedMsg" class="copied">Skopiowano!</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('skills')">Skills (48)</div>
+  <div class="tab" onclick="switchTab('commands')">Commands (105+)</div>
+  <div class="tab" onclick="switchTab('dod')">DoD & Tasks</div>
+</div>
+
+<!-- Skills Tab -->
+<div id="tab-skills" class="tab-content active">
+  <input type="text" class="filter" id="skillsFilter" placeholder="Szukaj skills..." oninput="renderSkills()">
+  <div id="skillsAccordion"></div>
+</div>
+
+<!-- Commands Tab -->
+<div id="tab-commands" class="tab-content">
+  <input type="text" class="filter" id="cmdsFilter" placeholder="Szukaj komend..." oninput="renderCommands()">
+  <div id="cmdsAccordion"></div>
+</div>
+
+<!-- DoD Tab -->
+<div id="tab-dod" class="tab-content">
+  <div class="section-label">DEFINITION OF DONE</div>
+  <div class="glass" id="dodList"></div>
+  <div class="section-label">DEFAULT TASKS</div>
+  <div class="glass" id="tasksList"></div>
+</div>
+
+<script>
+const SKILLS={"Architecture":[{name:"api-design-principles",desc:"REST and GraphQL API design"},{name:"architecture-decision-records",desc:"ADR — Architecture Decision Records"},{name:"architecture-patterns",desc:"Clean, Hexagonal, DDD patterns"},{name:"c4-architecture",desc:"C4 architecture documentation"},{name:"code-refactoring-tech-debt",desc:"Tech debt identification & plans"},{name:"documentation-generation",desc:"API docs, diagrams, guides"},{name:"legacy-modernizer",desc:"Legacy codebase modernization"},{name:"monorepo-management",desc:"Turborepo, Nx, pnpm workspaces"}],"Business & Strategy":[{name:"business-analyst",desc:"KPI frameworks, data-driven insights"},{name:"competitive-landscape",desc:"Porter's Five Forces, positioning"},{name:"kpi-dashboard-design",desc:"Metrics, visualization, monitoring"},{name:"market-sizing-analysis",desc:"TAM, SAM, SOM calculations"},{name:"risk-manager",desc:"Portfolio risk, hedging strategies"},{name:"sales-automator",desc:"Cold emails, proposals, scripts"},{name:"seo-content-planner",desc:"Content calendars, topic clusters"},{name:"seo-keyword-strategist",desc:"Keyword analysis, LSI keywords"},{name:"startup-financial-modeling",desc:"Projections, burn rate, runway"},{name:"startup-metrics-framework",desc:"SaaS metrics, CAC/LTV, Rule of 40"},{name:"team-composition-analysis",desc:"Org chart, hiring, compensation"}],"Data & AI":[{name:"data-engineering-pipeline",desc:"Batch & streaming data pipelines"},{name:"data-scientist",desc:"ML, statistical modeling, BI"},{name:"data-storytelling",desc:"Data → compelling narratives"},{name:"mlops-engineer",desc:"MLflow, Kubeflow, experiment tracking"},{name:"prompt-engineer",desc:"Advanced prompting, LLM optimization"},{name:"python-performance-optimization",desc:"cProfile, memory profiling"},{name:"rag-implementation",desc:"RAG systems, vector databases"},{name:"sql-pro",desc:"OLTP/OLAP, performance tuning"},{name:"vector-database-engineer",desc:"Pinecone, Weaviate, pgvector"}],"Development":[{name:"api-testing-observability",desc:"API mocking, parallel development"},{name:"code-review-excellence",desc:"Constructive feedback, knowledge sharing"},{name:"fastapi-pro",desc:"Async APIs, SQLAlchemy, Pydantic V2"},{name:"frontend-security-coder",desc:"XSS prevention, client-side security"},{name:"git-advanced-workflows",desc:"Rebasing, cherry-picking, bisect"},{name:"python-packaging",desc:"pyproject.toml, PyPI publishing"},{name:"react-modernization",desc:"Hooks, concurrent features"},{name:"react-state-management",desc:"Redux Toolkit, Zustand, Jotai"},{name:"tailwind-design-system",desc:"Design tokens, component libraries"},{name:"typescript-pro",desc:"Advanced types, generics, strict safety"}],"Infrastructure":[{name:"bash-defensive-patterns",desc:"Production-grade shell scripts"},{name:"cicd-automation",desc:"GitHub Actions, CI/CD pipelines"},{name:"cost-optimization",desc:"Cloud costs, rightsizing, RI"},{name:"database-admin",desc:"Cloud databases, IaC, reliability"},{name:"devops-troubleshooter",desc:"Incident response, log analysis"},{name:"incident-response",desc:"Outages, post-mortems, protocols"},{name:"observability-engineer",desc:"Monitoring, tracing, SLI/SLO"},{name:"security-auditor",desc:"DevSecOps, OWASP, compliance"},{name:"terraform-specialist",desc:"Terraform/OpenTofu, multi-cloud"}],"UI/UX":[{name:"ui-ux-pro-max",desc:"67+ styles, 96+ palettes, design systems"}]};
+
+const COMMANDS={"🔮 OPSX Slash Commands":[{cmd:"/opsx:new",desc:"Rozpocznij nową zmianę (feature/fix/mod)"},{cmd:"/opsx:continue",desc:"Następny artefakt w workflow"},{cmd:"/opsx:ff",desc:"Fast-forward — all artifacts at once"},{cmd:"/opsx:apply",desc:"Implementuj taski z changu"},{cmd:"/opsx:verify",desc:"Waliduj implementację vs artefakty"},{cmd:"/opsx:archive",desc:"Archiwizuj ukończoną zmianę"},{cmd:"/opsx:explore",desc:"Explore mode — thinking partner"},{cmd:"/opsx:sync",desc:"Sync delta specs → main specs"},{cmd:"/opsx:bulk-archive",desc:"Archiwizuj wiele zmian naraz"},{cmd:"/opsx:onboard",desc:"Guided onboarding — full cycle"}],"🚀 Project Prompts":[{cmd:"/jimbo-app",desc:"JIMBO COMMAND CENTER — full SPA scenario"}],"🖥️ OpenSpec CLI":[{cmd:"npx openspec list",desc:"Lista wszystkich zmian"},{cmd:"npx openspec validate",desc:"Waliduj artefakty"},{cmd:"npx openspec show <change-id>",desc:"Pokaż szczegóły zmiany"},{cmd:"npx openspec init --tools github-copilot --force",desc:"Re-init OpenSpec"}],"🐳 Podman & Agent Zero":[{cmd:"podman machine start",desc:"Uruchom Podman VM"},{cmd:"podman machine stop",desc:"Zatrzymaj Podman VM"},{cmd:"podman machine info",desc:"Info o Podman VM (CPU/RAM/disk)"},{cmd:"podman ps -a",desc:"Lista wszystkich kontenerów"},{cmd:"podman images",desc:"Lista obrazów"},{cmd:"podman start bonzo-agent-zero",desc:"Start kontener Agent Zero"},{cmd:"podman stop bonzo-agent-zero",desc:"Stop kontener Agent Zero"},{cmd:"podman restart bonzo-agent-zero",desc:"Restart Agent Zero"},{cmd:"podman logs -f bonzo-agent-zero",desc:"Logi Agent Zero (follow)"},{cmd:"podman logs --tail 100 bonzo-agent-zero",desc:"Ostatnie 100 linii logów"},{cmd:"podman exec -it bonzo-agent-zero bash",desc:"Shell wewnątrz kontenera"},{cmd:"podman exec bonzo-agent-zero python run_ui.py",desc:"Uruchom WebUI wewnątrz kontenera"},{cmd:"podman stats bonzo-agent-zero",desc:"Live stats CPU/RAM kontenera"},{cmd:'podman inspect bonzo-agent-zero | Select-String IPAddress',desc:"IP kontenera"},{cmd:"podman pull agent0ai/agent-zero:latest",desc:"Pobierz najnowszy obraz A0"},{cmd:"podman system prune -af",desc:"Wyczyść nieużywane obrazy/kontenery"},{cmd:"podman network ls",desc:"Lista sieci Podman"},{cmd:"podman volume ls",desc:"Lista wolumenów"}],"🔧 PowerShell — Naprawa & Diagnostyka":[{cmd:"sfc /scannow",desc:"Sprawdź i napraw pliki systemowe Windows"},{cmd:"DISM /Online /Cleanup-Image /RestoreHealth",desc:"Napraw obraz systemu (DISM)"},{cmd:"chkdsk C: /f /r",desc:"Sprawdź dysk C: (wymaga restartu)"},{cmd:"Get-Process | Sort-Object CPU -Descending | Select-Object -First 15",desc:"Top 15 procesów po CPU"},{cmd:'Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 15 Name, @{N="MB";E={[math]::Round($_.WorkingSet64/1MB,1)}}',desc:"Top 15 procesów po RAM"},{cmd:"Get-Service | Where-Object Status -eq 'Running' | Sort-Object DisplayName",desc:"Lista uruchomionych usług"},{cmd:"Get-NetTCPConnection -State Listen | Select-Object LocalPort, OwningProcess | Sort-Object LocalPort",desc:"Porty nasłuchujące"},{cmd:"Test-NetConnection -ComputerName 8.8.8.8 -Port 443",desc:"Test połączenia do Google DNS"},{cmd:"Get-NetAdapter | Select-Object Name, Status, LinkSpeed",desc:"Karty sieciowe i status"},{cmd:"ipconfig /flushdns",desc:"Wyczyść cache DNS"},{cmd:"ipconfig /release; ipconfig /renew",desc:"Odnów adres IP (DHCP)"},{cmd:"netsh winsock reset",desc:"Reset Winsock (naprawa sieci)"},{cmd:"netsh int ip reset",desc:"Reset stosu TCP/IP"},{cmd:"Get-Disk | Select-Object Number, FriendlyName, Size, HealthStatus",desc:"Status dysków"},{cmd:"Get-PnpDevice -Status Error",desc:"Urządzenia z błędami (drivers)"},{cmd:"Get-EventLog -LogName System -EntryType Error -Newest 20",desc:"Ostatnie 20 błędów systemowych"},{cmd:"Get-EventLog -LogName Application -EntryType Error -Newest 20",desc:"Ostatnie 20 błędów aplikacji"},{cmd:"[System.Environment]::OSVersion | Format-List",desc:"Wersja Windows"},{cmd:"Get-ComputerInfo | Select-Object CsName, WindowsVersion, OsArchitecture, CsTotalPhysicalMemory",desc:"Info o systemie"},{cmd:"Clear-RecycleBin -Force",desc:"Opróżnij kosz"},{cmd:'Get-ChildItem $env:TEMP -Recurse | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue',desc:"Wyczyść pliki tymczasowe"},{cmd:"wmic bios get serialnumber",desc:"Numer seryjny BIOS"},{cmd:"powercfg /batteryreport",desc:"Raport baterii (laptopy)"},{cmd:"powercfg /energy",desc:"Raport energii (60s analiza)"}],"⌨️ CMD — Komendy naprawcze":[{cmd:"ping -t google.com",desc:"Ciągły ping (Ctrl+C aby przerwać)"},{cmd:"tracert google.com",desc:"Trasowanie pakietów"},{cmd:"nslookup mybonzo.com",desc:"Sprawdź DNS dla domeny"},{cmd:'netstat -ano | findstr LISTENING',desc:"Porty nasłuchujące z PID"},{cmd:'tasklist /fi "STATUS eq running"',desc:"Lista uruchomionych procesów"},{cmd:"taskkill /f /pid <PID>",desc:"Zabij proces po PID"},{cmd:"systeminfo",desc:"Pełne info systemowe"},{cmd:"gpupdate /force",desc:"Wymuś aktualizację polityk grupowych"},{cmd:"shutdown /r /t 0",desc:"Natychmiastowy restart"},{cmd:"shutdown /s /t 0",desc:"Natychmiastowe wyłączenie"},{cmd:"assoc",desc:"Lista skojarzeń plików"},{cmd:"cipher /w:C:\\",desc:"Nadpisz usunięte dane (secure wipe)"},{cmd:"tree /f > drzewo.txt",desc:"Struktura plików do pliku"},{cmd:"fc plik1.txt plik2.txt",desc:"Porównaj dwa pliki"},{cmd:'reg query HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run',desc:"Programy autostart (rejestr)"}],"🪟 Win+R — Skróty systemowe":[{cmd:"msconfig",desc:"Konfiguracja systemu (autostart, boot)"},{cmd:"devmgmt.msc",desc:"Menedżer urządzeń"},{cmd:"diskmgmt.msc",desc:"Zarządzanie dyskami"},{cmd:"services.msc",desc:"Usługi systemowe"},{cmd:"eventvwr.msc",desc:"Podgląd zdarzeń"},{cmd:"compmgmt.msc",desc:"Zarządzanie komputerem"},{cmd:"control",desc:"Panel sterowania"},{cmd:"appwiz.cpl",desc:"Programy i funkcje (odinstaluj)"},{cmd:"ncpa.cpl",desc:"Połączenia sieciowe"},{cmd:"firewall.cpl",desc:"Zapora Windows"},{cmd:"sysdm.cpl",desc:"Właściwości systemu"},{cmd:"regedit",desc:"Edytor rejestru"},{cmd:"gpedit.msc",desc:"Edytor polityk grupowych (Pro/Enterprise)"},{cmd:"taskschd.msc",desc:"Harmonogram zadań"},{cmd:"perfmon",desc:"Monitor wydajności"},{cmd:"resmon",desc:"Monitor zasobów (CPU/RAM/Disk/Net)"},{cmd:"msinfo32",desc:"Pełne info systemowe (GUI)"},{cmd:"dxdiag",desc:"Diagnostyka DirectX (GPU info)"},{cmd:"cleanmgr",desc:"Oczyszczanie dysku"},{cmd:"optionalfeatures",desc:"Włącz/wyłącz funkcje Windows"},{cmd:"winver",desc:"Wersja Windows"},{cmd:"mstsc",desc:"Pulpit zdalny (RDP)"},{cmd:"notepad",desc:"Notatnik"},{cmd:"calc",desc:"Kalkulator"},{cmd:"cmd",desc:"Wiersz poleceń"},{cmd:"powershell",desc:"PowerShell"},{cmd:"wt",desc:"Windows Terminal"},{cmd:"shell:startup",desc:"Folder autostartu (Explorer)"},{cmd:"shell:sendto",desc:"Folder 'Wyślij do' (Explorer)"},{cmd:"%temp%",desc:"Folder plików tymczasowych"},{cmd:".",desc:"Folder użytkownika (Explorer)"}]};
+
+const DEFAULT_DOD=["npm run build && npm test bez błędów","Testy — coverage ≥ 80%","Wpis w notes/ opisujący zmianę","CLAUDE.md zaktualizowany (jeśli arch)","Git diff — bez secrets, clean commits","Brak dead code bez TODO + GitHub issue"];
+
+const DEFAULT_TASKS=[{text:"Aktualizuj CLAUDE.md jeśli zmienia się architektura",priority:"high",completed:false},{text:"Dodaj nowy wpis do notes/decisions.md po ważnej decyzji",priority:"medium",completed:false},{text:"Generuj snapshot co ~2h aktywnej pracy",priority:"low",completed:false}];
+
+function switchTab(id){
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tabs > .tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function renderSkills(){
+  const q=(document.getElementById('skillsFilter').value||'').toLowerCase();
+  let html='';
+  Object.entries(SKILLS).forEach(([cat,items])=>{
+    const filtered=q?items.filter(s=>(s.name+s.desc+cat).toLowerCase().includes(q)):items;
+    if(filtered.length===0)return;
+    html+=`<div class="acc-header" onclick="toggleAcc(this)"><div><span class="acc-title">${cat}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="acc-count">${filtered.length}</span><span class="acc-arrow">▶</span></div></div>`;
+    html+=`<div class="acc-body">${filtered.map(s=>`<div class="skill-item"><span class="skill-name">${s.name}</span><span class="skill-desc">${s.desc}</span></div>`).join('')}</div>`;
+  });
+  document.getElementById('skillsAccordion').innerHTML=html;
+}
+
+function renderCommands(){
+  const q=(document.getElementById('cmdsFilter').value||'').toLowerCase();
+  let html='';
+  Object.entries(COMMANDS).forEach(([cat,items])=>{
+    const filtered=q?items.filter(c=>(c.cmd+c.desc+cat).toLowerCase().includes(q)):items;
+    if(filtered.length===0)return;
+    html+=`<div class="acc-header" onclick="toggleAcc(this)"><div><span class="acc-title">${cat}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="acc-count">${filtered.length}</span><span class="acc-arrow">▶</span></div></div>`;
+    html+=`<div class="acc-body">${filtered.map(c=>`<div class="cmd-item"><code class="cmd-code" onclick="copyCmd(this)" title="Kliknij aby skopiować">${escHtml(c.cmd)}</code><span class="cmd-desc">${c.desc}</span></div>`).join('')}</div>`;
+  });
+  document.getElementById('cmdsAccordion').innerHTML=html;
+}
+
+function renderDoD(){
+  document.getElementById('dodList').innerHTML=DEFAULT_DOD.map(d=>`<div class="dod-item"><div class="dod-check"></div><span>${d}</span></div>`).join('');
+  document.getElementById('tasksList').innerHTML=DEFAULT_TASKS.map(t=>`<div class="dod-item"><span class="task-priority ${t.priority}">${t.priority}</span><span>${t.text}</span></div>`).join('');
+}
+
+function toggleAcc(el){
+  el.classList.toggle('open');
+  const body=el.nextElementSibling;
+  if(body)body.classList.toggle('open');
+}
+
+function copyCmd(el){
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    const msg=document.getElementById('copiedMsg');
+    msg.style.display='block';
+    setTimeout(()=>msg.style.display='none',1500);
+  });
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+renderSkills();renderCommands();renderDoD();
+</script>
+</body>
+</html>

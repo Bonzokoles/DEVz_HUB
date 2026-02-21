@@ -1,0 +1,222 @@
+# Cloudflare Infrastructure Configuration
+# JIMBO Dashboard - Services & Costs
+
+# ===========================================
+# ACCOUNT & ZONES
+# ===========================================
+
+account:
+  id: "YOUR_ACCOUNT_ID"
+  name: "JIMBO Inc"
+  plan: "Workers Paid"
+
+zones:
+  - id: "ZONE_ID_1"
+    domain: "mybonzo.com"
+    plan: "Pro"
+
+  - id: "ZONE_ID_2"
+    domain: "whitecat.pl"
+    plan: "Pro"
+
+# ===========================================
+# WORKERS CONFIGURATION
+# ===========================================
+
+workers:
+  whitecat-api:
+    name: "whitecat-product-api"
+    description: "Main product API for WHITECAT"
+    route: "api.whitecat.pl/*"
+    runtime: "nodejs"
+    memory: 128
+    timeout: 30
+
+    pricing:
+      requests_included: 10000000
+      overage_per_million: 0.50
+      cpu_ms_included: 40000000
+
+    usage:
+      requests_daily: 10000
+      cpu_ms_avg: 15
+      estimated_monthly: "$5.00"
+
+  moa-orchestrator:
+    name: "moa-pipeline-orchestrator"
+    description: "MOA content generation pipeline"
+    route: "moa.mybonzo.com/*"
+    runtime: "nodejs"
+    memory: 256
+    timeout: 60
+
+    pricing:
+      requests_included: 10000000
+      overage_per_million: 0.50
+
+    usage:
+      requests_daily: 1000
+      estimated_monthly: "$2.00"
+
+  x402-payment:
+    name: "x402-micropayment-handler"
+    description: "x402 protocol micropayments"
+    route: "pay.mybonzo.com/*"
+    runtime: "nodejs"
+    memory: 128
+    timeout: 15
+
+    pricing:
+      requests_included: 10000000
+      overage_per_million: 0.50
+
+    usage:
+      requests_daily: 500
+      estimated_monthly: "$1.00"
+      revenue_per_call: 0.01
+
+  content-delivery:
+    name: "whitecat-cdn"
+    description: "Content delivery and caching"
+    route: "cdn.whitecat.pl/*"
+    runtime: "nodejs"
+    memory: 64
+    timeout: 10
+
+    usage:
+      requests_daily: 50000
+      estimated_monthly: "$10.00"
+
+# ===========================================
+# D1 DATABASES
+# ===========================================
+
+d1_databases:
+  whitecat-products:
+    name: "whitecat-products-db"
+    description: "Product catalog database"
+
+    pricing:
+      rows_read_included: 5000000
+      rows_written_included: 100000
+      overage_per_million_read: 1.00
+      overage_per_million_write: 5.00
+      storage_included_gb: 5
+      storage_overage_per_gb: 5.00
+
+    usage:
+      size_mb: 500
+      rows_total: 10000
+      queries_daily: 5000
+      estimated_monthly: "$5.00"
+
+  moa-cache:
+    name: "moa-response-cache"
+    description: "MOA pipeline cache"
+
+    usage:
+      size_mb: 100
+      queries_daily: 10000
+      estimated_monthly: "$3.00"
+
+# ===========================================
+# R2 STORAGE
+# ===========================================
+
+r2_buckets:
+  whitecat-images:
+    name: "whitecat-product-images"
+    description: "Product images storage"
+
+    pricing:
+      storage_per_gb: 0.015
+      class_a_operations_per_million: 4.50
+      class_b_operations_per_million: 0.36
+
+    usage:
+      size_gb: 10
+      objects: 5000
+      operations_daily: 2000
+      estimated_monthly: "$0.50"
+
+  generated-content:
+    name: "whitecat-generated-content"
+    description: "AI generated content storage"
+
+    usage:
+      size_gb: 2
+      objects: 1000
+      estimated_monthly: "$0.10"
+
+# ===========================================
+# KV NAMESPACES
+# ===========================================
+
+kv_namespaces:
+  moa-session:
+    name: "MOA session state"
+    description: "Pipeline session management"
+
+    pricing:
+      storage_per_gb: 0.50
+      reads_per_million: 0.50
+      writes_per_million: 5.00
+
+    usage:
+      keys: 500
+      estimated_monthly: "$1.00"
+
+  rate-limiter:
+    name: "API rate limiter"
+    description: "Rate limiting counters"
+
+    usage:
+      keys: 1000
+      estimated_monthly: "$0.50"
+
+# ===========================================
+# HYPERDRIVE (PostgreSQL)
+# ===========================================
+
+hyperdrive:
+  whitecat-postgres:
+    name: "whitecat-postgres-connection"
+    description: "PostgreSQL connection pooling"
+
+    connection:
+      host: "your-postgres-host.com"
+      port: 5432
+      database: "whitecat"
+
+    pricing:
+      included_requests: 10000000
+      overage_per_million: 0.10
+
+    usage:
+      connections: 10
+      requests_daily: 5000
+      estimated_monthly: "$5.00"
+
+# ===========================================
+# COST SUMMARY
+# ===========================================
+
+cost_summary:
+  monthly_budget: 100.00
+
+  breakdown:
+    workers: $18.00
+    d1_databases: $8.00
+    r2_storage: $0.60
+    kv_namespaces: $1.50
+    hyperdrive: $5.00
+
+  total_estimated: $33.10
+  remaining_budget: $66.90
+
+  notes: |
+    - Workers Paid plan: $5/month minimum
+    - D1: Free tier generous for current usage
+    - R2: Very cost effective for storage
+    - KV: Minimal cost for session management
+    - Hyperdrive: Worth it for PostgreSQL pooling

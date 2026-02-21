@@ -1,0 +1,47 @@
+# Node
+node_modules/
+npm-debug.log*
+.npm
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.env
+venv/
+env/
+
+# Observable build output
+observable/.observablehq/cache/
+observable/dist/
+
+# Backups & temp
+backups/
+_terminal_temp/
+*.bak
+
+# Logs
+*.log
+debug.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Sensitive / large data
+*.db
+*.sqlite
+*.chroma/
+chroma_db/

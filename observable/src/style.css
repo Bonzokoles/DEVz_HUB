@@ -1,0 +1,363 @@
+/* ==============================================
+   DEVz HUB — Observable Theme Override
+   Dokładne dopasowanie do głównego dashboardu
+   ============================================== */
+
+/* --- Override Observable Framework theme vars --- */
+:root,
+:root[data-theme="dark"],
+:root[data-theme="dashboard"] {
+  /* Tła — identyczne z DEVz HUB main.css */
+  --theme-background: #07090f;
+  --theme-background-alt: #0b0f1a;
+
+  /* Tekst */
+  --theme-foreground: #e5e5e5;
+  --theme-foreground-muted: #737373;
+  --theme-foreground-faint: rgba(255,255,255,0.07);
+  --theme-foreground-faintest: rgba(255,255,255,0.05);
+  --theme-foreground-focus: #00FF41;
+
+  /* Accent — zielony DEVz */
+  --accent: #00FF41;
+  --accent-dim: rgba(0,255,65,0.25);
+  --accent-glow: rgba(0,255,65,0.12);
+  --cyan: #00d9ff;
+  --purple: #a855f7;
+  --indigo: #6366f1;
+
+  /* Powierzchnie */
+  --surface: rgba(255,255,255,0.03);
+  --surface-hover: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.07);
+
+  color-scheme: dark;
+}
+
+/* --- Body & global --- */
+body {
+  background: #07090f !important;
+  color: #e5e5e5;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Sidebar Observable --- */
+#observablehq-sidebar {
+  background: linear-gradient(180deg, #0c1020 0%, #080b14 100%) !important;
+  border-right-color: var(--border) !important;
+}
+
+#observablehq-sidebar a {
+  color: #737373 !important;
+  transition: color 0.2s, background 0.2s;
+}
+
+#observablehq-sidebar a:hover {
+  color: #e5e5e5 !important;
+  background: rgba(255,255,255,0.03);
+}
+
+#observablehq-sidebar a[aria-current="page"],
+#observablehq-sidebar a.active {
+  color: var(--accent) !important;
+  background: var(--accent-glow) !important;
+  border-color: var(--accent-dim) !important;
+}
+
+#observablehq-sidebar summary,
+#observablehq-sidebar h2 {
+  color: #525252 !important;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* --- Header & logo --- */
+#observablehq-header {
+  background: rgba(11,15,26,0.85) !important;
+  backdrop-filter: blur(8px);
+  border-bottom-color: var(--border) !important;
+}
+
+/* --- Main content area --- */
+#observablehq-main,
+#observablehq-center,
+main {
+  background: #07090f !important;
+}
+
+/* --- Cards — dopasowanie do moduleCard DEVz HUB --- */
+.card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 1.5rem;
+  transition: all 0.25s;
+}
+
+.card:hover {
+  border-color: rgba(255,255,255,0.14);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.card h3 {
+  margin-top: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #737373;
+}
+
+.card .big-number {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0.5rem 0;
+  color: #ffffff;
+}
+
+.card .subtitle {
+  font-size: 0.8rem;
+  color: #737373;
+}
+
+/* --- Status badges --- */
+.status-ok { color: #4ade80; }
+.status-warn { color: #facc15; }
+.status-err { color: #f87171; }
+
+/* --- Grids --- */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+}
+
+/* --- Hero --- */
+.hero {
+  text-align: center;
+  padding: 2rem 1rem;
+  position: relative;
+}
+
+.hero h2 {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: #737373;
+}
+
+/* --- Nagłówki stron --- */
+h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+h2 {
+  color: #e5e5e5;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+/* --- Observable Plot overrides --- */
+figure[class*="plot"] {
+  background: transparent !important;
+}
+
+svg[class*="plot"] {
+  color: #e5e5e5;
+}
+
+/* Axis and grid styling */
+[aria-label="x-axis tick label"],
+[aria-label="y-axis tick label"] {
+  fill: #737373 !important;
+}
+
+[aria-label="x-axis tick"],
+[aria-label="y-axis tick"] {
+  stroke: rgba(255,255,255,0.07) !important;
+}
+
+/* Plot title */
+text[aria-label="title"] {
+  fill: #e5e5e5 !important;
+  font-weight: 600 !important;
+}
+
+/* Plot grid lines */
+.plot g[aria-label="rule"] line,
+g[aria-label="grid"] line {
+  stroke: rgba(255,255,255,0.06) !important;
+}
+
+/* --- Inputs.table — dopasowanie do DEVz HUB style --- */
+table, .observablehq--table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+table th,
+.observablehq--table th {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+  color: #737373;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: transparent;
+}
+
+table td,
+.observablehq--table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: #e5e5e5;
+}
+
+table tr:hover td,
+.observablehq--table tr:hover td {
+  background: rgba(255,255,255,0.03);
+}
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+table.data-table th {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+  color: #737373;
+  font-weight: 600;
+}
+
+table.data-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* --- Mermaid overrides --- */
+.mermaid,
+pre.mermaid {
+  background: transparent !important;
+}
+
+.mermaid .node rect,
+.mermaid .node polygon {
+  rx: 8;
+  ry: 8;
+}
+
+/* --- Links --- */
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* --- Code blocks --- */
+code, pre {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  color: #e5e5e5;
+}
+
+pre {
+  padding: 1rem;
+}
+
+/* --- Scrollbar — identyczny z DEVz HUB --- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #737373; }
+
+/* --- Observable search input --- */
+#observablehq-search input {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.07) !important;
+  color: #e5e5e5 !important;
+  border-radius: 8px;
+}
+
+#observablehq-search input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-glow) !important;
+}
+
+/* --- Pager navigation --- */
+#observablehq-footer {
+  background: #07090f !important;
+  border-top-color: var(--border) !important;
+}
+
+#observablehq-footer a {
+  color: #737373 !important;
+}
+
+#observablehq-footer a:hover {
+  color: var(--accent) !important;
+}
+
+/* --- Selection input styling --- */
+input[type="range"] {
+  accent-color: var(--accent);
+}
+
+select, input[type="text"], input[type="number"] {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #e5e5e5;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+}
+
+select:focus, input[type="text"]:focus, input[type="number"]:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+/* --- Tooltip --- */
+[role="tooltip"] {
+  background: #0b0f1a !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: #e5e5e5 !important;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+/* --- ul/li --- */
+ul {
+  padding-left: 1.2rem;
+}
+
+li {
+  margin-bottom: 0.3rem;
+  color: #e5e5e5;
+  line-height: 1.6;
+}

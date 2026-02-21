@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Library</title>
+<style>
+:root{--bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--b:rgba(255,255,255,0.07);--a:#00d9ff;--a2:#7c3aed;--g:#4ade80;--y:#facc15;--r:#f87171;--t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:20px;min-height:100vh}
+h2{font-size:1.3rem;font-weight:700;color:var(--ts);margin-bottom:4px}
+.sub{color:var(--m);font-size:12px;margin-bottom:16px}
+.section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--d);margin:20px 0 10px}
+.glass{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:16px}
+.tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border:1px solid var(--b);border-radius:6px;background:var(--s);color:var(--m);font-size:11px;cursor:pointer;transition:all .2s}
+.tab.active,.tab:hover{background:rgba(0,217,255,.1);border-color:var(--a);color:var(--a)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.filter{width:100%;padding:8px 14px;background:var(--bg2);border:1px solid var(--b);border-radius:6px;color:var(--ts);font-size:12px;margin-bottom:12px;outline:none}
+.filter:focus{border-color:var(--a)}
+table{width:100%;border-collapse:separate;border-spacing:0 2px}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--d);text-align:left;padding:5px 8px;position:sticky;top:0;background:var(--bg)}
+td{padding:6px 8px;font-size:11px;background:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.03)}
+td:first-child{border-left:1px solid rgba(255,255,255,0.03);border-radius:4px 0 0 4px}
+td:last-child{border-right:1px solid rgba(255,255,255,0.03);border-radius:0 4px 4px 0}
+td.w{color:var(--ts);font-weight:600}
+td.a{color:var(--a)}
+.badge{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.cat-stt{background:rgba(99,102,241,.12);color:#818cf8}
+.cat-tts{background:rgba(236,72,153,.12);color:#f472b6}
+.cat-vision{background:rgba(0,217,255,.12);color:var(--a)}
+.cat-image{background:rgba(74,222,128,.12);color:var(--g)}
+.cat-video{background:rgba(248,113,113,.12);color:var(--r)}
+.cat-music{background:rgba(250,204,21,.12);color:var(--y)}
+.cat-nlp{background:rgba(124,58,237,.12);color:#a78bfa}
+.cat-embed{background:rgba(20,184,166,.12);color:#2dd4bf}
+.cat-safety{background:rgba(251,146,60,.12);color:#fb923c}
+.cat-multi{background:rgba(96,165,250,.12);color:#60a5fa}
+.tool-card{padding:12px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px}
+.tool-icon{font-size:20px}
+.tool-name{font-size:13px;font-weight:700;color:var(--ts)}
+.tool-cat{font-size:9px;color:var(--a);text-transform:uppercase;letter-spacing:.5px}
+.tool-desc{font-size:10px;color:var(--m);line-height:1.4}
+.tool-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.tag{padding:1px 5px;background:var(--bg2);border:1px solid var(--b);border-radius:3px;font-size:8px;color:var(--d)}
+.prov-card{padding:14px;position:relative;overflow:hidden;border-left:3px solid var(--a)}
+.prov-name{font-size:14px;font-weight:700;color:var(--ts);margin-bottom:2px}
+.prov-strength{font-size:10px;color:var(--m);margin:4px 0;line-height:1.4}
+.prov-pricing{font-size:10px;color:var(--a);font-family:monospace}
+.prov-specs{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.uc-row{display:grid;grid-template-columns:180px 1fr 1fr 2fr;gap:10px;padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px;align-items:start}
+.uc-row:last-child{border:none}
+.uc-task{color:var(--ts);font-weight:600}
+.uc-best{color:var(--g)}
+.uc-alt{color:var(--a)}
+.uc-why{color:var(--m);font-size:10px}
+.counter{font-size:24px;font-weight:700;color:var(--a)}
+.counter-label{font-size:9px;color:var(--d);text-transform:uppercase;letter-spacing:.8px}
+</style>
+</head>
+<body>
+<h2>AI Library</h2>
+<p class="sub">Kompletna biblioteka modeli eksperckich, narzedzi i providerow AI</p>
+
+<!-- Counters -->
+<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+  <div class="glass" style="flex:1;min-width:100px;text-align:center;padding:12px"><div class="counter" id="cntModels">0</div><div class="counter-label">Expert Models</div></div>
+  <div class="glass" style="flex:1;min-width:100px;text-align:center;padding:12px"><div class="counter" id="cntTools">0</div><div class="counter-label">Tools & Platforms</div></div>
+  <div class="glass" style="flex:1;min-width:100px;text-align:center;padding:12px"><div class="counter" id="cntProviders">0</div><div class="counter-label">AI Providers</div></div>
+  <div class="glass" style="flex:1;min-width:100px;text-align:center;padding:12px"><div class="counter" id="cntUseCases">0</div><div class="counter-label">Use Cases</div></div>
+</div>
+
+<!-- Main tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('expert')">Expert Models</div>
+  <div class="tab" onclick="switchTab('tools')">Tools & Platforms</div>
+  <div class="tab" onclick="switchTab('providers')">AI Providers</div>
+  <div class="tab" onclick="switchTab('usecases')">Use Cases</div>
+  <div class="tab" onclick="switchTab('openclaw')">OpenClaw Models</div>
+</div>
+
+<!-- Expert Models Tab -->
+<div id="tab-expert" class="tab-content active">
+  <div class="tabs" id="catTabs"></div>
+  <input type="text" class="filter" id="expertFilter" placeholder="Szukaj modeli..." oninput="filterExperts()">
+  <div style="max-height:60vh;overflow-y:auto">
+    <table>
+      <thead><tr><th>Model</th><th>Cat</th><th>Provider</th><th>Cena</th><th>Unit</th><th>Specyfikacja</th><th>Jakosc</th></tr></thead>
+      <tbody id="expertBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Tools Tab -->
+<div id="tab-tools" class="tab-content">
+  <input type="text" class="filter" id="toolsFilter" placeholder="Szukaj narzedzi..." oninput="filterTools()">
+  <div class="grid" id="toolsGrid"></div>
+</div>
+
+<!-- Providers Tab -->
+<div id="tab-providers" class="tab-content">
+  <div class="grid" id="providersGrid"></div>
+</div>
+
+<!-- Use Cases Tab -->
+<div id="tab-usecases" class="tab-content">
+  <div class="glass">
+    <div class="uc-row" style="font-weight:700;color:var(--d);font-size:9px;text-transform:uppercase;letter-spacing:.8px">
+      <div>Zadanie</div><div>Najlepszy</div><div>Alternatywa</div><div>Dlaczego</div>
+    </div>
+    <div id="usecasesBody"></div>
+  </div>
+</div>
+
+<!-- OpenClaw Tab -->
+<div id="tab-openclaw" class="tab-content">
+  <div class="glass">
+    <table>
+      <thead><tr><th>Provider</th><th>Model</th><th>ID</th><th>Status</th></tr></thead>
+      <tbody id="openclawBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const EXPERT_MODELS=[{name:"Whisper Large V3",cat:"stt",provider:"OpenAI",price:"$0.006",unit:"per 60s",spec:"Najlepsza jakość STT, 99 języków, timestamps",quality:"⭐⭐⭐⭐⭐"},{name:"Nova-3",cat:"stt",provider:"Deepgram",price:"$0.0052",unit:"per 60s",spec:"Najszybsza STT, real-time streaming, diarization",quality:"⭐⭐⭐⭐⭐"},{name:"Chirp Universal",cat:"stt",provider:"Google",price:"$0.024",unit:"per 60s",spec:"300+ wariantów językowych, medical/phone models",quality:"⭐⭐⭐⭐"},{name:"Azure Speech",cat:"stt",provider:"Microsoft",price:"$0.017",unit:"per 60s",spec:"Custom models, real-time + batch, pronunciation",quality:"⭐⭐⭐⭐"},{name:"Transcribe",cat:"stt",provider:"Amazon",price:"$0.024",unit:"per 60s",spec:"Medical transcription, call analytics, streaming",quality:"⭐⭐⭐⭐"},{name:"Gladia",cat:"stt",provider:"Gladia",price:"$0.010",unit:"per 60s",spec:"Audio intelligence, summary + sentiment + chapters",quality:"⭐⭐⭐⭐"},{name:"AssemblyAI Universal-2",cat:"stt",provider:"AssemblyAI",price:"$0.012",unit:"per 60s",spec:"LeMUR (LLM na transkrypcie), PII redaction, speakers",quality:"⭐⭐⭐⭐⭐"},{name:"Eleven Multilingual V2",cat:"tts",provider:"ElevenLabs",price:"$0.30",unit:"per 1K chars",spec:"Ultra-realistyczne głosy, voice cloning, 29 języków",quality:"⭐⭐⭐⭐⭐"},{name:"Play3.0-mini",cat:"tts",provider:"PlayHT",price:"$0.08",unit:"per 1K chars",spec:"Ultra-low latency, emotion control, streaming",quality:"⭐⭐⭐⭐"},{name:"XTTS-v2",cat:"tts",provider:"Coqui",price:"Free/OSS",unit:"—",spec:"Open source, voice cloning z 6s próbki, 17 języków",quality:"⭐⭐⭐⭐"},{name:"Azure Neural TTS",cat:"tts",provider:"Microsoft",price:"$0.016",unit:"per 1K chars",spec:"400+ głosów, SSML control, Custom Neural Voice",quality:"⭐⭐⭐⭐⭐"},{name:"Polly Neural",cat:"tts",provider:"Amazon",price:"$0.016",unit:"per 1K chars",spec:"Newscaster style, NTTS, 60+ głosów",quality:"⭐⭐⭐⭐"},{name:"Bark",cat:"tts",provider:"Suno (OSS)",price:"Free/OSS",unit:"—",spec:"Generative audio — śmiech, muzyka, efekty w tekście",quality:"⭐⭐⭐"},{name:"GPT-4o Vision",cat:"vision",provider:"OpenAI",price:"$2.50",unit:"per 1M tokens",spec:"Najlepsze rozumienie obrazów, charts, documents",quality:"⭐⭐⭐⭐⭐"},{name:"Claude 3.5 Vision",cat:"vision",provider:"Anthropic",price:"$3.00",unit:"per 1M tokens",spec:"Doskonały OCR, charts, diagramy, screenshots",quality:"⭐⭐⭐⭐⭐"},{name:"Document AI",cat:"vision",provider:"Google",price:"$0.065",unit:"per page",spec:"Ekstrakcja tabel, formularzy, faktur, paragonów",quality:"⭐⭐⭐⭐⭐"},{name:"Textract",cat:"vision",provider:"Amazon",price:"$0.015",unit:"per page",spec:"OCR, tabele, identity docs, expense analysis",quality:"⭐⭐⭐⭐"},{name:"PaddleOCR",cat:"vision",provider:"PaddlePaddle (OSS)",price:"Free/OSS",unit:"—",spec:"Multilingual OCR, table recognition, layout analysis",quality:"⭐⭐⭐⭐"},{name:"Surya",cat:"vision",provider:"VikParuchuri (OSS)",price:"Free/OSS",unit:"—",spec:"OCR 90+ języków, table detection, reading order",quality:"⭐⭐⭐⭐"},{name:"FLUX.1 Pro",cat:"image",provider:"Black Forest Labs",price:"$0.05",unit:"per image",spec:"Najlepsza jakość, photorealizm, 6-step generation",quality:"⭐⭐⭐⭐⭐"},{name:"DALL·E 3 HD",cat:"image",provider:"OpenAI",price:"$0.08",unit:"per image",spec:"Prompt adherence, text rendering w obrazach",quality:"⭐⭐⭐⭐⭐"},{name:"Stable Diffusion 3.5",cat:"image",provider:"Stability AI",price:"$0.03",unit:"per image",spec:"Open weights, ControlNet, LoRA, inpainting",quality:"⭐⭐⭐⭐"},{name:"Midjourney V6.1",cat:"image",provider:"Midjourney",price:"$0.05",unit:"per image",spec:"Artystyczny styl, coherent compositions, upscale",quality:"⭐⭐⭐⭐⭐"},{name:"Ideogram 2.0",cat:"image",provider:"Ideogram",price:"$0.04",unit:"per image",spec:"Najlepszy text-in-image, logo generation, design",quality:"⭐⭐⭐⭐⭐"},{name:"Recraft V3",cat:"image",provider:"Recraft",price:"$0.04",unit:"per image",spec:"Vector SVG generation, brand-style graphics",quality:"⭐⭐⭐⭐"},{name:"Leonardo Phoenix",cat:"image",provider:"Leonardo.Ai",price:"$0.02",unit:"per image",spec:"Game assets, character design, consistent styles",quality:"⭐⭐⭐⭐"},{name:"Sora",cat:"video",provider:"OpenAI",price:"$0.40",unit:"per 5s clip",spec:"Fizycznie realistyczne wideo, camera control",quality:"⭐⭐⭐⭐⭐"},{name:"Kling 1.6",cat:"video",provider:"Kuaishou",price:"$0.20",unit:"per 5s clip",spec:"Motion brush, lip sync, face swap, 1080p",quality:"⭐⭐⭐⭐"},{name:"Runway Gen-3 Alpha",cat:"video",provider:"Runway",price:"$0.25",unit:"per 5s clip",spec:"Motion control, first/last frame, temporal coherence",quality:"⭐⭐⭐⭐⭐"},{name:"Luma Dream Machine",cat:"video",provider:"Luma AI",price:"$0.15",unit:"per 5s clip",spec:"Text/image-to-video, keyframe interpolation",quality:"⭐⭐⭐⭐"},{name:"Pika 2.0",cat:"video",provider:"Pika Labs",price:"$0.10",unit:"per 4s clip",spec:"Scene ingredients, style transfer, pikaffects",quality:"⭐⭐⭐⭐"},{name:"Veo 2",cat:"video",provider:"Google DeepMind",price:"$0.30",unit:"per 5s clip",spec:"4K output, cinematic camera, 8s clips, SynthID watermark",quality:"⭐⭐⭐⭐⭐"},{name:"Udio v2",cat:"music",provider:"Udio",price:"$0.05",unit:"per track",spec:"Pełne piosenki 3min+, lyrics, 50+ gatunków",quality:"⭐⭐⭐⭐⭐"},{name:"Suno V4",cat:"music",provider:"Suno",price:"$0.05",unit:"per track",spec:"Text-to-music, custom vocals, covers, remix",quality:"⭐⭐⭐⭐⭐"},{name:"MusicGen Large",cat:"music",provider:"Meta (OSS)",price:"Free/OSS",unit:"—",spec:"Text/melody-to-music, 32kHz, stereo, 30s",quality:"⭐⭐⭐⭐"},{name:"Stable Audio 2.0",cat:"music",provider:"Stability AI",price:"$0.02",unit:"per 45s",spec:"Music + sound effects, 44.1kHz stereo, 3min",quality:"⭐⭐⭐⭐"},{name:"AudioCraft (Encodec)",cat:"music",provider:"Meta (OSS)",price:"Free/OSS",unit:"—",spec:"Audio compression + generation + enhancement",quality:"⭐⭐⭐"},{name:"DeepL Pro",cat:"nlp",provider:"DeepL",price:"$25",unit:"per 1M chars",spec:"Najlepsza jakość tłumaczeń, 33 języki, glossary",quality:"⭐⭐⭐⭐⭐"},{name:"NLLB-200",cat:"nlp",provider:"Meta (OSS)",price:"Free/OSS",unit:"—",spec:"200 języków, low-resource languages, 54B params",quality:"⭐⭐⭐⭐"},{name:"Sapling",cat:"nlp",provider:"Sapling AI",price:"$0.001",unit:"per suggestion",spec:"Grammar/spelling/style, customer support augmentation",quality:"⭐⭐⭐⭐"},{name:"Comprehend",cat:"nlp",provider:"Amazon",price:"$0.001",unit:"per unit",spec:"Sentiment, entities, key phrases, PII detection",quality:"⭐⭐⭐⭐"},{name:"Text Analytics",cat:"nlp",provider:"Microsoft",price:"$0.001",unit:"per record",spec:"Sentiment, NER, key phrases, language detection, health NLP",quality:"⭐⭐⭐⭐"},{name:"spaCy v3",cat:"nlp",provider:"Explosion (OSS)",price:"Free/OSS",unit:"—",spec:"NER, POS, dependency parsing, 75+ języków, fastest NLP",quality:"⭐⭐⭐⭐⭐"},{name:"text-embedding-3-large",cat:"embed",provider:"OpenAI",price:"$0.13",unit:"per 1M tokens",spec:"3072 dims, shortening, najlepsza jakość retrievalu",quality:"⭐⭐⭐⭐⭐"},{name:"Voyage-3-large",cat:"embed",provider:"Voyage AI",price:"$0.18",unit:"per 1M tokens",spec:"Code + text embeddings, superior retrieval, 32K context",quality:"⭐⭐⭐⭐⭐"},{name:"Cohere Embed v3",cat:"embed",provider:"Cohere",price:"$0.10",unit:"per 1M tokens",spec:"Multilingual 100+, compression, int8/binary modes",quality:"⭐⭐⭐⭐⭐"},{name:"Jina Embeddings V3",cat:"embed",provider:"Jina AI",price:"$0.02",unit:"per 1M tokens",spec:"8K context, task-specific LoRA, multilingual, matryoshka",quality:"⭐⭐⭐⭐"},{name:"BGE M3",cat:"embed",provider:"BAAI (OSS)",price:"Free/OSS",unit:"—",spec:"Dense+sparse+colbert, multi-lingual, multi-granularity",quality:"⭐⭐⭐⭐⭐"},{name:"Nomic Embed V2",cat:"embed",provider:"Nomic (OSS)",price:"Free/OSS",unit:"—",spec:"Open weights, 8K context, Matryoshka, multimodal",quality:"⭐⭐⭐⭐"},{name:"Omni Moderation",cat:"safety",provider:"OpenAI",price:"Free",unit:"—",spec:"Text + image safety: hate, violence, self-harm, sexual",quality:"⭐⭐⭐⭐⭐"},{name:"Llama Guard 3",cat:"safety",provider:"Meta (OSS)",price:"Free/OSS",unit:"—",spec:"Input/output guardrails, 13 harm categories, multilingual",quality:"⭐⭐⭐⭐"},{name:"Perspective API",cat:"safety",provider:"Google/Jigsaw",price:"Free (QPS)",unit:"—",spec:"Toxicity, threat, insult, profanity scoring",quality:"⭐⭐⭐⭐"},{name:"Azure Content Safety",cat:"safety",provider:"Microsoft",price:"$1.00",unit:"per 1K images",spec:"Text + image, severity levels, custom blocklists",quality:"⭐⭐⭐⭐⭐"},{name:"NeMo Guardrails",cat:"safety",provider:"NVIDIA (OSS)",price:"Free/OSS",unit:"—",spec:"Programmable guardrails, topic control, jailbreak prevention",quality:"⭐⭐⭐⭐"},{name:"GPT-4o",cat:"multi",provider:"OpenAI",price:"$2.50/$10",unit:"in/out per 1M",spec:"Text+Vision+Audio native, tool use, JSON mode",quality:"⭐⭐⭐⭐⭐"},{name:"Gemini 2.0 Flash",cat:"multi",provider:"Google",price:"$0.10/$0.40",unit:"in/out per 1M",spec:"1M context, native multimodal, grounding, code exec",quality:"⭐⭐⭐⭐⭐"},{name:"Claude Sonnet 4",cat:"multi",provider:"Anthropic",price:"$3/$15",unit:"in/out per 1M",spec:"Vision, PDF parsing, extended thinking, tool use, code",quality:"⭐⭐⭐⭐⭐"},{name:"Pixtral Large",cat:"multi",provider:"Mistral",price:"$2/$6",unit:"in/out per 1M",spec:"128K context, 123B params, superior chart/doc understanding",quality:"⭐⭐⭐⭐"},{name:"InternVL2.5 78B",cat:"multi",provider:"Shanghai AI Lab (OSS)",price:"Free/OSS",unit:"—",spec:"Open SOTA multimodal, video understanding, OCR, math",quality:"⭐⭐⭐⭐⭐"},{name:"Qwen2.5-VL 72B",cat:"multi",provider:"Alibaba (OSS)",price:"Free/OSS",unit:"—",spec:"Video 20min+, agent GUI control, document parsing, multilingual",quality:"⭐⭐⭐⭐⭐"}];
+
+const AI_TOOLS=[{name:"Eden AI",icon:"🧬",cat:"Agregator API",desc:"507 modeli, 52 providerów. Unified API do STT, TTS, OCR, NLP, Image, Video.",tags:["unified-api","marketplace","expert-models"]},{name:"Replicate",icon:"🔄",cat:"Model Hosting",desc:"Run any ML model via API. Serverless GPU. 50K+ publicznych modeli.",tags:["serverless","gpu","open-source"]},{name:"Hugging Face",icon:"🤗",cat:"Hub & Inference",desc:"1M+ modeli, 200K+ datasetów. Spaces, Inference API, Transformers library.",tags:["hub","open-source","community"]},{name:"RunPod",icon:"🚀",cat:"GPU Cloud",desc:"Tanie GPU (A100 od $1.64/h, H100 od $3.29/h). Serverless endpoints.",tags:["gpu","serverless","cheap"]},{name:"Together AI",icon:"🤝",cat:"Inference API",desc:"Najszybszy inference open-source modeli. $0.20/M tokens.",tags:["fast-inference","open-source","cheap"]},{name:"Groq",icon:"⚡",cat:"Inference (LPU)",desc:"Najszybszy inference na świecie — LPU hardware. Free tier.",tags:["ultra-fast","free-tier","hardware"]},{name:"Fireworks AI",icon:"🎆",cat:"Inference API",desc:"Fastest open model API. Function calling, JSON mode, compound AI.",tags:["fast","enterprise","compound-ai"]},{name:"Perplexity",icon:"🔍",cat:"AI Search",desc:"AI-powered search z cytatami. Sonar API. Real-time web data.",tags:["search","citations","real-time"]},{name:"LangChain",icon:"🦜",cat:"Framework",desc:"Framework do budowy AI apps. Chains, agents, RAG. LangGraph.",tags:["framework","agents","rag"]},{name:"LlamaIndex",icon:"🦙",cat:"Data Framework",desc:"Framework do RAG i data agents. 160+ connectors.",tags:["rag","data","connectors"]},{name:"Weights & Biases",icon:"📊",cat:"MLOps",desc:"Experiment tracking, model registry, dataset versioning.",tags:["mlops","tracking","experiments"]},{name:"Vercel AI SDK",icon:"▲",cat:"SDK / Framework",desc:"TypeScript toolkit do AI apps. Streaming, tools, multi-provider.",tags:["typescript","streaming","frontend"]},{name:"CrewAI",icon:"👥",cat:"Multi-Agent",desc:"Multi-agent orchestration. Role-based AI agents.",tags:["multi-agent","orchestration","roles"]},{name:"AutoGen",icon:"🤖",cat:"Multi-Agent",desc:"Microsoft multi-agent framework. Konwersacyjne agenty.",tags:["multi-agent","microsoft","conversation"]},{name:"Ollama",icon:"🦙",cat:"Local LLM",desc:"Uruchom LLM lokalnie. Llama, Mistral, Phi. Free.",tags:["local","free","offline"]},{name:"LM Studio",icon:"🖥️",cat:"Local LLM",desc:"Desktop app do lokalnych LLMów. GGUF models, chat UI.",tags:["local","desktop","gui"]},{name:"Unsloth",icon:"🦥",cat:"Fine-tuning",desc:"2x szybszy fine-tuning, 60% mniej VRAM. LoRA/QLoRA.",tags:["fine-tuning","efficient","lora"]},{name:"Modal",icon:"📦",cat:"Serverless GPU",desc:"Serverless cloud functions z GPU. Python-native. Cold start <1s.",tags:["serverless","gpu","python"]},{name:"Pinecone",icon:"🌲",cat:"Vector DB",desc:"Managed vector database. Serverless, hybrid search.",tags:["vector-db","managed","search"]},{name:"Weaviate",icon:"🔮",cat:"Vector DB",desc:"Open-source vector DB. Hybrid search, multi-tenancy.",tags:["vector-db","open-source","hybrid"]},{name:"n8n",icon:"🔗",cat:"AI Automation",desc:"Low-code workflow automation z AI nodes. 400+ integracji.",tags:["automation","low-code","workflows"]},{name:"Dify",icon:"🎯",cat:"AI App Builder",desc:"Open-source LLM app development. Visual workflow, RAG.",tags:["app-builder","open-source","visual"]},{name:"Helicone",icon:"☀️",cat:"Observability",desc:"LLM observability. Logging, caching, rate limiting.",tags:["observability","logging","caching"]},{name:"PromptLayer",icon:"📝",cat:"Prompt Management",desc:"Prompt versioning, A/B testing, analytics.",tags:["prompts","versioning","analytics"]}];
+
+const AI_PROVIDERS=[{name:"OpenAI",icon:"🟢",spec:["LLM (GPT-4o, o3)","Image (DALL·E 3)","STT (Whisper)","TTS","Embeddings","Moderation"],strength:"Najszerszy ekosystem, best-in-class multi-modal",pricing:"$5-200/mln tokens",color:"#10b981"},{name:"Anthropic",icon:"🟣",spec:["LLM (Claude 4 family)","Vision","Tool use","Extended thinking","Computer use"],strength:"Najlepszy reasoning i coding, 200K context",pricing:"$3-15/mln tokens",color:"#7c3aed"},{name:"Google DeepMind",icon:"🔵",spec:["LLM (Gemini)","Vision","Video (Veo 2)","Image (Imagen 3)","Audio","Code"],strength:"1M context, grounding, multimodal native, najtańszy premium",pricing:"$0.10-7/mln tokens",color:"#3b82f6"},{name:"Meta AI",icon:"🔷",spec:["LLM (Llama 3.1)","Vision (SAM 2)","Audio (MusicGen)","Embeddings","Safety"],strength:"Open-source leader, foundation models",pricing:"Free / OSS",color:"#0284c7"},{name:"Mistral AI",icon:"🟠",spec:["LLM (Mistral Large)","Code (Codestral)","Vision (Pixtral)","Embeddings"],strength:"European AI leader, best quality/price ratio",pricing:"$0.10-2/mln tokens",color:"#f97316"},{name:"DeepSeek",icon:"🐳",spec:["LLM (V3)","Reasoning (R1)","Code (Coder V3)","Math"],strength:"State-of-art za 10x mniej. Open weights. MoE.",pricing:"$0.14-2.19/mln",color:"#06b6d4"},{name:"xAI",icon:"⚡",spec:["LLM (Grok 3)","Vision","Real-time data"],strength:"Real-time knowledge, humor, duży context",pricing:"$2-10/mln",color:"#eab308"},{name:"Cohere",icon:"🟤",spec:["LLM (Command R+)","Embeddings","Rerank","RAG","Classify"],strength:"Enterprise NLP/RAG specialist, multilingual",pricing:"$0.10-15/mln",color:"#a16207"},{name:"Stability AI",icon:"🎨",spec:["Image (SD 3.5)","Video","Audio","3D","Language"],strength:"Open-source generative media, ControlNet",pricing:"$0.02-0.05/image",color:"#ec4899"},{name:"ElevenLabs",icon:"🎙️",spec:["TTS (V2)","Voice cloning","Sound FX","Dubbing"],strength:"Best-in-class TTS, najrealistyczniejsze głosy",pricing:"$0.18-0.30/1K chars",color:"#6366f1"},{name:"Deepgram",icon:"🎤",spec:["STT (Nova-3)","TTS (Aura)","Audio intelligence"],strength:"Najszybsza STT, real-time streaming",pricing:"$0.004-0.015/min",color:"#14b8a6"},{name:"Runway",icon:"🎬",spec:["Video (Gen-3)","Image-to-video","Motion brush","Inpainting"],strength:"Pioneer AI video, best motion control",pricing:"$0.05/s video",color:"#f43f5e"},{name:"Black Forest Labs",icon:"🌲",spec:["Image (FLUX.1)","ControlNet","Inpainting","Redux"],strength:"Najlepszy open-source image gen, photorealism",pricing:"$0.03-0.05/image",color:"#22c55e"},{name:"NVIDIA",icon:"💚",spec:["TensorRT","NeMo","Guardrails","Omniverse","CUDA"],strength:"AI hardware & software stack, enterprise",pricing:"Hardware + NIM API",color:"#84cc16"},{name:"Hugging Face",icon:"🤗",spec:["Hub (1M+)","Datasets (200K+)","Spaces","Inference API"],strength:"The GitHub of ML — open-source hub",pricing:"Free + Pro $9/mo",color:"#fbbf24"}];
+
+const AI_USE_CASES=[{task:"Transkrypcja rozmów",best:"Deepgram Nova-3",alt:"Whisper Large V3",why:"Najszybciej + speaker diarization. Whisper = najlepsza jakość offline."},{task:"Synteza mowy (voiceover)",best:"ElevenLabs V2",alt:"Azure Neural TTS",why:"Najrealistyczniejsze głosy. Azure = tańszy dla dużych wolumenów."},{task:"Generowanie obrazów",best:"FLUX.1 Pro",alt:"Midjourney V6.1",why:"Najlepszy photorealizm. Midjourney = artystyczny styl."},{task:"Generowanie wideo",best:"Runway Gen-3 Alpha",alt:"Veo 2",why:"Najlepsza motion control. Veo = 4K + dłuższe klipy."},{task:"OCR / dokumenty",best:"Google Document AI",alt:"Claude 3.5 Vision",why:"Document AI = structured extraction. Claude = flexible."},{task:"Tłumaczenia",best:"DeepL Pro",alt:"NLLB-200 (free)",why:"DeepL = best quality. NLLB = 200 języków, free, local."},{task:"Tworzenie muzyki",best:"Suno V4",alt:"Udio v2",why:"Suno = pełne piosenki. Udio = lepsza instrumentalna."},{task:"Embeddings (RAG)",best:"text-embedding-3-large",alt:"Cohere Embed v3",why:"OpenAI = najlepszy retrieval. Cohere = multilingual."},{task:"Content moderation",best:"OpenAI Moderation",alt:"Llama Guard 3",why:"OpenAI = free + multi-modal. Guard = self-hosted."},{task:"Local LLM (offline)",best:"Ollama + Llama 3.1",alt:"LM Studio",why:"Ollama = CLI/API. LM Studio = GUI + download manager."},{task:"Multi-agent system",best:"CrewAI",alt:"AutoGen / Agent Zero",why:"CrewAI = role-based. AutoGen = konwersacyjne. A0 = our stack."},{task:"Fine-tuning LLM",best:"Unsloth + LoRA",alt:"Modal/RunPod GPU",why:"Unsloth = 2x szybciej, 60% mniej VRAM. Cloud = scale."}];
+
+const OPENCLAW_MODELS=[{provider:"Anthropic",name:"Opus 4.6",id:"anthropic/claude-opus-4-6",status:"active"},{provider:"Kimi-Coding",name:"Kimi K2.5",id:"kimi-coding/k2p5",status:"available"},{provider:"Google",name:"Gemini 3 Flash",id:"google/gemini-3-flash-preview",status:"available"},{provider:"Google",name:"Gemini Pro",id:"google/gemini-2.5-pro",status:"available"},{provider:"Xai",name:"Grok 4",id:"xai/grok-4",status:"available"},{provider:"Xai",name:"Grok 4 Fast",id:"xai/grok-4-fast",status:"available"},{provider:"Openai-Codex",name:"GPT 5.3 Codex",id:"openai-codex/gpt-5.3-codex",status:"available"},{provider:"Openai",name:"GPT-5.2",id:"openai/gpt-5.2",status:"available"},{provider:"Zai",name:"GLM-5",id:"zai/glm-5",status:"available"},{provider:"Minimax",name:"MiniMax M2.5",id:"minimax/MiniMax-M2.5",status:"available"}];
+
+const CAT_NAMES={stt:"Speech-to-Text",tts:"Text-to-Speech",vision:"Vision / OCR",image:"Image Gen",video:"Video Gen",music:"Music & Audio",nlp:"NLP / Translation",embed:"Embeddings",safety:"Safety / Moderation",multi:"Multimodal"};
+const CATS=Object.keys(CAT_NAMES);
+let activeCat='all';
+
+function init(){
+  document.getElementById('cntModels').textContent=EXPERT_MODELS.length;
+  document.getElementById('cntTools').textContent=AI_TOOLS.length;
+  document.getElementById('cntProviders').textContent=AI_PROVIDERS.length;
+  document.getElementById('cntUseCases').textContent=AI_USE_CASES.length;
+  renderCatTabs();renderExperts();renderTools();renderProviders();renderUseCases();renderOpenClaw();
+}
+
+function switchTab(id){
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tabs > .tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function renderCatTabs(){
+  let h='<div class="tab '+(activeCat==='all'?'active':'')+'" onclick="setCat(\'all\')">All ('+EXPERT_MODELS.length+')</div>';
+  CATS.forEach(c=>{
+    const n=EXPERT_MODELS.filter(m=>m.cat===c).length;
+    if(n>0) h+='<div class="tab '+(activeCat===c?'active':'')+'" onclick="setCat(\''+c+'\')">'+CAT_NAMES[c]+' ('+n+')</div>';
+  });
+  document.getElementById('catTabs').innerHTML=h;
+}
+
+function setCat(c){activeCat=c;renderCatTabs();renderExperts();}
+
+function renderExperts(){
+  const q=document.getElementById('expertFilter').value.toLowerCase();
+  let data=EXPERT_MODELS;
+  if(activeCat!=='all')data=data.filter(m=>m.cat===activeCat);
+  if(q)data=data.filter(m=>(m.name+m.provider+m.spec+m.cat).toLowerCase().includes(q));
+  document.getElementById('expertBody').innerHTML=data.map(m=>'<tr><td class="w">'+m.name+'</td><td><span class="badge cat-'+m.cat+'">'+m.cat+'</span></td><td>'+m.provider+'</td><td class="a">'+m.price+'</td><td style="color:var(--d)">'+m.unit+'</td><td style="color:var(--m);max-width:260px">'+m.spec+'</td><td>'+m.quality+'</td></tr>').join('');
+}
+
+function filterExperts(){renderExperts();}
+
+function renderTools(){
+  const grid=document.getElementById('toolsGrid');
+  grid.innerHTML=AI_TOOLS.map(t=>'<div class="glass tool-card"><div style="display:flex;align-items:center;gap:8px"><span class="tool-icon">'+t.icon+'</span><div><div class="tool-name">'+t.name+'</div><div class="tool-cat">'+t.cat+'</div></div></div><div class="tool-desc">'+t.desc+'</div><div class="tool-tags">'+t.tags.map(tg=>'<span class="tag">'+tg+'</span>').join('')+'</div></div>').join('');
+}
+
+function filterTools(){
+  const q=document.getElementById('toolsFilter').value.toLowerCase();
+  const grid=document.getElementById('toolsGrid');
+  const data=q?AI_TOOLS.filter(t=>(t.name+t.cat+t.desc+t.tags.join(' ')).toLowerCase().includes(q)):AI_TOOLS;
+  grid.innerHTML=data.map(t=>'<div class="glass tool-card"><div style="display:flex;align-items:center;gap:8px"><span class="tool-icon">'+t.icon+'</span><div><div class="tool-name">'+t.name+'</div><div class="tool-cat">'+t.cat+'</div></div></div><div class="tool-desc">'+t.desc+'</div><div class="tool-tags">'+t.tags.map(tg=>'<span class="tag">'+tg+'</span>').join('')+'</div></div>').join('');
+}
+
+function renderProviders(){
+  document.getElementById('providersGrid').innerHTML=AI_PROVIDERS.map(p=>'<div class="glass prov-card" style="border-left-color:'+p.color+'"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:18px">'+p.icon+'</span><div class="prov-name">'+p.name+'</div></div><div class="prov-strength">'+p.strength+'</div><div class="prov-pricing">'+p.pricing+'</div><div class="prov-specs">'+p.spec.map(s=>'<span class="tag" style="border-color:'+p.color+'40;color:'+p.color+'">'+s+'</span>').join('')+'</div></div>').join('');
+}
+
+function renderUseCases(){
+  document.getElementById('usecasesBody').innerHTML=AI_USE_CASES.map(u=>'<div class="uc-row"><div class="uc-task">'+u.task+'</div><div class="uc-best">'+u.best+'</div><div class="uc-alt">'+u.alt+'</div><div class="uc-why">'+u.why+'</div></div>').join('');
+}
+
+function renderOpenClaw(){
+  document.getElementById('openclawBody').innerHTML=OPENCLAW_MODELS.map(m=>'<tr><td>'+m.provider+'</td><td class="w">'+m.name+'</td><td style="color:var(--a);font-family:monospace;font-size:10px">'+m.id+'</td><td><span class="badge" style="background:rgba('+(m.status==='active'?'74,222,128':'250,204,21')+',.12);color:'+(m.status==='active'?'var(--g)':'var(--y)')+'">'+m.status+'</span></td></tr>').join('');
+}
+
+init();
+</script>
+</body>
+</html>

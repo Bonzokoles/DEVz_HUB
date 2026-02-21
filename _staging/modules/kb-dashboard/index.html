@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Base Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--sh:rgba(255,255,255,0.06);--b:rgba(255,255,255,0.07);--a:#a855f7;--a2:rgba(168,85,247,0.15);--aG:rgba(168,85,247,0.08);--g:#4ade80;--r:#f87171;--y:#facc15;--cyan:#00d9ff;--pink:#ec4899;--t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:20px;min-height:100vh;overflow-y:auto}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  background:var(--s);border:1px solid var(--b);border-radius:12px;margin-bottom:16px}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.hdr-logo{width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,var(--a),var(--pink));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;color:#fff}
+.hdr h1{font-size:18px;font-weight:700;color:var(--ts)}
+.hdr h1 span{color:var(--a)}
+.hdr-sub{font-size:11px;color:var(--d);margin-top:2px}
+.hdr-meta{text-align:right;font-size:11px;color:var(--d)}
+.hdr-meta .status{display:flex;align-items:center;gap:6px;margin-top:4px;justify-content:flex-end}
+.hdr-meta .dot{width:7px;height:7px;border-radius:50%;background:var(--g);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Stats Row */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:14px;text-align:center;transition:all .2s;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--a);opacity:0;transition:opacity .2s}
+.stat:hover{transform:translateY(-2px);border-color:var(--a)}.stat:hover::after{opacity:1}
+.stat-val{font-size:26px;font-weight:700;color:var(--ts)}
+.stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--d);margin-top:4px}
+.stat-icon{margin-bottom:6px;font-size:16px}
+
+/* ============= SEARCH SECTION ============= */
+.search-section{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:20px;margin-bottom:16px;
+  position:relative;overflow:hidden}
+.search-section::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--a),var(--pink),var(--cyan));opacity:.6}
+.search-title{font-size:14px;font-weight:700;color:var(--ts);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.search-title .badge{font-size:9px;padding:2px 8px;border-radius:99px;background:var(--a);color:#fff;font-weight:600}
+.search-sub{font-size:10px;color:var(--d);margin-bottom:12px}
+.search-row{display:flex;gap:8px;margin-bottom:10px}
+.search-input{flex:1;padding:10px 14px;background:var(--bg2);border:1px solid var(--b);border-radius:8px;
+  color:var(--ts);font-size:13px;font-family:inherit;outline:none;transition:border .2s}
+.search-input:focus{border-color:var(--a)}
+.search-input::placeholder{color:var(--d)}
+.search-btn{padding:10px 20px;background:var(--a);border:none;border-radius:8px;
+  color:#fff;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.search-btn:hover{background:#9333ea;transform:translateY(-1px)}
+.search-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.search-options{display:flex;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.search-cat{padding:5px 10px;background:var(--bg2);border:1px solid var(--b);border-radius:6px;
+  color:var(--t);font-size:11px;font-family:inherit;outline:none;cursor:pointer}
+.search-cat:focus{border-color:var(--a)}
+.search-limit{width:60px;padding:5px 8px;background:var(--bg2);border:1px solid var(--b);border-radius:6px;
+  color:var(--t);font-size:11px;font-family:inherit;outline:none;text-align:center}
+.search-label{font-size:9px;color:var(--d);text-transform:uppercase;letter-spacing:.8px}
+
+/* Search Results */
+.search-results{max-height:500px;overflow-y:auto}
+.result-empty{text-align:center;padding:40px 20px;color:var(--d);font-size:12px}
+.result-empty .icon{font-size:32px;margin-bottom:8px}
+.result-item{background:var(--bg2);border:1px solid var(--b);border-radius:8px;
+  padding:14px;margin-bottom:8px;transition:all .2s;cursor:default;position:relative}
+.result-item:hover{border-color:var(--a)}
+.result-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.result-source{font-size:10px;color:var(--a);font-weight:600;max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-dist{font-size:9px;padding:2px 8px;border-radius:4px;font-weight:600;font-family:monospace}
+.result-dist.high{background:rgba(74,222,128,.1);color:var(--g)}
+.result-dist.medium{background:rgba(250,204,21,.1);color:var(--y)}
+.result-dist.low{background:rgba(248,113,113,.1);color:var(--r)}
+.result-text{font-size:11px;color:var(--t);line-height:1.6;max-height:120px;overflow:hidden;
+  position:relative;white-space:pre-wrap;word-break:break-word}
+.result-text.expanded{max-height:none}
+.result-expand{font-size:9px;color:var(--a);cursor:pointer;margin-top:4px;display:inline-block}
+.result-expand:hover{text-decoration:underline}
+.result-category{font-size:9px;color:var(--d);margin-top:6px}
+.result-count{text-align:center;padding:8px;font-size:11px;color:var(--d)}
+
+/* Connection status */
+.conn-status{display:flex;align-items:center;gap:6px;font-size:10px;padding:6px 12px;
+  border-radius:6px;background:var(--bg2);border:1px solid var(--b)}
+.conn-dot{width:6px;height:6px;border-radius:50%}
+.conn-dot.online{background:var(--g);box-shadow:0 0 6px var(--g)}
+.conn-dot.offline{background:var(--r);box-shadow:0 0 6px var(--r)}
+
+/* Charts */
+.charts{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:16px}
+.chart-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px}
+.chart-card h2{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--ts)}
+.chart-card h2 .badge{font-size:9px;padding:2px 8px;border-radius:99px;background:var(--a);color:#fff;font-weight:500}
+
+/* Top items */
+.top-bar{margin-top:10px}
+.top-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.top-item:last-child{border:none}
+.top-item .rank{width:20px;font-size:10px;color:var(--d);text-align:center;font-weight:700}
+.top-item .bar-wrap{flex:1}
+.top-item .bar-lbl{font-size:10px;display:flex;justify-content:space-between;margin-bottom:2px}
+.top-item .bar-lbl span:last-child{color:var(--d)}
+.top-item .bar{height:5px;border-radius:3px;background:rgba(255,255,255,0.04);overflow:hidden}
+.top-item .bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* Special collections */
+.section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--d);margin:20px 0 10px;display:flex;align-items:center;gap:8px}
+.special-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.sp-card{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:16px;transition:all .2s}
+.sp-card:hover{transform:translateY(-2px);border-color:var(--a)}
+.sp-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sp-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.sp-name{font-size:12px;font-weight:700;color:var(--ts)}
+.sp-desc{font-size:9px;color:var(--d)}
+.sp-val{font-size:22px;font-weight:700;margin-top:6px}
+.sp-lbl{font-size:9px;color:var(--d);text-transform:uppercase}
+
+/* Categories grid */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.cat-card{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:14px;
+  transition:all .2s;position:relative;overflow:hidden;cursor:pointer}
+.cat-card.empty{opacity:.4}
+.cat-card:hover{transform:translateY(-2px);border-color:var(--a)}
+.cat-card .cat-hdr{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cat-card .cat-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.cat-card .cat-id{font-size:9px;color:var(--d);font-weight:700}
+.cat-card .cat-nm{font-size:12px;font-weight:600;color:var(--ts)}
+.cat-card .cat-desc{font-size:9px;color:var(--m);margin-bottom:8px}
+.cat-card .cat-stats{display:flex;gap:12px;font-size:10px;color:var(--d)}
+.cat-card .cat-stats strong{color:var(--ts);font-size:12px}
+.cat-card .status-dot{position:absolute;top:10px;right:10px;width:6px;height:6px;border-radius:50%}
+
+/* Footer */
+.footer{text-align:center;padding:16px;color:var(--d);font-size:10px;border-top:1px solid var(--b);margin-top:16px}
+
+/* Responsive */
+@media(max-width:1200px){.cat-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}.charts{grid-template-columns:1fr}.cat-grid{grid-template-columns:repeat(2,1fr)}.special-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}.cat-grid,.special-grid{grid-template-columns:1fr}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--m)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-logo">KB</div>
+    <div>
+      <h1><span>Knowledge</span> Base</h1>
+      <div class="hdr-sub">The_DEVz_HUB_of_work / knowledge_base</div>
+    </div>
+  </div>
+  <div class="hdr-meta">
+    <div>ChromaDB v1.4.1 &middot; SentenceTransformers</div>
+    <div class="status"><span class="dot"></span><span id="serverStatus">Sprawdzam...</span></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat"><div class="stat-icon">📊</div><div class="stat-val">4,816</div><div class="stat-lbl">Dokumentow (kb_all)</div></div>
+  <div class="stat"><div class="stat-icon">📂</div><div class="stat-val">6</div><div class="stat-lbl">Aktywnych kategorii</div></div>
+  <div class="stat"><div class="stat-icon">🗄️</div><div class="stat-val">26</div><div class="stat-lbl">Kolekcji ChromaDB</div></div>
+  <div class="stat"><div class="stat-icon">📁</div><div class="stat-val">3,135</div><div class="stat-lbl">Plikow zrodlowych</div></div>
+  <div class="stat"><div class="stat-icon">💾</div><div class="stat-val">69.1</div><div class="stat-lbl">Rozmiar DB (MB)</div></div>
+</div>
+
+<!-- ============= VECTOR SEARCH ============= -->
+<div class="search-section">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+    <div>
+      <div class="search-title">🔍 Wyszukiwanie wektorowe <span class="badge">ChromaDB</span></div>
+      <div class="search-sub">Semantic search po 4816 dokumentach — all-MiniLM-L6-v2 embeddings</div>
+    </div>
+    <div class="conn-status">
+      <div class="conn-dot" id="connDot"></div>
+      <span id="connLabel">--</span>
+    </div>
+  </div>
+
+  <div class="search-row">
+    <input type="text" class="search-input" id="searchInput" placeholder="Wpisz zapytanie... np. 'jak zoptymalizowac SEO pod AI' lub 'RAG pipeline architecture'" />
+    <button class="search-btn" id="searchBtn" onclick="doSearch()">🔍 Szukaj</button>
+  </div>
+
+  <div class="search-options">
+    <div>
+      <div class="search-label">Kategoria</div>
+      <select class="search-cat" id="searchCategory">
+        <option value="all">Wszystkie kategorie</option>
+        <option value="01">01 AI_SEO</option>
+        <option value="02">02 WHITECAT_SYSTEM</option>
+        <option value="03">03 PYTHON_AUTOMATION</option>
+        <option value="04">04 ECOMMERCE_SHOPS</option>
+        <option value="05">05 AGENTS_AND_RAG</option>
+        <option value="06">06 FINANCE</option>
+        <option value="07">07 B2B_SALES</option>
+        <option value="08">08 MARKETPLACE</option>
+        <option value="09">09 BUY_AND_SELL</option>
+        <option value="10">10 MARKET_ANALYSIS</option>
+        <option value="11">11 OPPORTUNITIES</option>
+        <option value="12">12 FORECASTING</option>
+        <option value="13">13 AI_NEWS</option>
+        <option value="14">14 BLOG_TOPICS</option>
+        <option value="15">15 READY_ARTICLES</option>
+        <option value="16">16 PROMPT_LIBRARY</option>
+        <option value="17">17 AGENT_KNOWLEDGE</option>
+        <option value="18">18 MCP_TOOLS</option>
+        <option value="19">19 PROJECT_PLANS</option>
+        <option value="20">20 TRAINING_CORPUS</option>
+      </select>
+    </div>
+    <div>
+      <div class="search-label">Limit wynikow</div>
+      <input type="number" class="search-limit" id="searchLimit" value="10" min="1" max="50" />
+    </div>
+    <div>
+      <div class="search-label">API Endpoint</div>
+      <input type="text" class="search-input" id="apiUrl" value="http://localhost:7071" style="width:200px;padding:5px 10px;font-size:11px" />
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="search-results" id="searchResults">
+    <div class="result-empty">
+      <div class="icon">🧠</div>
+      <div>Wpisz zapytanie i kliknij Szukaj</div>
+      <div style="margin-top:4px;font-size:10px">Wymaga: <strong>kb_server.py</strong> na porcie 7071</div>
+      <div style="margin-top:8px;font-size:9px;color:#525252">
+        <code style="background:var(--bg2);padding:3px 8px;border-radius:4px;color:var(--a)">
+          cd U:\The_DEVz_HUB_of_work\knowledge_base &amp;&amp; uvicorn kb_server:app --port 7071
+        </code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="charts">
+  <div class="chart-card">
+    <h2>📊 Dokumenty per kategoria <span class="badge">20 kategorii</span></h2>
+    <canvas id="barChart" height="240"></canvas>
+  </div>
+  <div class="chart-card">
+    <h2>🍩 Kolekcje specjalne</h2>
+    <canvas id="donutChart" height="200"></canvas>
+    <div class="top-bar" style="margin-top:12px">
+      <div style="font-size:9px;color:var(--d);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px">TOP KATEGORIE</div>
+      <div class="top-item"><div class="rank">#1</div><div class="bar-wrap"><div class="bar-lbl"><span>01 AI_SEO</span><span>3,912</span></div><div class="bar"><div class="bar-fill" style="width:100%;background:var(--a)"></div></div></div></div>
+      <div class="top-item"><div class="rank">#2</div><div class="bar-wrap"><div class="bar-lbl"><span>05 AGENTS_AND_RAG</span><span>81</span></div><div class="bar"><div class="bar-fill" style="width:2%;background:#f59e0b"></div></div></div></div>
+      <div class="top-item"><div class="rank">#3</div><div class="bar-wrap"><div class="bar-lbl"><span>06 FINANCE</span><span>26</span></div><div class="bar"><div class="bar-fill" style="width:1%;background:var(--g)"></div></div></div></div>
+      <div class="top-item"><div class="rank">#4</div><div class="bar-wrap"><div class="bar-lbl"><span>04 ECOMMERCE</span><span>23</span></div><div class="bar"><div class="bar-fill" style="width:1%;background:#10b981"></div></div></div></div>
+      <div class="top-item"><div class="rank">#5</div><div class="bar-wrap"><div class="bar-lbl"><span>07 B2B_SALES</span><span>13</span></div><div class="bar"><div class="bar-fill" style="width:0.3%;background:var(--r)"></div></div></div></div>
+      <div class="top-item"><div class="rank">#6</div><div class="bar-wrap"><div class="bar-lbl"><span>13 AI_NEWS</span><span>12</span></div><div class="bar"><div class="bar-fill" style="width:0.3%;background:var(--d)"></div></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SPECIAL COLLECTIONS -->
+<div class="section-label">🗃️ Kolekcje specjalne</div>
+<div class="special-grid">
+  <div class="sp-card"><div class="sp-header"><div class="sp-icon" style="background:#3b82f615;color:#3b82f6">📖</div><div><div class="sp-name">kb_docs</div><div class="sp-desc">Dokumentacja techniczna</div></div></div><div class="sp-val" style="color:#3b82f6">96</div><div class="sp-lbl">dokumentow</div></div>
+  <div class="sp-card"><div class="sp-header"><div class="sp-icon" style="background:#10b98115;color:#10b981">🔧</div><div><div class="sp-name">kb_ai_tools</div><div class="sp-desc">Narzedzia AI</div></div></div><div class="sp-val" style="color:#10b981">271</div><div class="sp-lbl">dokumentow</div></div>
+  <div class="sp-card"><div class="sp-header"><div class="sp-icon" style="background:#f59e0b15;color:#f59e0b">🗄️</div><div><div class="sp-name">kb_ml_datasets</div><div class="sp-desc">Datasety ML/AI</div></div></div><div class="sp-val" style="color:#f59e0b">142</div><div class="sp-lbl">dokumentow</div></div>
+  <div class="sp-card"><div class="sp-header"><div class="sp-icon" style="background:#ec489915;color:#ec4899">💬</div><div><div class="sp-name">kb_prompts</div><div class="sp-desc">Prompty i szablony</div></div></div><div class="sp-val" style="color:#ec4899">29</div><div class="sp-lbl">dokumentow</div></div>
+  <div class="sp-card"><div class="sp-header"><div class="sp-icon" style="background:#ef444415;color:#ef4444">📋</div><div><div class="sp-name">kb_agent_reports</div><div class="sp-desc">Raporty agentow</div></div></div><div class="sp-val" style="color:#ef4444">211</div><div class="sp-lbl">dokumentow</div></div>
+</div>
+
+<!-- CATEGORIES GRID -->
+<div class="section-label">📂 Kategorie wiedzy <span style="color:var(--m);font-weight:400">(20 folderow)</span></div>
+<div class="cat-grid" id="catGrid"></div>
+
+<!-- FOOTER -->
+<div class="footer">Knowledge Base Dashboard &middot; ChromaDB 69.1 MB &middot; 4,816 docs &middot; Jimbo Unified Dashboard v2.0</div>
+
+<script>
+// ================================================================
+// KB CATEGORIES DATA (from real ChromaDB state, 2026-02-17)
+// ================================================================
+const CATEGORIES = [
+  { id: '01', name: 'AI_SEO', desc: 'Strategie SEO pod AI, boty, schema.org', icon: '🔍', color: '#6366f1', chunks: 3912, files: 3111 },
+  { id: '02', name: 'WHITECAT_SYSTEM', desc: 'Dokumentacja techniczna Whitecat', icon: '🖥️', color: '#8b5cf6', chunks: 0, files: 0 },
+  { id: '03', name: 'PYTHON_AUTOMATION', desc: 'Skrypty i narzedzia Python', icon: '🐍', color: '#3b82f6', chunks: 0, files: 0 },
+  { id: '04', name: 'ECOMMERCE_SHOPS', desc: 'E-commerce: Astro, Stripe, IdoSell', icon: '🛒', color: '#10b981', chunks: 23, files: 4 },
+  { id: '05', name: 'AGENTS_AND_RAG', desc: 'Architektura agentow i RAG', icon: '🤖', color: '#f59e0b', chunks: 81, files: 12 },
+  { id: '06', name: 'FINANCE', desc: 'Strategie finansowe, cenniki', icon: '💰', color: '#22c55e', chunks: 26, files: 4 },
+  { id: '07', name: 'B2B_SALES', desc: 'Lead generation, B2B sales', icon: '📈', color: '#ef4444', chunks: 13, files: 2 },
+  { id: '08', name: 'MARKETPLACE', desc: 'Allegro, Amazon, eBay, Empik', icon: '🛍️', color: '#ec4899', chunks: 0, files: 0 },
+  { id: '09', name: 'BUY_AND_SELL', desc: 'Okazje rynkowe, flipping', icon: '🔄', color: '#14b8a6', chunks: 0, files: 0 },
+  { id: '10', name: 'MARKET_ANALYSIS', desc: 'Raporty, analiza konkurencji', icon: '📊', color: '#f97316', chunks: 0, files: 0 },
+  { id: '11', name: 'OPPORTUNITIES', desc: 'Nowe nisze i mozliwosci', icon: '⚡', color: '#a855f7', chunks: 0, files: 0 },
+  { id: '12', name: 'FORECASTING', desc: 'Prognozy 2025-2027', icon: '🔮', color: '#06b6d4', chunks: 0, files: 0 },
+  { id: '13', name: 'AI_NEWS', desc: 'Nowosci AI, modele, update\'y', icon: '📰', color: '#64748b', chunks: 12, files: 2 },
+  { id: '14', name: 'BLOG_TOPICS', desc: 'Pomysly na artykuly, keywords', icon: '✏️', color: '#84cc16', chunks: 0, files: 0 },
+  { id: '15', name: 'READY_ARTICLES', desc: 'Gotowe artykuly do publikacji', icon: '📝', color: '#d946ef', chunks: 0, files: 0 },
+  { id: '16', name: 'PROMPT_LIBRARY', desc: 'Kolekcja promptow', icon: '💬', color: '#0ea5e9', chunks: 0, files: 0 },
+  { id: '17', name: 'AGENT_KNOWLEDGE', desc: 'Kod i konfiguracja agentow', icon: '📦', color: '#f43f5e', chunks: 0, files: 0 },
+  { id: '18', name: 'MCP_TOOLS', desc: 'Poradniki integracji MCP', icon: '🔧', color: '#8b5cf6', chunks: 0, files: 0 },
+  { id: '19', name: 'PROJECT_PLANS', desc: 'Plany projektow i specyfikacje', icon: '📋', color: '#eab308', chunks: 0, files: 0 },
+  { id: '20', name: 'TRAINING_CORPUS', desc: 'Referencje danych treningowych', icon: '🗄️', color: '#78716c', chunks: 0, files: 0 },
+];
+
+// ================================================================
+// RENDER CATEGORIES GRID
+// ================================================================
+const catGrid = document.getElementById('catGrid');
+catGrid.innerHTML = CATEGORIES.map(cat => `
+  <div class="cat-card ${cat.chunks === 0 ? 'empty' : ''}" onclick="selectCategory('${cat.id}')">
+    <div class="status-dot" style="background:${cat.chunks > 0 ? 'var(--g)' : 'var(--d)'}"></div>
+    <div class="cat-hdr">
+      <div class="cat-ic" style="background:${cat.color}15;color:${cat.color}">${cat.icon}</div>
+      <div>
+        <div class="cat-id">${cat.id}</div>
+        <div class="cat-nm">${cat.name}</div>
+      </div>
+    </div>
+    <div class="cat-desc">${cat.desc}</div>
+    <div class="cat-stats">
+      <span>📄 <strong>${cat.chunks.toLocaleString()}</strong> chunks</span>
+      <span>📁 <strong>${cat.files.toLocaleString()}</strong> plikow</span>
+    </div>
+  </div>
+`).join('');
+
+function selectCategory(catId) {
+  document.getElementById('searchCategory').value = catId;
+  document.getElementById('searchInput').focus();
+}
+
+// ================================================================
+// VECTOR SEARCH ENGINE
+// ================================================================
+let isSearching = false;
+
+async function checkConnection() {
+  const apiUrl = document.getElementById('apiUrl').value;
+  const dot = document.getElementById('connDot');
+  const label = document.getElementById('connLabel');
+  const serverStatus = document.getElementById('serverStatus');
+  try {
+    const res = await fetch(apiUrl + '/', { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json();
+      dot.className = 'conn-dot online';
+      label.textContent = 'API Online — ' + (data.categories || '?') + ' kategorii';
+      label.style.color = '#4ade80';
+      serverStatus.textContent = 'ChromaDB Online · 69.1 MB';
+      return true;
+    }
+  } catch(e) {}
+  dot.className = 'conn-dot offline';
+  label.textContent = 'API Offline — uruchom kb_server.py';
+  label.style.color = '#f87171';
+  serverStatus.textContent = 'API Offline';
+  return false;
+}
+
+async function doSearch() {
+  if (isSearching) return;
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) { document.getElementById('searchInput').focus(); return; }
+
+  const apiUrl = document.getElementById('apiUrl').value;
+  const category = document.getElementById('searchCategory').value;
+  const limit = parseInt(document.getElementById('searchLimit').value) || 10;
+  const btn = document.getElementById('searchBtn');
+  const resultsDiv = document.getElementById('searchResults');
+
+  isSearching = true;
+  btn.disabled = true;
+  btn.textContent = '⏳ Szukam...';
+  resultsDiv.innerHTML = '<div class="result-empty"><div class="icon">⏳</div><div>Przeszukuje wektory...</div></div>';
+
+  try {
+    let url;
+    if (category === 'all') {
+      url = apiUrl + '/api/kb/search';
+    } else {
+      url = apiUrl + '/api/kb/categories/' + category + '/search';
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, limit }),
+      signal: AbortSignal.timeout(15000)
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + res.statusText);
+    const data = await res.json();
+
+    if (data.warning) {
+      resultsDiv.innerHTML = '<div class="result-empty"><div class="icon">⚠️</div><div style="color:var(--y)">' + escapeHtml(data.warning) + '</div></div>';
+      return;
+    }
+
+    const docs = data.results?.documents?.[0] || [];
+    const metas = data.results?.metadatas?.[0] || [];
+    const dists = data.results?.distances?.[0] || [];
+
+    if (docs.length === 0) {
+      resultsDiv.innerHTML = '<div class="result-empty"><div class="icon">🤷</div><div>Brak wynikow dla tego zapytania</div></div>';
+      return;
+    }
+
+    let html = '<div class="result-count">Znaleziono <strong>' + docs.length + '</strong> / ' + (data.total_documents || '?') + ' dokumentow &middot; <em>"' + escapeHtml(query) + '"</em></div>';
+
+    docs.forEach((doc, i) => {
+      const meta = metas[i] || {};
+      const dist = dists[i] || 0;
+      const relevance = dist < 0.5 ? 'high' : dist < 1.0 ? 'medium' : 'low';
+      const relevanceLabel = dist < 0.5 ? 'Wysoka' : dist < 1.0 ? 'Srednia' : 'Niska';
+      const source = meta.source || meta.file || 'unknown';
+      const catName = meta.category || '';
+      const shortDoc = doc.length > 500 ? doc.substring(0, 500) + '...' : doc;
+
+      html += '<div class="result-item">';
+      html += '<div class="result-meta">';
+      html += '<div class="result-source" title="' + escapeHtml(source) + '">📄 ' + escapeHtml(source) + '</div>';
+      html += '<div class="result-dist ' + relevance + '" title="Distance: ' + dist.toFixed(4) + '">' + relevanceLabel + ' (' + dist.toFixed(2) + ')</div>';
+      html += '</div>';
+      html += '<div class="result-text" id="rt' + i + '">' + escapeHtml(shortDoc) + '</div>';
+      if (doc.length > 500) {
+        html += '<span class="result-expand" data-idx="' + i + '" data-expanded="0">▸ Pokaz wiecej</span>';
+      }
+      if (catName) {
+        html += '<div class="result-category">📂 Kategoria: ' + escapeHtml(catName) + '</div>';
+      }
+      html += '</div>';
+    });
+
+    resultsDiv.innerHTML = html;
+    
+    // Store full documents for expand
+    window._searchDocs = docs;
+    
+    // Attach expand events
+    resultsDiv.querySelectorAll('.result-expand').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.dataset.idx);
+        const el = document.getElementById('rt' + idx);
+        const expanded = this.dataset.expanded === '1';
+        if (expanded) {
+          el.textContent = window._searchDocs[idx].substring(0, 500) + '...';
+          el.classList.remove('expanded');
+          this.textContent = '▸ Pokaz wiecej';
+          this.dataset.expanded = '0';
+        } else {
+          el.textContent = window._searchDocs[idx];
+          el.classList.add('expanded');
+          this.textContent = '▾ Schowaj';
+          this.dataset.expanded = '1';
+        }
+      });
+    });
+
+  } catch(e) {
+    let errMsg = e.message;
+    if (e.name === 'AbortError' || e.name === 'TimeoutError') errMsg = 'Timeout — serwer nie odpowiada';
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      errMsg = 'Nie mozna polaczyc z API';
+    }
+    resultsDiv.innerHTML = '<div class="result-empty"><div class="icon">❌</div><div style="color:var(--r)">' + escapeHtml(errMsg) + '</div>'
+      + '<div style="margin-top:8px;font-size:9px"><code style="background:var(--bg2);padding:3px 8px;border-radius:4px;color:var(--a)">cd U:\\The_DEVz_HUB_of_work\\knowledge_base &amp;&amp; uvicorn kb_server:app --port 7071</code></div></div>';
+  } finally {
+    isSearching = false;
+    btn.disabled = false;
+    btn.textContent = '🔍 Szukaj';
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Enter to search
+document.getElementById('searchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doSearch();
+});
+
+// Check connection on load
+checkConnection();
+setInterval(checkConnection, 30000); // re-check every 30s
+
+// ================================================================
+// CHARTS
+// ================================================================
+const catNames = CATEGORIES.map(c => c.id + ' ' + c.name);
+const catChunks = CATEGORIES.map(c => c.chunks);
+const catFiles = CATEGORIES.map(c => c.files);
+const catColors = CATEGORIES.map(c => c.color);
+
+new Chart(document.getElementById('barChart').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: catNames,
+    datasets: [{
+      label: 'Zindeksowane chunki',
+      data: catChunks,
+      backgroundColor: catColors.map(c => c + '80'),
+      borderColor: catColors,
+      borderWidth: 1, borderRadius: 4
+    },{
+      label: 'Pliki zrodlowe',
+      data: catFiles,
+      backgroundColor: 'rgba(148,163,184,0.25)',
+      borderColor: 'rgba(148,163,184,0.5)',
+      borderWidth: 1, borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#737373', font: { size: 10 } } } },
+    scales: {
+      x: { ticks: { color: '#525252', font: { size: 8 }, maxRotation: 45 }, grid: { color: 'rgba(255,255,255,0.03)' } },
+      y: { ticks: { color: '#525252', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.03)' } }
+    }
+  }
+});
+
+new Chart(document.getElementById('donutChart').getContext('2d'), {
+  type: 'doughnut',
+  data: {
+    labels: ['DOCS', 'AI_TOOLS', 'ML_DATASETS', 'PROMPTS', 'AGENT_REPORTS'],
+    datasets: [{
+      data: [96, 271, 142, 29, 211],
+      backgroundColor: ['#3b82f680', '#10b98180', '#f59e0b80', '#ec489980', '#ef444480'],
+      borderColor: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#ef4444'],
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '55%',
+    plugins: { legend: { position: 'bottom', labels: { color: '#737373', font: { size: 10 }, padding: 10 } } }
+  }
+});
+</script>
+</body>
+</html>

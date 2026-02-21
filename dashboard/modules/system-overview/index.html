@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Przegląd Systemu</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#07090f; --bg2:#0b0f1a; --surface:rgba(255,255,255,0.03);
+  --border:rgba(255,255,255,0.07); --accent:#00FF41; --cyan:#00d9ff;
+  --green:#4ade80; --yellow:#facc15; --red:#f87171;
+  --text:#e5e5e5; --strong:#fff; --muted:#737373; --dim:#525252;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px;min-height:100vh}
+h2{font-size:1.4rem;font-weight:700;color:var(--strong);margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:all .2s}
+.card:hover{border-color:rgba(0,255,65,0.3)}
+.card-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:8px}
+.card-value{font-size:2rem;font-weight:700}
+.good{color:var(--green)} .warn{color:var(--yellow)} .crit{color:var(--red)}
+.card-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin:24px 0 12px}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border)}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.03)}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600}
+.badge-ok{background:rgba(74,222,128,.12);color:var(--green)}
+.badge-warn{background:rgba(250,204,21,.12);color:var(--yellow)}
+.badge-err{background:rgba(248,113,113,.12);color:var(--red)}
+.pulse{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.status-dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+.status-dot.off{background:var(--dim)}
+.refresh-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.refresh-btn{background:var(--surface);border:1px solid var(--border);padding:8px 16px;border-radius:8px;color:var(--text);cursor:pointer;font-size:12px;transition:all .2s}
+.refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
+.last-update{font-size:11px;color:var(--dim)}
+</style>
+</head>
+<body>
+
+<div class="refresh-bar">
+  <h2>Przegląd Systemu</h2>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="last-update" id="lastUpdate">--</span>
+    <button class="refresh-btn" onclick="refresh()">Odśwież</button>
+  </div>
+</div>
+
+<!-- Health Cards -->
+<div class="grid" id="healthGrid">
+  <div class="card"><div class="card-label">CPU</div><div class="card-value good" id="cpu">--</div></div>
+  <div class="card"><div class="card-label">Pamięć</div><div class="card-value good" id="mem">--</div></div>
+  <div class="card"><div class="card-label">Dysk</div><div class="card-value good" id="disk">--</div></div>
+  <div class="card"><div class="card-label">Uptime</div><div class="card-value" id="uptime" style="color:var(--cyan)">--</div></div>
+</div>
+
+<!-- Zasoby danych -->
+<div class="section-label">Zasoby danych</div>
+<div class="grid">
+  <div class="card"><div class="card-label">Knowledge Base</div><div class="card-value" style="color:var(--cyan)">3,892</div><div class="card-sub">plików w 21 kategoriach</div></div>
+  <div class="card"><div class="card-label">ChromaDB</div><div class="card-value" style="color:#a855f7">4,816</div><div class="card-sub">dokumentów · 26 kolekcji</div></div>
+  <div class="card"><div class="card-label">Control Center</div><div class="card-value" style="color:var(--green)">12,721</div><div class="card-sub">plików w 25 kategoriach</div></div>
+  <div class="card"><div class="card-label">Biblioteki</div><div class="card-value" style="color:var(--yellow)">4+7</div><div class="card-sub">strategiczne + dodatkowe</div></div>
+</div>
+
+<!-- Chart: Resource Allocation -->
+<div class="section-label">Alokacja Zasobów — wykres</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+  <div class="table-wrap" style="height:280px;display:flex;align-items:center;justify-content:center">
+    <canvas id="resourceChart"></canvas>
+  </div>
+  <div class="table-wrap" style="height:280px;display:flex;align-items:center;justify-content:center">
+    <canvas id="budgetChart"></canvas>
+  </div>
+</div>
+
+<!-- Agent Status -->
+<div class="section-label">Agenci & AI</div>
+<div class="grid">
+  <div class="card">
+    <div class="card-label">Jimbo (Orkiestrator)</div>
+    <div class="card-value" style="font-size:1rem">
+      <span class="status-dot on pulse" id="agentDot"></span>
+      <span id="agentStatus">Checking...</span>
+    </div>
+    <div class="card-sub">Claude 4.5 Sonnet · port 50001</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Modele AI</div>
+    <div class="card-value" id="tokens" style="color:var(--cyan)">6</div>
+    <div class="card-sub">3 tanie + 3 premium</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Agenci</div>
+    <div class="card-value good">5</div>
+    <div class="card-sub">Jimbo, Elwirka, Norbert, Zbychu, Angels</div>
+  </div>
+  <div class="card">
+    <div class="card-label">MCP Tools</div>
+    <div class="card-value" style="color:#a855f7">6</div>
+    <div class="card-sub">Brave, GitHub, Context7, Exa, GitKraken, HF</div>
+  </div>
+</div>
+
+<!-- Cost Tracking -->
+<div class="section-label">Budżet miesięczny</div>
+<div class="grid">
+  <div class="card"><div class="card-label">AI Modele</div><div class="card-value" style="color:var(--cyan)">$300</div><div class="card-sub">/miesiąc</div></div>
+  <div class="card"><div class="card-label">Cloudflare</div><div class="card-value" style="color:var(--cyan)">$100</div><div class="card-sub">/miesiąc</div></div>
+  <div class="card"><div class="card-label">Rezerwa</div><div class="card-value" style="color:var(--yellow)">$100</div><div class="card-sub">/miesiąc</div></div>
+  <div class="card"><div class="card-label">RAZEM</div><div class="card-value" style="color:var(--accent)">$500</div><div class="card-sub">/miesiąc</div></div>
+</div>
+
+<!-- Services Table -->
+<div class="section-label">Serwisy</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Serwis</th><th>Port</th><th>Status</th><th>Opis</th></tr></thead>
+    <tbody id="servicesTable">
+      <tr><td>Dashboard HQ</td><td>4200</td><td><span class="badge badge-ok">Online</span></td><td>Python HTTP — ten dashboard</td></tr>
+      <tr><td>Agent Zero</td><td>50001</td><td><span class="badge badge-ok">Online</span></td><td>Platforma agentów AI</td></tr>
+      <tr><td>MCP Gateway</td><td>8001</td><td><span class="badge badge-ok">Online</span></td><td>Brama MCP narzędzi</td></tr>
+      <tr><td>KB API (RAG)</td><td>7071</td><td><span class="badge badge-warn">Standby</span></td><td>FastAPI — wyszukiwanie wektorowe</td></tr>
+      <tr><td>Observable FW</td><td>5025</td><td><span class="badge badge-warn">Standby</span></td><td>Observable Framework dashboards</td></tr>
+      <tr><td>Movie Review</td><td>5675</td><td><span class="badge badge-warn">Standby</span></td><td>Recenzje filmowe GUI</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+function setVal(id, val) { const e = document.getElementById(id); if(e) e.textContent = val; }
+function setClass(id, cls) { const e = document.getElementById(id); if(e) { e.className = 'card-value ' + cls; } }
+
+// Chart.js — Resource Allocation Doughnut
+const ctxRes = document.getElementById('resourceChart')?.getContext('2d');
+if (ctxRes) {
+  new Chart(ctxRes, {
+    type: 'doughnut',
+    data: {
+      labels: ['Knowledge Base', 'Control Center', 'ChromaDB', 'Biblioteki', 'Archiwum'],
+      datasets: [{
+        data: [3892, 12721, 4816, 4076, 757],
+        backgroundColor: ['#6366f180','#4ade8080','#a855f780','#fbbf2480','#52525280'],
+        borderColor: ['#6366f1','#4ade80','#a855f7','#fbbf24','#525252'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#737373', font: { size: 10 }, padding: 12 } },
+        title: { display: true, text: 'Alokacja danych (pliki)', color: '#525252', font: { size: 11 } }
+      }
+    }
+  });
+}
+
+// Chart.js — Budget Doughnut
+const ctxBdg = document.getElementById('budgetChart')?.getContext('2d');
+if (ctxBdg) {
+  new Chart(ctxBdg, {
+    type: 'doughnut',
+    data: {
+      labels: ['AI Modele ($300)', 'Cloudflare ($100)', 'Rezerwa ($100)'],
+      datasets: [{
+        data: [300, 100, 100],
+        backgroundColor: ['#6366f180','#00d9ff80','#fbbf2480'],
+        borderColor: ['#6366f1','#00d9ff','#fbbf24'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#737373', font: { size: 10 }, padding: 12 } },
+        title: { display: true, text: 'Budżet miesięczny ($500)', color: '#525252', font: { size: 11 } }
+      }
+    }
+  });
+}
+
+async function refresh() {
+  try {
+    const res = await fetch('/api/data');
+    const d = await res.json();
+    setVal('cpu', d.system.cpu + '%');
+    setClass('cpu', d.system.cpu > 90 ? 'crit' : d.system.cpu > 75 ? 'warn' : 'good');
+    setVal('mem', d.system.memory + '%');
+    setClass('mem', d.system.memory > 90 ? 'crit' : d.system.memory > 75 ? 'warn' : 'good');
+    setVal('disk', d.system.disk + '%');
+    setClass('disk', d.system.disk > 90 ? 'crit' : d.system.disk > 80 ? 'warn' : 'good');
+    setVal('uptime', d.system.uptime);
+    setVal('agentStatus', d.agent.status === 'running' ? 'Online' : 'Offline');
+    setVal('lastUpdate', new Date().toLocaleTimeString('pl-PL'));
+  } catch(e) {
+    setVal('cpu', '24%'); setClass('cpu','good');
+    setVal('mem', '62%'); setClass('mem','good');
+    setVal('disk', '46%'); setClass('disk','good');
+    setVal('uptime', '127h 34m');
+    setVal('agentStatus', 'Standby');
+    setVal('lastUpdate', 'Dane statyczne');
+  }
+}
+refresh();
+setInterval(refresh, 120000);
+</script>
+</body>
+</html>

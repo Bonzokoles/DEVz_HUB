@@ -1,0 +1,40 @@
+{
+  "knowledge_base": {
+    "total_docs": 4816,
+    "categories": [
+      {"name": "agent_knowledge", "docs": 892, "status": "active"},
+      {"name": "control_center", "docs": 12721, "status": "active"},
+      {"name": "chromadb_vectors", "docs": 4816, "status": "active"},
+      {"name": "libraries", "docs": 4076, "status": "active"},
+      {"name": "archive", "docs": 757, "status": "active"},
+      {"name": "cloudflare_docs", "docs": 0, "status": "empty"},
+      {"name": "mcp_tools", "docs": 0, "status": "empty"},
+      {"name": "workflows", "docs": 0, "status": "empty"},
+      {"name": "prompts", "docs": 0, "status": "empty"},
+      {"name": "templates", "docs": 0, "status": "empty"}
+    ]
+  },
+  "services": [
+    {"name": "DEVz HUB Dashboard", "port": 4200, "status": "active", "type": "Python HTTP"},
+    {"name": "MCP Gateway", "port": 8001, "status": "active", "type": "FastAPI"},
+    {"name": "Agent Zero", "port": 50001, "status": "active", "type": "Python/Docker"},
+    {"name": "KB API", "port": 7071, "status": "inactive", "type": "FastAPI"},
+    {"name": "ChromaDB", "port": 5025, "status": "inactive", "type": "Vector DB"},
+    {"name": "Ollama", "port": 5675, "status": "inactive", "type": "LLM Runtime"}
+  ],
+  "agents": [
+    {"name": "Jimbo77", "role": "Orchestrator", "models": 6, "tools": 12},
+    {"name": "Developer", "role": "Coding", "models": 3, "tools": 8},
+    {"name": "Researcher", "role": "Research", "models": 2, "tools": 6},
+    {"name": "Hacker", "role": "Security", "models": 2, "tools": 5},
+    {"name": "Content Writer", "role": "Content", "models": 4, "tools": 4}
+  ],
+  "workflows": [
+    {"name": "SEO masowe", "models": ["DeepSeek R1", "Elwirka"], "cost_min": 0.02, "cost_max": 0.10, "quality": 7},
+    {"name": "Content premium", "models": ["Claude Sonnet", "GPT-4o", "Norbert"], "cost_min": 0.50, "cost_max": 3.00, "quality": 9.5},
+    {"name": "Kodowanie", "models": ["Claude Sonnet", "FastCode"], "cost_min": 0.30, "cost_max": 2.00, "quality": 9},
+    {"name": "Deep Research", "models": ["Claude Opus", "Angels"], "cost_min": 1.00, "cost_max": 5.00, "quality": 10},
+    {"name": "Multi-agent", "models": ["Jimbo", "Sub-agents"], "cost_min": 0.50, "cost_max": 8.00, "quality": 9},
+    {"name": "E-commerce", "models": ["Qwen", "Gemini"], "cost_min": 0.05, "cost_max": 0.30, "quality": 7.5}
+  ]
+}

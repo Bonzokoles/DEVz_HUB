@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Costs & Budget</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--b:rgba(255,255,255,0.07);--a:#00d9ff;--a2:#7c3aed;--g:#4ade80;--y:#facc15;--r:#f87171;--t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252;--gold:#fbbf24}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:20px;min-height:100vh}
+h2{font-size:1.3rem;font-weight:700;color:var(--ts);margin-bottom:12px}
+.section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--d);margin:20px 0 10px}
+.glass{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:16px}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.cost-card{text-align:center;padding:20px;position:relative;overflow:hidden}
+.cost-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,rgba(0,217,255,.4),transparent)}
+.cost-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--d);margin-bottom:6px}
+.cost-value{font-size:28px;font-weight:700}
+.cost-sub{font-size:11px;color:var(--m);margin-top:4px}
+.budget-input{width:100%;padding:10px;background:var(--bg2);border:1px solid var(--b);color:var(--a);font:700 18px monospace;text-align:center;outline:none;border-radius:4px}
+.budget-input:focus{border-color:var(--a)}
+.progress-bar{height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:4px;transition:width .5s}
+.chart-container{max-height:260px;position:relative}
+.error{color:var(--r);font-size:12px;padding:12px}
+table{width:100%;border-collapse:separate;border-spacing:0 3px}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--d);text-align:left;padding:6px 10px}
+th.r{text-align:right}
+td{padding:8px 10px;font-size:12px;background:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.03)}
+td:first-child{border-left:1px solid rgba(255,255,255,0.03);border-radius:6px 0 0 6px}
+td:last-child{border-right:1px solid rgba(255,255,255,0.03);border-radius:0 6px 6px 0}
+td.r{text-align:right}
+td.w{color:var(--ts);font-weight:600}
+td.cost{color:var(--a);font-weight:600}
+</style>
+</head>
+<body>
+<h2>Costs & Budget Tracker</h2>
+<p style="color:var(--m);font-size:12px;margin-bottom:16px">Dane z <code style="color:var(--a)">data/costs.json</code> + <code style="color:var(--a)">config/cloudflare.yaml</code></p>
+
+<!-- Budget Cards -->
+<div class="section-label">BUDZET MIESIECZNY</div>
+<div class="grid-4">
+  <div class="glass cost-card">
+    <div class="cost-label">AI Models</div>
+    <div><input type="number" class="budget-input" id="budgetAI" value="300" onchange="updateBudget()"></div>
+    <div class="cost-sub">Limit na modele AI</div>
+  </div>
+  <div class="glass cost-card">
+    <div class="cost-label">Cloudflare</div>
+    <div><input type="number" class="budget-input" id="budgetCF" value="100" onchange="updateBudget()"></div>
+    <div class="cost-sub">Workers + D1 + R2 + KV</div>
+  </div>
+  <div class="glass cost-card">
+    <div class="cost-label">Buffer</div>
+    <div><input type="number" class="budget-input" id="budgetBuffer" value="100" onchange="updateBudget()"></div>
+    <div class="cost-sub">Zapas na nieprzewidziane</div>
+  </div>
+  <div class="glass cost-card">
+    <div class="cost-label">TOTAL</div>
+    <div class="cost-value" id="budgetTotal" style="color:var(--a)">$500</div>
+    <div class="cost-sub">Limit calkowity</div>
+  </div>
+</div>
+
+<!-- Spending Status -->
+<div class="section-label">STATUS WYDATKOW</div>
+<div class="grid-4" id="spendingCards">
+  <div class="glass cost-card">
+    <div class="cost-label">AI Wydane</div>
+    <div class="cost-value" id="spentAI" style="color:var(--g)">$0.00</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressAI" style="width:0%;background:var(--g)"></div></div>
+    <div class="cost-sub" id="remainAI">Pozostalo: $300</div>
+  </div>
+  <div class="glass cost-card">
+    <div class="cost-label">CF Wydane</div>
+    <div class="cost-value" id="spentCF" style="color:var(--g)">$0.00</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressCF" style="width:0%;background:var(--g)"></div></div>
+    <div class="cost-sub" id="remainCF">Pozostalo: $100</div>
+  </div>
+  <div class="glass cost-card">
+    <div class="cost-label">Total Wydane</div>
+    <div class="cost-value" id="spentTotal" style="color:var(--g)">$0.00</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressTotal" style="width:0%;background:var(--g)"></div></div>
+    <div class="cost-sub" id="remainTotal">Pozostalo: $500</div>
+  </div>
+  <div class="glass cost-card">
+    <div class="cost-label">Dni w miesiacu</div>
+    <div class="cost-value" id="daysInfo" style="color:var(--gold)">--</div>
+    <div class="cost-sub" id="onTrack">--</div>
+  </div>
+</div>
+
+<!-- Charts -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+  <div class="glass">
+    <div class="section-label" style="margin-top:0">PODZIAL BUDZETU</div>
+    <div class="chart-container"><canvas id="budgetChart"></canvas></div>
+  </div>
+  <div class="glass">
+    <div class="section-label" style="margin-top:0">CF BREAKDOWN</div>
+    <div class="chart-container"><canvas id="cfChart"></canvas></div>
+  </div>
+</div>
+
+<!-- CF Cost Details Table -->
+<div class="glass">
+  <div class="section-label" style="margin-top:0">CLOUDFLARE SZCZEGOLOW KOSZTOW</div>
+  <table>
+    <thead><tr><th>Serwis</th><th>Nazwa</th><th class="r">Szacowany/mies.</th></tr></thead>
+    <tbody id="cfCostBody"></tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;padding:8px 10px;margin-top:4px;border-top:2px solid var(--a);font-weight:700">
+    <span style="color:var(--ts)">TOTAL CF</span>
+    <span id="cfCostTotal" style="color:var(--a)">--</span>
+  </div>
+</div>
+
+<script>
+let costsData = null;
+let cfData = null;
+let budgetChart = null;
+let cfChart = null;
+
+// Load budget from localStorage
+function loadSavedBudget() {
+  const saved = localStorage.getItem('jimbo_budget');
+  if (saved) {
+    const b = JSON.parse(saved);
+    document.getElementById('budgetAI').value = b.ai || 300;
+    document.getElementById('budgetCF').value = b.cf || 100;
+    document.getElementById('budgetBuffer').value = b.buffer || 100;
+  }
+}
+
+function saveBudget(ai, cf, buffer) {
+  localStorage.setItem('jimbo_budget', JSON.stringify({ ai, cf, buffer }));
+}
+
+function updateBudget() {
+  const ai = parseFloat(document.getElementById('budgetAI').value) || 0;
+  const cf = parseFloat(document.getElementById('budgetCF').value) || 0;
+  const buffer = parseFloat(document.getElementById('budgetBuffer').value) || 0;
+  const total = ai + cf + buffer;
+  document.getElementById('budgetTotal').textContent = '$' + total;
+  saveBudget(ai, cf, buffer);
+  if (costsData) renderSpending();
+  renderBudgetChart();
+}
+
+function renderBudgetChart() {
+  const ai = parseFloat(document.getElementById('budgetAI').value) || 0;
+  const cf = parseFloat(document.getElementById('budgetCF').value) || 0;
+  const buffer = parseFloat(document.getElementById('budgetBuffer').value) || 0;
+  
+  const ctx = document.getElementById('budgetChart');
+  if (budgetChart) budgetChart.destroy();
+  budgetChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['AI Models', 'Cloudflare', 'Buffer'],
+      datasets: [{
+        data: [ai, cf, buffer],
+        backgroundColor: ['#6366f1','#00d9ff','#fbbf24'],
+        borderColor: '#07090f', borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: '#9898b0', font: { size: 11 } } } }
+    }
+  });
+}
+
+async function loadData() {
+  try {
+    const [costsRes] = await Promise.all([
+      fetch('../../data/costs.json')
+    ]);
+    costsData = await costsRes.json();
+    renderSpending();
+  } catch(e) {
+    console.warn('costs.json not available, using budget data only');
+  }
+  
+  // Parse CF YAML for cost breakdown
+  try {
+    const cfRes = await fetch('../../data/cloudflare.yaml');
+    const cfText = await cfRes.text();
+    cfData = jsyaml.load(cfText);
+    renderCFCosts();
+  } catch(e) {
+    console.warn('cloudflare.yaml not available');
+  }
+}
+
+function renderSpending() {
+  const cm = costsData?.current_month;
+  if (!cm) return;
+  
+  const aiSpent = cm.spending?.ai_models?.total || 0;
+  const cfSpent = cm.spending?.cloudflare?.total || 0;
+  const totalSpent = cm.spending?.total || 0;
+  const days = cm.days_elapsed || 0;
+  const daysTotal = cm.days_total || 28;
+  
+  const aiBudget = parseFloat(document.getElementById('budgetAI').value) || 300;
+  const cfBudget = parseFloat(document.getElementById('budgetCF').value) || 100;
+  const totalBudget = aiBudget + cfBudget + (parseFloat(document.getElementById('budgetBuffer').value) || 100);
+  
+  setSpend('spentAI', 'progressAI', 'remainAI', aiSpent, aiBudget);
+  setSpend('spentCF', 'progressCF', 'remainCF', cfSpent, cfBudget);
+  setSpend('spentTotal', 'progressTotal', 'remainTotal', totalSpent, totalBudget);
+  
+  document.getElementById('daysInfo').textContent = days + '/' + daysTotal;
+  const pct = (days / daysTotal * 100).toFixed(0);
+  document.getElementById('onTrack').textContent = cm.on_track ? 'Na dobrej drodze (' + pct + '%)' : 'Uwaga! Przekroczenie budzetu';
+  document.getElementById('onTrack').style.color = cm.on_track ? '#4ade80' : '#f87171';
+}
+
+function setSpend(valId, progId, remId, spent, budget) {
+  const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+  const color = pct > 90 ? '#f87171' : pct > 70 ? '#facc15' : '#4ade80';
+  document.getElementById(valId).textContent = '$' + spent.toFixed(2);
+  document.getElementById(valId).style.color = color;
+  document.getElementById(progId).style.width = pct + '%';
+  document.getElementById(progId).style.background = color;
+  document.getElementById(remId).textContent = 'Pozostalo: $' + (budget - spent).toFixed(2);
+}
+
+function renderCFCosts() {
+  if (!cfData) return;
+  const rows = [];
+  let total = 0;
+  
+  // Workers
+  if (cfData.workers) {
+    Object.entries(cfData.workers).forEach(([k, w]) => {
+      const est = w.usage?.estimated_monthly || '$0.00';
+      const val = parseFloat(est.replace('$','')) || 0;
+      total += val;
+      rows.push({ svc: 'Worker', name: w.name || k, cost: est });
+    });
+  }
+  // D1
+  if (cfData.d1_databases) {
+    Object.entries(cfData.d1_databases).forEach(([k, d]) => {
+      const est = d.usage?.estimated_monthly || '$0.00';
+      const val = parseFloat(est.replace('$','')) || 0;
+      total += val;
+      rows.push({ svc: 'D1', name: d.name || k, cost: est });
+    });
+  }
+  // R2
+  if (cfData.r2_buckets) {
+    Object.entries(cfData.r2_buckets).forEach(([k, r]) => {
+      const est = r.usage?.estimated_monthly || '$0.00';
+      const val = parseFloat(est.replace('$','')) || 0;
+      total += val;
+      rows.push({ svc: 'R2', name: r.name || k, cost: est });
+    });
+  }
+  // KV
+  if (cfData.kv_namespaces) {
+    Object.entries(cfData.kv_namespaces).forEach(([k, kv]) => {
+      const est = kv.usage?.estimated_monthly || '$0.00';
+      const val = parseFloat(est.replace('$','')) || 0;
+      total += val;
+      rows.push({ svc: 'KV', name: kv.name || k, cost: est });
+    });
+  }
+  // Hyperdrive
+  if (cfData.hyperdrive) {
+    Object.entries(cfData.hyperdrive).forEach(([k, h]) => {
+      const est = h.usage?.estimated_monthly || '$0.00';
+      const val = parseFloat(est.replace('$','')) || 0;
+      total += val;
+      rows.push({ svc: 'Hyperdrive', name: h.name || k, cost: est });
+    });
+  }
+  
+  document.getElementById('cfCostBody').innerHTML = rows.map(r =>
+    '<tr><td class="w">' + r.svc + '</td><td>' + r.name + '</td><td class="r cost">' + r.cost + '</td></tr>'
+  ).join('');
+  document.getElementById('cfCostTotal').textContent = '$' + total.toFixed(2);
+  
+  // CF Chart
+  const labels = rows.map(r => r.name.substring(0, 20));
+  const values = rows.map(r => parseFloat(r.cost.replace('$','')) || 0);
+  const colors = ['#6366f1','#00d9ff','#a855f7','#fbbf24','#4ade80','#f87171','#fb923c','#60a5fa','#34d399','#c084fc'];
+  
+  const ctx = document.getElementById('cfChart');
+  if (cfChart) cfChart.destroy();
+  cfChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors.slice(0, values.length),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#737373', callback: v => '$' + v }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { ticks: { color: '#9898b0', font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+loadSavedBudget();
+updateBudget();
+loadData();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIT News - Artificial intelligence</title>
+<style>
+:root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a28;
+    --border: #2a2a3a;
+    --text: #e8e8f0;
+    --text2: #9898b0;
+    --accent: #a855f7;
+    --accent2: #6366f1;
+    --accent-glow: rgba(168,85,247,0.15);
+    --red: #ef4444;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --radius: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+.bg-grid {
+    position: fixed; inset:0; z-index:0;
+    background-image:
+        linear-gradient(rgba(168,85,247,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168,85,247,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+}
+
+/* HEADER */
+header {
+    position: relative; z-index:1;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+}
+header::before {
+    content:""; position:absolute; top:0; left:0; right:0; height:3px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent), var(--red));
+}
+.logo {
+    display: inline-flex; align-items: center; gap: 12px; margin-bottom: 1rem;
+}
+.logo svg { width:40px; height:40px; }
+.logo h1 {
+    font-size: 1.8rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header-meta {
+    color: var(--text2); font-size: 0.9rem;
+}
+.header-meta .count {
+    display: inline-block; background: var(--accent-glow); color: var(--accent);
+    padding: 2px 10px; border-radius: 20px; font-weight: 600;
+    border: 1px solid rgba(168,85,247,0.2);
+}
+.search-box {
+    margin: 1.2rem auto 0; max-width: 500px; position: relative;
+}
+.search-box input {
+    width:100%; padding: 12px 16px 12px 44px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+    color: var(--text); font-size: 1rem; outline: none;
+    transition: border-color .2s;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width:20px; height:20px; stroke: var(--text2);
+}
+
+/* FILTERS */
+.filters {
+    position: relative; z-index:1;
+    padding: 1rem 2rem;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    max-width: 100%; overflow-x: auto;
+}
+.filter-btn {
+    padding: 6px 14px; border-radius: 20px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); font-size: 0.82rem; cursor: pointer;
+    transition: all .2s; white-space: nowrap;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--text); }
+.filter-btn.active {
+    background: var(--accent-glow); border-color: var(--accent);
+    color: var(--accent); font-weight: 600;
+}
+
+/* GRID */
+.container {
+    position: relative; z-index:1;
+    max-width: 1400px; margin: 0 auto;
+    padding: 2rem;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+}
+
+/* CARD */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform .25s, box-shadow .25s, border-color .25s;
+    animation: fadeUp .5s ease both;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    border-color: var(--accent);
+}
+.card.hidden { display:none; }
+@keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to { opacity:1; transform: translateY(0); }
+}
+.card-img {
+    position: relative; overflow: hidden;
+    height: 200px;
+}
+.card-img img {
+    width:100%; height:100%; object-fit: cover;
+    transition: transform .4s;
+}
+.card:hover .card-img img { transform: scale(1.05); }
+.img-credit {
+    position: absolute; bottom:0; right:0;
+    background: rgba(0,0,0,0.7); color: var(--text2);
+    font-size: 0.7rem; padding: 2px 8px;
+    border-radius: 8px 0 0 0;
+}
+.card-body { padding: 1.2rem 1.4rem 1.4rem; }
+.card-meta {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 0.6rem; font-size: 0.82rem; color: var(--text2);
+}
+.card-meta .date {
+    background: var(--surface2); padding: 2px 10px; border-radius: 8px;
+    font-weight: 500;
+}
+.card-meta .author { font-style: italic; }
+.card-title {
+    font-size: 1.15rem; line-height: 1.4; margin-bottom: 0.6rem;
+}
+.card-title a {
+    color: var(--text); text-decoration: none;
+    transition: color .2s;
+}
+.card-title a:hover { color: var(--accent); }
+.card-desc {
+    color: var(--text2); font-size: 0.9rem; line-height: 1.5;
+    margin-bottom: 1rem;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag {
+    font-size: 0.72rem; padding: 2px 8px; border-radius: 6px;
+    background: var(--surface2); color: var(--text2);
+    border: 1px solid transparent;
+    transition: all .2s;
+}
+.tag:hover { border-color: var(--accent); color: var(--accent); }
+
+/* NO RESULTS */
+.no-results {
+    display: none; text-align: center; padding: 4rem 2rem;
+    color: var(--text2); font-size: 1.1rem;
+    grid-column: 1 / -1;
+}
+.no-results.visible { display: block; }
+
+/* FOOTER */
+footer {
+    position: relative; z-index:1;
+    text-align: center; padding: 2rem;
+    color: var(--text2); font-size: 0.82rem;
+    border-top: 1px solid var(--border);
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* BACK TO TOP */
+.back-top {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 10;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--accent); border: none; cursor: pointer;
+    color: #fff; font-size: 1.4rem; display: none;
+    align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(168,85,247,0.4);
+    transition: opacity .3s, transform .3s;
+}
+.back-top.visible { display: flex; }
+
+/* RESPONSIVE */
+@media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+    header { padding: 1.5rem 1rem; }
+    .container { padding: 1rem; }
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<header>
+    <div class="logo">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="10" fill="url(#g1)"/>
+            <path d="M12 28V12h4l4 10 4-10h4v16h-3V17l-3.5 9h-3L15 17v11h-3z" fill="#fff"/>
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#a855f7"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+        </svg>
+        <h1>MIT News &mdash; AI</h1>
+    </div>
+    <p class="header-meta">
+        Najnowsze artykuly o sztucznej inteligencji z MIT &bull;
+        <span class="count">50 artykulow</span> &bull;
+        Ostatnia aktualizacja: 12 lut 2026
+    </p>
+    <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Szukaj artykulow..." autocomplete="off"/>
+    </div>
+</header>
+
+<div class="filters">
+    <button class="filter-btn active" data-filter="all">Wszystkie</button>
+            <button class="filter-btn" data-filter="Artificial intelligence">Artificial intelligence (50)</button>
+            <button class="filter-btn" data-filter="School of Engineering">School of Engineering (41)</button>
+            <button class="filter-btn" data-filter="Research">Research (33)</button>
+            <button class="filter-btn" data-filter="Machine learning">Machine learning (29)</button>
+            <button class="filter-btn" data-filter="Computer science and technology">Computer science and technology (29)</button>
+            <button class="filter-btn" data-filter="MIT Schwarzman College of Computing">MIT Schwarzman College of Computing (29)</button>
+            <button class="filter-btn" data-filter="Electrical engineering and computer science (EECS)">Electrical engineering and computer science (EECS) (27)</button>
+            <button class="filter-btn" data-filter="Computer Science and Artificial Intelligence Laboratory (CSAIL)">Computer Science and Artificial Intelligence Laboratory (CSAIL) (13)</button>
+            <button class="filter-btn" data-filter="Mechanical engineering">Mechanical engineering (11)</button>
+            <button class="filter-btn" data-filter="Algorithms">Algorithms (10)</button>
+            <button class="filter-btn" data-filter="Laboratory for Information and Decision Systems (LIDS)">Laboratory for Information and Decision Systems (LIDS) (10)</button>
+            <button class="filter-btn" data-filter="Faculty">Faculty (9)</button>
+
+</div>
+
+<main class="container">
+    <div class="grid" id="grid">
+        
+    <article class="card" style="animation-delay:0.0s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/mit-j-pal-letrus.jpg?itok=qjK8_FC9" alt="High school students in Brazil use an AI platform called Letrus to receive rapid feedback on their writing skills. The program was evaluated by J-PAL researchers and found to be effective in closing achievement gaps between public and private school students; it is now being scaled up in schools across Brazil. " loading="lazy"/>
+            <span class="img-credit">Photo courtesy of Letrus.</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">12 lut 2026</span>
+                <span class="author">Abdul Latif Jameel Poverty Action Lab (J-PAL)</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/new-j-pal-research-policy-initiative-to-test-scale-ai-innovations-fight-poverty-0212" target="_blank" rel="noopener">New J-PAL research and policy initiative to test and scale AI innovations to fight poverty</a>
+            </h2>
+            <p class="card-desc">Project AI Evidence will connect governments, tech companies, and nonprofits with world-class economists at MIT and across J-PAL&#x27;s global network to evaluate and improve AI solutions. </p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Economics</span><span class="tag">Artificial intelligence</span><span class="tag">Technology and policy</span><span class="tag">Poverty</span><span class="tag">Funding</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.05s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/MIT-Rafael-Gomez-Bombarelli-01-press.jpg?itok=vCsnmt-Q" alt="“AI for science is one of the most exciting and aspirational uses of AI,” Rafael Gómez-Bombarelli says. “Other applications for AI have more downsides and ambiguity. AI for science is about bringing a better future forward in time.”" loading="lazy"/>
+            <span class="img-credit">Photo: Jodi Hilton</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">12 lut 2026</span>
+                <span class="author">Zach Winn | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/accelerating-science-ai-and-simulations-rafael-gomez-bombarelli-0212" target="_blank" rel="noopener">Accelerating science with AI and simulations</a>
+            </h2>
+            <p class="card-desc">Associate Professor Rafael Gómez-Bombarelli has spent his career applying AI to improve scientific discovery. Now he believes we are at an inflection point.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Faculty</span><span class="tag">Profile</span><span class="tag">Materials science and engineering</span><span class="tag">Machine learning</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.1s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/mit-jameel-research.jpg?itok=bPU1OnEK" alt="Provost Anantha Chandrakasan joined (from left) Bruce Currie from JIMCO Life Sciences and MIT professors Jim Collins and Alex Shalek for a research agreement signing ceremony." loading="lazy"/>
+            <span class="img-credit">Photo: Elizabeth Connolly</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">11 lut 2026</span>
+                <span class="author">Daniel J. Darling | Department of Biological Engineering</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/using-synthetic-biology-ai-address-global-antimicrobial-resistance-0211" target="_blank" rel="noopener">Using synthetic biology and AI to address global antimicrobial resistance threat</a>
+            </h2>
+            <p class="card-desc">Driven by overuse and misuse of antibiotics, drug-resistant infections are on the rise, while development of new antibacterial tools has slowed.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Collaboration</span><span class="tag">Biological engineering</span><span class="tag">Jameel Clinic</span><span class="tag">Synthetic biology</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.15000000000000002s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/mit-picower-brain-imaging.jpg?itok=Z83SrzkF" alt="Researchers have developed a new way to resolve distinct bundles of nerve fibers in the brainstem. In this detail of a figure from the paper offering two different cross-section views of a human brain, individual bundles are segmented and color-coded." loading="lazy"/>
+            <span class="img-credit">Image: Mark Olchanyi/Emery Brown Lab</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">10 lut 2026</span>
+                <span class="author">David Orenstein | The Picower Institute for Learning and Memory</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/new-window-on-brainstem-ai-algorithm-enables-tracking-white-matter-pathways-0210" target="_blank" rel="noopener">AI algorithm enables tracking of vital white matter pathways</a>
+            </h2>
+            <p class="card-desc">Opening a new window on the brainstem, a new tool reliably and finely resolves distinct nerve bundles in live diffusion MRI scans, revealing signs of injury or disease.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Imaging</span><span class="tag">Algorithms</span><span class="tag">Alzheimer&#x27;s</span><span class="tag">Parkinson&#x27;s</span><span class="tag">Neuroscience</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.2s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/MIT_Jerry-Lu-Anette-Hosoi_01-PRESS.jpg?itok=_vfn9PGN" alt="MIT Sports Lab researchers, Jerry Lu and Annette (Peko) Hosoi, are applying AI technologies to help figure skaters improve." loading="lazy"/>
+            <span class="img-credit">Credit: Bryce Vickmark, edited by MIT News; MIT Mechanical Engineering</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">10 lut 2026</span>
+                <span class="author">Abby Abazorius | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/3-questions-using-ai-help-olympic-skaters-land-quint-0210" target="_blank" rel="noopener">3 Questions: Using AI to help Olympic skaters land a quint</a>
+            </h2>
+            <p class="card-desc">MIT Sports Lab researchers are applying AI technologies to help figure skaters improve. They also have thoughts on whether five-rotation jumps are humanly possible.</p>
+            <div class="tags"><span class="tag">Interview</span><span class="tag">Alumni/ae</span><span class="tag">Research</span><span class="tag">Artificial intelligence</span><span class="tag">Sports and fitness</span><span class="tag">Mechanical engineering</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.25s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/MIT-LLM-Rankings-01-press.jpg?itok=sfZTuiuE" alt="“At the end of the day, a user wants to know whether they are choosing the best LLM. If only a few prompts are driving this ranking, that suggests the ranking might not be the end-all-be-all,” Tamara Broderick says." loading="lazy"/>
+            <span class="img-credit">Image: MIT News; iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">9 lut 2026</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/study-platforms-rank-latest-llms-can-be-unreliable-0209" target="_blank" rel="noopener">Study: Platforms that rank the latest LLMs can be unreliable</a>
+            </h2>
+            <p class="card-desc">Removing just a tiny fraction of the crowdsourced data that informs online ranking platforms can significantly change the results.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Data</span><span class="tag">Mathematics</span><span class="tag">Computer science and technology</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.30000000000000004s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/Sally%20Kornbluth%20GBH_0.png?itok=ijERDelJ" alt="President Sally Kornbluth answers a question on GBH&#x27;s Boston Public Radio. February 5, 2026" loading="lazy"/>
+            <span class="img-credit">(Screenshot)</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">6 lut 2026</span>
+                
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/science-mit-president-talks-about-importance-americas-research-enterprise-gbhs-boston-public" target="_blank" rel="noopener">“This is science!” – MIT president talks about the importance of America’s research enterprise on GBH’s Boston Public Radio</a>
+            </h2>
+            <p class="card-desc">MIT faculty join The Curiosity Desk to discuss football, math, Olympic figure skating, AI and the quest to cure ovarian cancer.</p>
+            <div class="tags"><span class="tag">President Sally Kornbluth</span><span class="tag">Research</span><span class="tag">Koch Institute</span><span class="tag">Mathematics</span><span class="tag">Mechanical engineering</span><span class="tag">Alumni/ae</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.35000000000000003s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/encompass2-mit-00_0.png?itok=O0CEx68x" alt="When EnCompass runs a program, it will automatically backtrack if LLMs make mistakes. EnCompass can also make clones of the program runtime to make multiple attempts in parallel in search of the best solution." loading="lazy"/>
+            <span class="img-credit">Image: Alex Shipps/MIT CSAIL</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">5 lut 2026</span>
+                <span class="author">Alex Shipps | MIT CSAIL</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/helping-ai-agents-search-to-get-best-results-from-llms-0205" target="_blank" rel="noopener">Helping AI agents search to get the best results out of large language models </a>
+            </h2>
+            <p class="card-desc">EnCompass executes AI agent programs by backtracking and making multiple attempts, finding the best set of outputs generated by an LLM. It could help coders work with AI agents more efficiently.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Human-computer interaction</span><span class="tag">Programming languages</span><span class="tag">Software</span><span class="tag">Algorithms</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.4s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/brian-hedden-mit-00.png?itok=2WboLoHT" alt="Brian Hedden joins SERC co-associate dean Nikos Trichakis in advancing the initiative’s ongoing research, teaching, and engagement efforts. " loading="lazy"/>
+            <span class="img-credit">Photo courtesy of Brian Hedden</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">4 lut 2026</span>
+                <span class="author">Amanda Diehl | MIT Schwarzman College of Computing</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/brian-hedden-named-co-associate-dean-serc-0204" target="_blank" rel="noopener">Brian Hedden named co-associate dean of Social and Ethical Responsibilities of Computing</a>
+            </h2>
+            <p class="card-desc">He joins Nikos Trichakis in guiding the cross-cutting initiative of the MIT Schwarzman College of Computing.</p>
+            <div class="tags"><span class="tag">Administration</span><span class="tag">Faculty</span><span class="tag">Philosophy</span><span class="tag">Ethics</span><span class="tag">Artificial intelligence</span><span class="tag">Education, teaching, academics</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.45s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/mit-eecs-Torralba-Antonio.jpg?itok=ck8ixbVg" alt="Antonio Torralba is the faculty head of artificial intelligence and decision-making within MIT&#x27;s Department of Electrical Engineering and Computer Science." loading="lazy"/>
+            <span class="img-credit">Photo: Lillie Paquette/School of Engineering</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">4 lut 2026</span>
+                <span class="author">Jane Halpern | Department of Electrical Engineering and Computer Science</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/antonio-torralba-three-mit-alumni-named-acm-fellows-0204" target="_blank" rel="noopener">Antonio Torralba, three MIT alumni named 2025 ACM fellows</a>
+            </h2>
+            <p class="card-desc">Torralba’s research focuses on computer vision, machine learning, and human visual perception. </p>
+            <div class="tags"><span class="tag">Awards, honors and fellowships</span><span class="tag">Faculty</span><span class="tag">Alumni/ae</span><span class="tag">Computer vision</span><span class="tag">Artificial intelligence</span><span class="tag">Computer science and technology</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.5s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/jim-collins-mit-00.jpg?itok=JTgq5F3D" alt="James Collins is the Termeer Professor of Medical Engineering and Science, professor of biological engineering, and core faculty at the Institute for Medical Engineering and Science (IMES)." loading="lazy"/>
+            <span class="img-credit">Photo: M. Scott Brauer</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">4 lut 2026</span>
+                <span class="author">Mindy Blodgett | Institute for Medical Engineering and Science</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/3-questions-using-ai-to-accelerate-discovery-design-therapeutic-drugs-0204" target="_blank" rel="noopener">3 Questions: Using AI to accelerate the discovery and design of therapeutic drugs</a>
+            </h2>
+            <p class="card-desc">Professor James Collins discusses how collaboration has been central to his research into combining computational predictions with new experimental platforms. </p>
+            <div class="tags"><span class="tag">Interview</span><span class="tag">Faculty</span><span class="tag">Biological engineering</span><span class="tag">Drug development</span><span class="tag">Artificial intelligence</span><span class="tag">Disease</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.55s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/mit-student-Spivakovsky-Katie-Churchill.jpg?itok=Itxf02Qu" alt="Katie Spivakovsky is majoring in biological engineering and artificial intelligence with minors in mathematics and biology." loading="lazy"/>
+            <span class="img-credit">Photo: Hannah Wang</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">3 lut 2026</span>
+                <span class="author">Julia Mongo | Office of Distinguished Fellowships</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/katie-spivakovsky-wins-churchill-scholarship-0203" target="_blank" rel="noopener">Katie Spivakovsky wins 2026 Churchill Scholarship</a>
+            </h2>
+            <p class="card-desc">The MIT senior will pursue a master’s degree at Cambridge University in the U.K. this fall.</p>
+            <div class="tags"><span class="tag">Awards, honors and fellowships</span><span class="tag">Students</span><span class="tag">Undergraduate</span><span class="tag">Biological engineering</span><span class="tag">Biology</span><span class="tag">Mathematics</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.6000000000000001s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/mit-architecture-kitchen-cosmo.jpg?itok=ilVJRgjB" alt="Jacob Payne (left) and Ayah Mahmoud pose with their interactive kitchen assistant, Kitchen Cosmo." loading="lazy"/>
+            <span class="img-credit">Photo: Maria Iacobo</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">3 lut 2026</span>
+                <span class="author">Maria Iacobo | School of Architecture and Planning</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/counter-intelligence-kitchen-cosmo-0203" target="_blank" rel="noopener">Counter intelligence</a>
+            </h2>
+            <p class="card-desc">Architecture students bring new forms of human-machine interaction into the kitchen.</p>
+            <div class="tags"><span class="tag">Students</span><span class="tag">Design</span><span class="tag">Food</span><span class="tag">Invention</span><span class="tag">Human-computer interaction</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.65s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202602/smart-witec-patch-prototype-00_0.jpeg?itok=EHlc_92n" alt="WITEC’s customized patch, shown here in prototype, is made with ultrasonic transducers that adhere to the human body using bioadhesive gel soft materials." loading="lazy"/>
+            <span class="img-credit">Photo courtesy of SMART WITEC</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">3 lut 2026</span>
+                <span class="author">Singapore-MIT Alliance for Research and Technology</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/smart-launches-wearable-imaging-transforming-elderly-care-research-group-0203" target="_blank" rel="noopener">SMART launches new Wearable Imaging for Transforming Elderly Care research group</a>
+            </h2>
+            <p class="card-desc">WITEC is working to develop the first wearable ultrasound imaging system to monitor chronic conditions in real-time, with the goal of enabling earlier detection and timely intervention.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Wearable sensors</span><span class="tag">Imaging</span><span class="tag">Health care</span><span class="tag">3-D printing</span><span class="tag">Invention</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.7000000000000001s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/MIT-DiffSyn-01.jpg?itok=7TQIoUod" alt="MIT researchers created a model that suggests promising ways to synthesize new materials for faster experimentation. “It gives you a very good initial guess on synthesis recipes for completely new materials,” Elton Pan says." loading="lazy"/>
+            <span class="img-credit">Image: iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">2 lut 2026</span>
+                <span class="author">Zach Winn | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/how-generative-ai-can-help-scientists-synthesize-complex-materials-0202" target="_blank" rel="noopener">How generative AI can help scientists synthesize complex materials</a>
+            </h2>
+            <p class="card-desc">MIT researchers’ DiffSyn model offers recipes for synthesizing new materials, enabling faster experimentation and a shorter journey from hypothesis to use.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Materials science and engineering</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Computer science and technology</span><span class="tag">DMSE</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.75s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/Leslie-Kaelbling-MIT-00.jpg?itok=Mx-0HAqW" alt="Co-instructor Leslie Kaelbling, the Panasonic Professor of Computer Science and Engineering, helps students examine the deep relationship between computer science and philosophy." loading="lazy"/>
+            <span class="img-credit">Photo: Hanley Valentin</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">30 sty 2026</span>
+                <span class="author">Amanda Diehl | MIT Schwarzman College of Computing</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/philosophical-puzzle-rational-artificial-intelligence-0130" target="_blank" rel="noopener">The philosophical puzzle of rational artificial intelligence</a>
+            </h2>
+            <p class="card-desc">As AI technology advances, a new interdisciplinary course seeks to equip students with foundational critical thinking skills in computing.</p>
+            <div class="tags"><span class="tag">Classes and programs</span><span class="tag">Philosophy</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Technology and society</span><span class="tag">Computer science and technology</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.8s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/mit-lids-Ghassemi.jpg?itok=0Xn50RHx" alt="“We demonstrate that even when you train models on large amounts of data, and choose the best average model, in a new setting this ‘best model’ could be the worst model for 6-75 percent of the new data,” says Associate Professor Marzyeh Ghassemi." loading="lazy"/>
+            <span class="img-credit">Image: iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">20 sty 2026</span>
+                <span class="author">Michaela Jarvis | MIT Laboratory for Information and Decision Systems</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/why-its-critical-to-move-beyond-overly-aggregated-machine-learning-metrics-0120" target="_blank" rel="noopener">Why it’s critical to move beyond overly aggregated machine-learning metrics</a>
+            </h2>
+            <p class="card-desc">New research detects hidden evidence of mistaken correlations — and provides a method to improve accuracy.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Machine learning</span><span class="tag">Artificial intelligence</span><span class="tag">Health care</span><span class="tag">Computer science and technology</span><span class="tag">Technology and society</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.8500000000000001s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/mit-quest.jpg?itok=Z4AIAI6Y" alt="Celebrating the newly named MIT Siegel Family Quest for Intelligence are (left to right) Josh Tenenbaum, David Siegel, Jim DiCarlo, Nick Roy, Erik Vogan, and Leslie Kaelbling." loading="lazy"/>
+            <span class="img-credit">Photo: Giro Studios</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">14 sty 2026</span>
+                <span class="author">Rachel Kemper | MIT Quest for Intelligence</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/continued-commitment-to-understanding-intelligence-0114" target="_blank" rel="noopener">At MIT, a continued commitment to understanding intelligence</a>
+            </h2>
+            <p class="card-desc">With support from the Siegel Family Endowment, the newly renamed MIT Siegel Family Quest for Intelligence investigates how brains produce intelligence and how it can be replicated to solve problems.</p>
+            <div class="tags"><span class="tag">Brain and cognitive sciences</span><span class="tag">Artificial intelligence</span><span class="tag">Neuroscience</span><span class="tag">Giving</span><span class="tag">Research</span><span class="tag">Electrical engineering and computer science (EECS)</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.9s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-MechStyle.jpg?itok=R7YZJuH2" alt="MIT CSAIL researchers have found a way to make real-world objects with AI, creating durable items that exhibit the user’s intended appearance and texture." loading="lazy"/>
+            <span class="img-credit">Image: Alex Shipps/MIT CSAIL, with assets from the researchers and Pexels.</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">14 sty 2026</span>
+                <span class="author">Alex Shipps | MIT CSAIL</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/genai-tool-helps-3d-print-personal-items-sustain-daily-use-0114" target="_blank" rel="noopener">Generative AI tool helps 3D print personal items that sustain daily use</a>
+            </h2>
+            <p class="card-desc">“MechStyle” allows users to personalize 3D models, while ensuring they’re physically viable after fabrication, producing unique personal items and assistive technology.</p>
+            <div class="tags"><span class="tag">Design</span><span class="tag">Fabrication</span><span class="tag">3-D printing</span><span class="tag">Invention</span><span class="tag">Artificial intelligence</span><span class="tag">Computer science and technology</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:0.9500000000000001s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202601/MIT_AI-Power-01-update-press.jpg?itok=w4OT9btX" alt="Priya Donti, an MIT electrical engineering and computer science professor, studies how machine learning can make the power grid more efficient and resilient." loading="lazy"/>
+            <span class="img-credit">Credit: Adam Glanzman</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">9 sty 2026</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/3-questions-how-ai-could-optimize-power-grid-0109" target="_blank" rel="noopener">3 Questions: How AI could optimize the power grid</a>
+            </h2>
+            <p class="card-desc">While the growing energy demands of AI are worrying, some techniques can also help make power grids cleaner and more efficient.</p>
+            <div class="tags"><span class="tag">Interview</span><span class="tag">Faculty</span><span class="tag">Research</span><span class="tag">Sustainable computing</span><span class="tag">Algorithms</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.0s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/mit-Judah-Cohen-weather-map.jpg?itok=bQl3bqvA" alt="Judah Cohen’s model won first place for the fall season in the 2025 AI WeatherQuest subseasonal forecasting competition. The winning model combined machine-learning pattern recognition with the same Arctic diagnostics Cohen has refined over decades. The model detected a potential cold surge in mid-December for the U.S. East Coast weeks before such signals typically arise. The forecast was widely publicized in the media in real-time." loading="lazy"/>
+            <span class="img-credit">Image: weathermodels.com </span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">8 sty 2026</span>
+                <span class="author">Stephanie Martinovich | Department of Civil and Environmental Engineering</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/decoding-arctic-to-predict-winter-weather-0108" target="_blank" rel="noopener">Decoding the Arctic to predict winter weather</a>
+            </h2>
+            <p class="card-desc">With the help of AI, MIT Research Scientist Judah Cohen is reshaping subseasonal forecasting, with the goal of extending the lead time for predicting impactful weather.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Weather</span><span class="tag">Staff</span><span class="tag">Profile</span><span class="tag">Technology and society</span><span class="tag">Machine learning</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.05s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/mit-stone-center-launch.jpg?itok=6BtJlLDS" alt="Co-directors of the Stone Center on Inequality and Shaping the Future of Work stand with Stone Foundation leadership at the launch of the new center." loading="lazy"/>
+            <span class="img-credit">Photo: Bryce Vickmark</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">7 sty 2026</span>
+                <span class="author">Julia Regier | Blueprint Labs</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/stone-center-inequality-shaping-future-work-launches-0107" target="_blank" rel="noopener">Stone Center on Inequality and Shaping the Future of Work Launches at MIT</a>
+            </h2>
+            <p class="card-desc">Recent launch event for the center featured discussions on pro-worker AI, wealth inequality, and the future of liberal democracy.</p>
+            <div class="tags"><span class="tag">Special events and guest speakers</span><span class="tag">Labor and jobs</span><span class="tag">Artificial intelligence</span><span class="tag">Economics</span><span class="tag">Technology and society</span><span class="tag">Inequality</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.1s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/mit-j-clinic-EHR-Memorization.jpg?itok=VrtzS0Gi" alt="MIT scientists are developing tests to ensure that AI models aren’t memorizing sensitive patient information." loading="lazy"/>
+            <span class="img-credit">Image: Alex Ouyang/MIT Jameel Clinic, with Adobe Stock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">5 sty 2026</span>
+                <span class="author">Alex Ouyang | Abdul Latif Jameel Clinic for Machine Learning in Health</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/mit-scientists-investigate-memorization-risk-clinical-ai-0105" target="_blank" rel="noopener">MIT scientists investigate memorization risk in the age of clinical AI</a>
+            </h2>
+            <p class="card-desc">New research demonstrates how AI models can be tested to ensure they don’t cause harm by revealing anonymized patient health data.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Privacy</span><span class="tag">Cybersecurity</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Health care</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.1500000000000001s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/mit-architecture-Jacob-Payne.JPG?itok=_koezIN9" alt="Architecture graduate student C Jacob Payne is “an exceptional designer who deeply embodies MIT’s ‘mens et manus’ [‘mind and hand’] ethos by approaching product and interaction design with an exciting combination of intellectual rigor and high-quality, hands-on making,” says Marcelo Coelho, an MIT professor of the practice and director of the Design Intelligence Lab." loading="lazy"/>
+            <span class="img-credit">Photo: Gretchen Ertl</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">5 sty 2026</span>
+                <span class="author">Stefanie Koperniak | Office of Graduate Education</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2026/using-design-interpret-past-envision-future-c-jacob-payne-0105" target="_blank" rel="noopener">Using design to interpret the past and envision the future </a>
+            </h2>
+            <p class="card-desc">MIT graduate student C Jacob Payne reimagines historic architecture and invents new possibilities at the intersection of AI and design.</p>
+            <div class="tags"><span class="tag">Profile</span><span class="tag">Students</span><span class="tag">Graduate, postdoctoral</span><span class="tag">Architecture</span><span class="tag">Design</span><span class="tag">Urban studies and planning</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.2000000000000002s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-TopinMedia.jpg?itok=QNUAOAWj" alt="" loading="lazy"/>
+            <span class="img-credit">Image: MIT News</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">22 gru 2025</span>
+                <span class="author">MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/mit-media-review-1222" target="_blank" rel="noopener">MIT in the media: 2025 in review </a>
+            </h2>
+            <p class="card-desc">MIT community members made headlines with key research advances and their efforts to tackle pressing challenges.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">School of Engineering</span><span class="tag">School of Science</span><span class="tag">School of Humanities Arts and Social Sciences</span><span class="tag">School of Architecture and Planning</span><span class="tag">MIT Sloan School of Management</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.25s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/mit-csail-Untrainable-networks.jpg?itok=_xsMAwVf" alt="MIT researchers found that many so-called “ineffective” networks may simply start from less-than-ideal starting points, and that short-term guidance can strengthen their performance.  " loading="lazy"/>
+            <span class="img-credit">Image: Alex Shipps/MIT CSAIL</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">18 gru 2025</span>
+                <span class="author">Rachel Gordon | MIT CSAIL</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/guided-learning-lets-untrainable-neural-networks-realize-their-potential-1218" target="_blank" rel="noopener">Guided learning lets “untrainable” neural networks realize their potential</a>
+            </h2>
+            <p class="card-desc">CSAIL researchers find even “untrainable” neural nets can learn effectively when guided by another network’s built-in biases using their guidance method.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Data</span><span class="tag">Artificial intelligence</span><span class="tag">Algorithms</span><span class="tag">Machine learning</span><span class="tag">Networks</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.3s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/mit-watson-cats-in-a-box.jpg?itok=ytH_wQHS" alt="Large language models struggle with state changes that are common in long texts, like how a cat might interact with a box over time and how the box might break down. Now, work from MIT-IBM Watson AI Lab researchers can outperform the current state-of-the-art method, RoPE." loading="lazy"/>
+            <span class="img-credit">Image: AdobeStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">17 gru 2025</span>
+                <span class="author">Lauren Hinkel | MIT-IBM Watson AI Lab</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/new-way-to-increase-large-language-model-capabilities-1217" target="_blank" rel="noopener">A new way to increase the capabilities of large language models</a>
+            </h2>
+            <p class="card-desc">MIT-IBM Watson AI Lab researchers developed an expressive architecture that provides better state tracking and sequential reasoning in LLMs over long texts.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Algorithms</span><span class="tag">Computer science and technology</span><span class="tag">Data</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.35s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT_Eye-Evolution-01.jpg?itok=iCpfrm_2" alt="Researchers developed a computational framework that enables them to explore and probe the evolution of vision systems over millions of years using embodied AI agents. " loading="lazy"/>
+            <span class="img-credit">Image: iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">17 gru 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/scientific-sandbox-lets-researchers-explore-evolution-vision-systems-1217" target="_blank" rel="noopener">A “scientific sandbox” lets researchers explore the evolution of vision systems</a>
+            </h2>
+            <p class="card-desc">The AI-powered tool could inform the design of better sensors and cameras for robots or autonomous vehicles.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Computer science and technology</span><span class="tag">Computer vision</span><span class="tag">Imaging</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.4000000000000001s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-TextAssembly-01-press.jpg?itok=9VjD1Zwy" alt="Given the prompt “Make me a chair” and feedback “I want panels on the seat,” the robot assembles a chair and places panel components according to the user prompt." loading="lazy"/>
+            <span class="img-credit">Credit: Courtesy of the researchers</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">16 gru 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/robot-makes-chair-1216" target="_blank" rel="noopener">“Robot, make me a chair” </a>
+            </h2>
+            <p class="card-desc">An AI-driven system lets users design and build simple, multicomponent objects by describing them with words.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Computer science and technology</span><span class="tag">Artificial intelligence</span><span class="tag">Architecture</span><span class="tag">Mechanical engineering</span><span class="tag">Machine learning</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.4500000000000002s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/mit-biology-Yunha-Hwang-3q.jpg?itok=iTEkh14c" alt="New faculty member Yunha Hwang once wanted to be an astronaut and instead found a close equivalent to studying life in space: the novel biology of organisms that survive and thrive in extreme environments, many of which cannot be cultivated in the lab. Hwang is using the power of computation to explore microbial diversity and map the evolutionary relationships between each instance of life. " loading="lazy"/>
+            <span class="img-credit">Photo: Lillian Eden/Department of Biology</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">15 gru 2025</span>
+                <span class="author">Lillian Eden | Department of Biology</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/3-questions-yunha-hwang-using-computation-study-worlds-best-single-celled-chemists-1215" target="_blank" rel="noopener">3 Questions: Using computation to study the world’s best single-celled chemists</a>
+            </h2>
+            <p class="card-desc">Assistant Professor Yunha Hwang utilizes microbial genomes to examine the language of biology. Her appointment reflects MIT’s commitment to exploring the intersection of genetics research and AI.</p>
+            <div class="tags"><span class="tag">Interview</span><span class="tag">Faculty</span><span class="tag">Biology</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Microbes</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.5s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/MIT-Dauren-Sarsenbayev-cov.jpg?itok=K2Xg3ZVg" alt="Using his modeling expertise in his doctoral work, Dauren Sarsenbayev is evaluating the potential of spent nuclear fuel as an anthropogenic geothermal energy source. " loading="lazy"/>
+            <span class="img-credit">Photo: Gretchen Ertl</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">15 gru 2025</span>
+                <span class="author">Poornima Apte | Department of Nuclear Science and Engineering</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/dauren-sarsenbayev-working-to-eliminate-barriers-adopting-nuclear-energy-1215" target="_blank" rel="noopener">Working to eliminate barriers to adopting nuclear energy</a>
+            </h2>
+            <p class="card-desc">Nuclear waste continues to be a bottleneck in the widespread use of nuclear energy, so doctoral student Dauren Sarsenbayev is developing models to address the problem.</p>
+            <div class="tags"><span class="tag">Profile</span><span class="tag">Students</span><span class="tag">Graduate, postdoctoral</span><span class="tag">Civil and environmental engineering</span><span class="tag">Nuclear science and engineering</span><span class="tag">Energy</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.55s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-CellPredict-01-press.gif?itok=GtpODOzD" alt="A developing Drosophila embryo was recorded using light sheet microscopy. The embryo is segmented, tracked, and reconstructed. Cell boundaries show how individual cells fold, divide, and rearrange." loading="lazy"/>
+            <span class="img-credit">Credit: MultiCell authors</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">15 gru 2025</span>
+                <span class="author">Jennifer Chu | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/deep-learning-model-predicts-how-fruit-flies-form-1215" target="_blank" rel="noopener">Deep-learning model predicts how fruit flies form, cell by cell</a>
+            </h2>
+            <p class="card-desc">The approach could apply to more complex tissues and organs, helping researchers to identify early signs of disease.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">3-D</span><span class="tag">Artificial intelligence</span><span class="tag">Biology</span><span class="tag">Cells</span><span class="tag">Animals</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.6s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/self-steering-model-mit-csail-00_0.png?itok=v7ciylOd" alt="A new approach developed by MIT CSAIL researchers uses an LLM to plan how to answer complex reasoning tasks, then divides the legwork of that strategy among smaller language models. Their method helps LMs provide more accurate responses than leading LLMs and approach the precision of top reasoning systems, while being more efficient than both." loading="lazy"/>
+            <span class="img-credit">Image: Alex Shipps/MIT CSAIL</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">12 gru 2025</span>
+                <span class="author">Alex Shipps | MIT CSAIL</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/enabling-small-language-models-solve-complex-reasoning-tasks-1212" target="_blank" rel="noopener">Enabling small language models to solve complex reasoning tasks</a>
+            </h2>
+            <p class="card-desc">The “self-steering” DisCIPL system directs small models to work together on tasks with constraints, like itinerary planning and budgeting.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Brain and cognitive sciences</span><span class="tag">Algorithms</span><span class="tag">MIT Siegel Family Quest for Intelligence</span><span class="tag">Computer science and technology</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.6500000000000001s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/mit-2023-2N-Commencement.JPG?itok=J7W9sSOO" alt="Class of 2023 graduates of the MIT Naval Construction and Engineering (Course 2N) program. The 2N program will celebrate its 125th&amp;nbsp;year at MIT in 2026." loading="lazy"/>
+            <span class="img-credit">Photo: Tony Pulsone</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">12 gru 2025</span>
+                <span class="author">Anne Wilson | Department of Mechanical Engineering</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/applied-ai-program-train-military-leaders-ai-age-1212" target="_blank" rel="noopener">New MIT program to train military leaders for the AI age</a>
+            </h2>
+            <p class="card-desc">The new certificate program will equip naval officers with skills needed to solve the military’s hardest problems.</p>
+            <div class="tags"><span class="tag">Classes and programs</span><span class="tag">Navy</span><span class="tag">Artificial intelligence</span><span class="tag">Security studies and military</span><span class="tag">Oceanography and ocean engineering</span><span class="tag">Mechanical engineering</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.7000000000000002s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-SmoothSailing-01-press.jpg?itok=7_MdZ9Pf" alt="Researchers developed a new method designed to generate valid confidence intervals for problems involving data that vary across space. Instead of assuming the source and target data are similar, the researchers assume the data vary smoothly over space." loading="lazy"/>
+            <span class="img-credit">Image: MIT News; iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">12 gru 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/new-method-improves-reliability-statistical-estimations-1212" target="_blank" rel="noopener">New method improves the reliability of statistical estimations</a>
+            </h2>
+            <p class="card-desc">The technique can help scientists in economics, public health, and other fields understand whether to trust the results of their experiments.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Data</span><span class="tag">Mathematics</span><span class="tag">Computer science and technology</span><span class="tag">Computer Science and Artificial Intelligence Laboratory (CSAIL)</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.75s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-Memory-Transistors-01-press.jpg?itok=hNQjmJPU" alt="A new fabrication technique that stacks multiple active components on the back end of a computer chip could significantly boost the energy efficiency of microelectronics." loading="lazy"/>
+            <span class="img-credit">Credit: Christine Daniloff, MIT; iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">11 gru 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/new-materials-could-boost-energy-efficiency-microelectronics-1211" target="_blank" rel="noopener">New materials could boost the energy efficiency of microelectronics</a>
+            </h2>
+            <p class="card-desc">By stacking multiple active components based on new materials on the back end of a computer chip, this new approach reduces the amount of energy wasted during computation.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Computer chips</span><span class="tag">Electronics</span><span class="tag">Computer science and technology</span><span class="tag">Energy</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.8s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/ai2050-fellows-2025_0.png?itok=TOImdXxR" alt="Zongyi Li (left), a postdoc in MIT CSAIL, and Tess Smidt, an associate professor of electrical engineering and computer science, are among those awarded AI2050 fellowships for 2025." loading="lazy"/>
+            <span class="img-credit">Photos courtesy of the subjects.</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">8 gru 2025</span>
+                <span class="author">Jane Halpern | Department of Electrical Engineering and Computer Science</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/mit-affiliates-named-schmidt-sciences-ai2050-fellows-1208" target="_blank" rel="noopener">MIT affiliates named 2025 Schmidt Sciences AI2050 Fellows</a>
+            </h2>
+            <p class="card-desc">Postdoc Zongyi Li, Associate Professor Tess Smidt, and seven additional alumni will be supported in the development of AI against difficult problems.</p>
+            <div class="tags"><span class="tag">Awards, honors and fellowships</span><span class="tag">Faculty</span><span class="tag">Staff</span><span class="tag">Graduate, postdoctoral</span><span class="tag">Algorithms</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.85s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/MIT-MAD-robotic-assembly.jpg?itok=SX5kVHIo" alt="A robotic arm builds a lattice-like stool after hearing the prompt “I want a simple stool,” demonstrating how the system translates speech into real-time fabrication." loading="lazy"/>
+            <span class="img-credit">Photo courtesy of Alexander Kyaw and the researchers.</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">5 gru 2025</span>
+                <span class="author">Denise Brehm | MIT Morningside Academy for Design</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/mit-researchers-speak-objects-existence-using-ai-robotics-1205" target="_blank" rel="noopener">MIT researchers “speak objects into existence” using AI and robotics</a>
+            </h2>
+            <p class="card-desc">The speech-to-reality system combines 3D generative AI and robotic assembly to create objects on demand.</p>
+            <div class="tags"><span class="tag">School of Architecture and Planning</span><span class="tag">School of Engineering</span><span class="tag">MIT Schwarzman College of Computing</span><span class="tag">Architecture</span><span class="tag">Electrical engineering and computer science (EECS)</span><span class="tag">Mechanical engineering</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.9000000000000001s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-Pickle-Robot-01-press.jpg?itok=GDuDSRPk" alt="The company’s one-armed robots autonomously unload trailers, picking up boxes weighing up to 50 pounds and placing them onto onboard conveyor belts for warehouses of all types." loading="lazy"/>
+            <span class="img-credit">Credit: Courtesy of Pickle Robotics</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">5 gru 2025</span>
+                <span class="author">Zach Winn | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/robots-spare-warehouse-workers-heavy-lifting-1205" target="_blank" rel="noopener">Robots that spare warehouse workers the heavy lifting</a>
+            </h2>
+            <p class="card-desc">Founded by MIT alumni, the Pickle Robot Company has developed machines that can autonomously load and unload trucks inside warehouses and logistic centers.</p>
+            <div class="tags"><span class="tag">Robotics</span><span class="tag">Startups</span><span class="tag">Innovation and Entrepreneurship (I&amp;E)</span><span class="tag">Machine learning</span><span class="tag">Artificial intelligence</span><span class="tag">Electrical engineering and computer science (EECS)</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:1.9500000000000002s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-RewardModel-01-press.jpg?itok=kqFU7BM6" alt="MIT researchers developed a smarter way for an LLM to allocate computation while it reasons about a problem, boosting efficiency." loading="lazy"/>
+            <span class="img-credit">Image: MIT News; iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">4 gru 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/smarter-way-large-language-models-think-about-hard-problems-1204" target="_blank" rel="noopener">A smarter way for large language models to think about hard problems</a>
+            </h2>
+            <p class="card-desc">This new technique enables LLMs to dynamically adjust the amount of computation they use for reasoning, based on the difficulty of the question. </p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Computer science and technology</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Algorithms</span><span class="tag">Mechanical engineering</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.0s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/MIT-MicroRobot-Learning-01-press.jpg?itok=E4W5TaSr" alt="A time-lapse photo shows a flying microrobot performing a flip." loading="lazy"/>
+            <span class="img-credit">Credit: Courtesy of the Soft and Micro Robotics Laboratory</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">3 gru 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/mit-engineers-design-aerial-microrobot-fly-like-bumblebee-1203" target="_blank" rel="noopener">MIT engineers design an aerial microrobot that can fly as fast as a bumblebee</a>
+            </h2>
+            <p class="card-desc">With insect-like speed and agility, the tiny robot could someday aid in search-and-rescue missions. </p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Robotics</span><span class="tag">Drones</span><span class="tag">Electronics</span><span class="tag">Bioinspiration</span><span class="tag">Artificial intelligence</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.0500000000000003s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/mit-csail-Contact-Aware.jpg?itok=B1-c14Yo" alt="MIT researchers are teaching robots to understand their own limits while still achieving their goals, ensuring the machines move safely and never overextend themselves." loading="lazy"/>
+            <span class="img-credit">Image: Maximilian Stölzle and Joey Impoza Roberts</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">2 gru 2025</span>
+                <span class="author">Rachel Gordon | MIT CSAIL</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/new-control-system-teaches-soft-robots-art-staying-safe-1202" target="_blank" rel="noopener">New control system teaches soft robots the art of staying safe</a>
+            </h2>
+            <p class="card-desc">MIT CSAIL and LIDS researchers developed a mathematically grounded system that lets soft robots deform, adapt, and interact with people and objects, without violating safety limits. </p>
+            <div class="tags"><span class="tag">School of Engineering</span><span class="tag">MIT Schwarzman College of Computing</span><span class="tag">Civil and environmental engineering</span><span class="tag">Electrical engineering and computer science (EECS)</span><span class="tag">Mechanical engineering</span><span class="tag">Computer Science and Artificial Intelligence Laboratory (CSAIL)</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.1s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202512/Farm-Sveinung-Beckett-MIT-Aquaculture-00.jpg?itok=BWqZMuaK" alt="MIT Sea Grant student intern Beckett Devoe (foreground) looks into one of the net pens at the Singsholmen salmon farm off the island of Hitra in Norway." loading="lazy"/>
+            <span class="img-credit">Photo: Lily Keyes/MIT Sea Grant</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">1 gru 2025</span>
+                <span class="author">Lily Keyes | MIT Sea Grant</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/aquaculture-shock-ai-and-autonomy-aquaculture-1201" target="_blank" rel="noopener">MIT Sea Grant students explore the intersection of technology and offshore aquaculture in Norway</a>
+            </h2>
+            <p class="card-desc">AquaCulture Shock program, in collaboration with MIT-Scandinavia MISTI, offers international internships for AI and autonomy in aquaculture</p>
+            <div class="tags"><span class="tag">Classes and programs</span><span class="tag">International initiatives</span><span class="tag">Collaboration</span><span class="tag">Mechanical engineering</span><span class="tag">Center for International Studies</span><span class="tag">MISTI</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.15s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/mit-Ben-Manning-profile.jpg?itok=F2JUerH-" alt="“We are possibly moving toward a world where the pace of understanding may get much closer to the speed of economic change,” says PhD student Benjamin Manning. " loading="lazy"/>
+            <span class="img-credit">Photo: Kelly Davidson</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">1 gru 2025</span>
+                <span class="author">Alyssa Loebig | MIT Sloan School of Management</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/benjamin-manning-how-ai-will-shape-future-work-1201" target="_blank" rel="noopener">Exploring how AI will shape the future of work</a>
+            </h2>
+            <p class="card-desc">For PhD student Benjamin Manning, the future of work means grasping AI’s role on our behalf while transforming and accelerating social scientific discovery.</p>
+            <div class="tags"><span class="tag">Profile</span><span class="tag">Students</span><span class="tag">Graduate, postdoctoral</span><span class="tag">Artificial intelligence</span><span class="tag">Labor and jobs</span><span class="tag">Technology and society</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.2s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/LLM-Lessons-01a-press.jpg?itok=w968Fdjx" alt="An LLM might learn that a question like “Where is Paris located?” is structured as adverb/verb/proper noun/verb. If the model is given a new question with the same grammatical structure but nonsense words, like “Quickly sit Paris clouded?” it might answer “France” even though that answer makes no sense." loading="lazy"/>
+            <span class="img-credit">Image: MIT News; iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">26 lis 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/shortcoming-makes-llms-less-reliable-1126" target="_blank" rel="noopener">Researchers discover a shortcoming that makes LLMs less reliable</a>
+            </h2>
+            <p class="card-desc">Large language models can learn to mistakenly link certain sentence patterns with specific topics — and may then repeat these patterns instead of reasoning.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Computer science and technology</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Human-computer interaction</span><span class="tag">Data</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.25s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/mit-BoltzGen.jpg?itok=iwyOhi0f" alt="More than 300 people attended a BoltzGen seminar on Oct. 30, just days after its initial release." loading="lazy"/>
+            <span class="img-credit">Photo: Ethan Wu, Will Stokes</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">25 lis 2025</span>
+                <span class="author">Alex Ouyang | Abdul Latif Jameel Clinic for Machine Learning in Health</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/mit-scientists-debut-generative-ai-model-that-could-create-molecules-addressing-hard-to-treat-diseases-1125" target="_blank" rel="noopener">MIT scientists debut a generative AI model that could create molecules addressing hard-to-treat diseases</a>
+            </h2>
+            <p class="card-desc">BoltzGen generates protein binders for any biological target from scratch, expanding AI’s reach from understanding biology toward engineering it.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Special events and guest speakers</span><span class="tag">Computer science and technology</span><span class="tag">Health sciences and technology</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.3000000000000003s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/mit-mcgovern-costofthinking.jpg?itok=ExgVV7Hc" alt="“People who build these models don’t care if they do it like humans. They just want a system that will robustly perform under all sorts of conditions and produce correct responses,” Associate Professor Ev Fedorenko says. “The fact that there’s some convergence is really quite striking.”" loading="lazy"/>
+            <span class="img-credit">Image: iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">19 lis 2025</span>
+                <span class="author">Jennifer Michalowski | McGovern Institute for Brain Research</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/cost-of-thinking-1119" target="_blank" rel="noopener">The cost of thinking</a>
+            </h2>
+            <p class="card-desc">MIT neuroscientists find a surprising parallel in the ways humans and new AI models solve complex problems.  </p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Brain and cognitive sciences</span><span class="tag">Neuroscience</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Computer science and technology</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.35s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/MIT-Video-CAD-01.jpg?itok=32J3Kq6t" alt="MIT engineers are looking to ease CAD’s learning curve with a new AI model that can use CAD software much like a human would. Given a 2D sketch of an object, the model can quickly create a 3D version by carrying out keyboard and mouse commands and selecting buttons and file options within the software." loading="lazy"/>
+            <span class="img-credit">Credit: iStock</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">19 lis 2025</span>
+                <span class="author">Jennifer Chu | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/new-ai-agent-learns-use-cad-create-3d-objects-sketches-1119" target="_blank" rel="noopener">New AI agent learns to use CAD to create 3D objects from sketches</a>
+            </h2>
+            <p class="card-desc">The virtual VideoCAD tool could boost designers’ productivity and help train engineers learning computer-aided design.</p>
+            <div class="tags"><span class="tag">3-D</span><span class="tag">Software</span><span class="tag">Design</span><span class="tag">Artificial intelligence</span><span class="tag">automation</span><span class="tag">Computer modeling</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.4000000000000004s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/MIT-Phillip-Isola-01-press.jpg?itok=az-LV8-Q" alt="“I see all the different kinds of intelligence as having a lot of commonalities, and I’d like to understand those commonalities. What is it that all animals, humans, and AIs have in common?” says Phillip Isola." loading="lazy"/>
+            <span class="img-credit">Photo: Jake Belcher</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">11 lis 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/understanding-nuances-human-intelligence-phillip-isola-1111" target="_blank" rel="noopener">Understanding the nuances of human-like intelligence</a>
+            </h2>
+            <p class="card-desc">Associate Professor Phillip Isola studies the ways in which intelligent machines “think,” in an effort to safely integrate AI into human society. </p>
+            <div class="tags"><span class="tag">Profile</span><span class="tag">Faculty</span><span class="tag">Computer science and technology</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Brain and cognitive sciences</span></div>
+        </div>
+    </article>
+
+    <article class="card" style="animation-delay:2.45s">
+        
+        <div class="card-img">
+            <img src="https://news.mit.edu/sites/default/files/styles/news_article__cover_image__original/public/images/202511/MIT-Grounded-Transformer-01-press.jpg?itok=fYwtJL_b" alt="The artificial intelligence-driven system incrementally creates and aligns smaller submaps of the scene, which it stitches together to reconstruct a full 3D map, like of an office cubicle, while estimating the robot’s position in real-time. " loading="lazy"/>
+            <span class="img-credit">Credit: Courtesy of the researchers</span>
+        </div>
+        <div class="card-body">
+            <div class="card-meta">
+                <span class="date">5 lis 2025</span>
+                <span class="author">Adam Zewe | MIT News</span>
+            </div>
+            <h2 class="card-title">
+                <a href="https://news.mit.edu/2025/teaching-robots-to-map-large-environments-1105" target="_blank" rel="noopener">Teaching robots to map large environments</a>
+            </h2>
+            <p class="card-desc">A new approach developed at MIT could help a search-and-rescue robot navigate an unpredictable environment by rapidly generating an accurate map of its surroundings.</p>
+            <div class="tags"><span class="tag">Research</span><span class="tag">Computer science and technology</span><span class="tag">Algorithms</span><span class="tag">Artificial intelligence</span><span class="tag">Machine learning</span><span class="tag">Robotics</span></div>
+        </div>
+    </article>
+        <div class="no-results" id="noResults">Brak wynikow dla podanego zapytania.</div>
+    </div>
+</main>
+
+<button class="back-top" id="backTop" title="Na gore">&uarr;</button>
+
+<footer>
+    Zrodlo: <a href="https://news.mit.edu/topic/mitartificial-intelligence2-rss.xml" target="_blank">MIT News &mdash; Artificial Intelligence RSS</a>
+    &bull; Wygenerowano 2026-02-17 16:16
+</footer>
+
+<script>
+// Search
+const searchInput = document.getElementById('searchInput');
+const cards = document.querySelectorAll('.card');
+const noResults = document.getElementById('noResults');
+const filterBtns = document.querySelectorAll('.filter-btn');
+let activeFilter = 'all';
+
+function applyFilters() {
+    const q = searchInput.value.toLowerCase().trim();
+    let visible = 0;
+    cards.forEach(card => {
+        const title = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+        const desc = card.querySelector('.card-desc')?.textContent.toLowerCase() || '';
+        const tags = Array.from(card.querySelectorAll('.tag')).map(t => t.textContent);
+        const tagsLower = tags.map(t => t.toLowerCase());
+        const matchesSearch = !q || title.includes(q) || desc.includes(q) || tagsLower.some(t => t.includes(q));
+        const matchesFilter = activeFilter === 'all' || tags.includes(activeFilter);
+        if (matchesSearch && matchesFilter) {
+            card.classList.remove('hidden');
+            visible++;
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+    noResults.classList.toggle('visible', visible === 0);
+}
+
+searchInput.addEventListener('input', applyFilters);
+
+filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.filter;
+        applyFilters();
+    });
+});
+
+// Back to top
+const backTop = document.getElementById('backTop');
+window.addEventListener('scroll', () => {
+    backTop.classList.toggle('visible', window.scrollY > 400);
+});
+backTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+[
+  {"name": "DeepSeek R1", "role": "Writer", "input": 0.14, "output": 0.55, "quality": 7.5, "speed": "fast", "provider": "OpenRouter"},
+  {"name": "Claude Sonnet 4", "role": "Writer", "input": 3.00, "output": 15.00, "quality": 9.5, "speed": "medium", "provider": "Anthropic"},
+  {"name": "GPT-4o", "role": "Writer", "input": 2.50, "output": 10.00, "quality": 9.0, "speed": "medium", "provider": "OpenAI"},
+  {"name": "Qwen 2.5 72B", "role": "Writer", "input": 0.20, "output": 0.60, "quality": 7.0, "speed": "fast", "provider": "OpenRouter"},
+  {"name": "Gemini 2.0 Flash", "role": "Critic", "input": 0.10, "output": 0.40, "quality": 8.0, "speed": "fast", "provider": "Google"},
+  {"name": "Claude Opus 4", "role": "Aggregator", "input": 15.00, "output": 75.00, "quality": 10.0, "speed": "slow", "provider": "Anthropic"},
+  {"name": "Bielik 7B", "role": "Support", "input": 0.00, "output": 0.00, "quality": 5.0, "speed": "fast", "provider": "Local"},
+  {"name": "text-embedding-3-small", "role": "Embedding", "input": 0.02, "output": 0.00, "quality": 8.5, "speed": "fast", "provider": "OpenAI"}
+]

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Models & Pricing</title>
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<style>
+:root{--bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--b:rgba(255,255,255,0.07);--a:#00d9ff;--a2:#7c3aed;--g:#4ade80;--y:#facc15;--r:#f87171;--t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:20px;min-height:100vh}
+h2{font-size:1.3rem;font-weight:700;color:var(--ts);margin-bottom:12px}
+.section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--d);margin:20px 0 10px}
+.glass{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:16px}
+.grid{display:grid;gap:12px;margin-bottom:16px}
+.grid-3{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.grid-4{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+table{width:100%;border-collapse:separate;border-spacing:0 3px}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--d);text-align:left;padding:6px 10px;font-weight:600}
+th.r{text-align:right}
+td{padding:8px 10px;font-size:12px;background:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.03)}
+td:first-child{border-left:1px solid rgba(255,255,255,0.03);border-radius:6px 0 0 6px}
+td:last-child{border-right:1px solid rgba(255,255,255,0.03);border-radius:0 6px 6px 0}
+td.r{text-align:right}
+td.w{color:var(--ts);font-weight:600}
+td.cost{color:var(--a);font-weight:600}
+tr:hover td{background:rgba(255,255,255,0.04)}
+.badge{font-size:9px;padding:2px 8px;border-radius:4px;font-weight:600;text-transform:uppercase}
+.badge-active{background:rgba(74,222,128,.12);color:var(--g)}
+.badge-standby{background:rgba(250,204,21,.12);color:var(--y)}
+.badge-available{background:rgba(99,102,241,.12);color:#a78bfa}
+.badge-cheap{background:rgba(74,222,128,.1);color:#4ade80}
+.badge-mid{background:rgba(96,165,250,.1);color:#60a5fa}
+.badge-premium{background:rgba(168,85,247,.1);color:#c084fc}
+.badge-free{background:rgba(74,222,128,.15);color:#34d399}
+.model-card{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:16px;text-align:center;transition:all .2s}
+.model-card:hover{border-color:var(--a);transform:translateY(-2px)}
+.model-card .name{font-weight:700;font-size:13px;color:var(--ts);margin-bottom:4px}
+.model-card .role{font-size:10px;color:var(--m);margin-bottom:6px}
+.model-card .price{font-size:20px;font-weight:700;color:var(--a);margin:6px 0}
+.model-card .price-unit{font-size:9px;color:var(--d)}
+.model-card .provider{font-size:10px;color:var(--m);margin-top:4px}
+.calc-input{width:100%;padding:10px;background:var(--bg2);border:1px solid var(--b);color:var(--t);font:13px/1 monospace;outline:none;border-radius:4px}
+.calc-input:focus{border-color:var(--a)}
+.calc-btn{padding:10px 20px;background:linear-gradient(135deg,var(--a),var(--a2));border:none;color:#fff;font-weight:700;cursor:pointer;border-radius:6px;font-size:13px}
+.calc-btn:hover{transform:scale(1.02);box-shadow:0 4px 12px rgba(0,217,255,.3)}
+.calc-result{background:var(--bg2);border:1px solid var(--b);padding:10px 14px;border-radius:6px;margin:4px 0;display:flex;justify-content:space-between;font-size:12px}
+.calc-result .model-name{color:var(--t)}
+.calc-result .model-cost{color:var(--a);font-weight:700}
+.scroll-x{overflow-x:auto}
+.error{color:var(--r);font-size:12px;padding:12px}
+</style>
+</head>
+<body>
+<h2>AI Models & Pricing</h2>
+<p style="color:var(--m);font-size:12px;margin-bottom:16px">Dane z <code style="color:var(--a)">config/models.yaml</code> — realne ceny modeli</p>
+
+<div id="loading" style="color:var(--m);padding:20px;text-align:center">Ladowanie danych z models.yaml...</div>
+<div id="content" style="display:none">
+
+<!-- Price Cards -->
+<div class="section-label">KARTY CENOWE</div>
+<div class="grid grid-4" id="priceCards"></div>
+
+<!-- Full Table -->
+<div class="glass">
+  <div class="section-label" style="margin-top:0">TABELA POROWNAWCZA</div>
+  <div class="scroll-x">
+    <table>
+      <thead><tr>
+        <th>Model</th><th>Rola</th><th>Provider</th>
+        <th class="r">Input $/1M</th><th class="r">Output $/1M</th><th class="r">Cache $/1M</th>
+        <th class="r">Context</th><th class="r">Max Tokens</th><th>Status</th><th>Tier</th>
+      </tr></thead>
+      <tbody id="modelsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Calculator -->
+<div class="glass">
+  <div class="section-label" style="margin-top:0">KALKULATOR KOSZTOW</div>
+  <p style="font-size:11px;color:var(--m);margin-bottom:12px">Formuła: <span style="color:var(--a)">(input_tokens / 1M * input_price) + (output_tokens / 1M * output_price)</span></p>
+  <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-bottom:12px">
+    <div>
+      <label style="font-size:10px;color:var(--d);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Input Tokens</label>
+      <input type="number" id="calcIn" value="15000" class="calc-input">
+    </div>
+    <div>
+      <label style="font-size:10px;color:var(--d);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:4px">Output Tokens</label>
+      <input type="number" id="calcOut" value="3000" class="calc-input">
+    </div>
+    <button class="calc-btn" onclick="calculate()">Oblicz</button>
+  </div>
+  <div id="calcResults"></div>
+</div>
+
+</div>
+
+<script>
+let allModels = [];
+
+async function loadModels() {
+  try {
+    const res = await fetch('../../data/models.yaml');
+    const text = await res.text();
+    const data = jsyaml.load(text);
+    
+    // Parse all model groups
+    const groups = [
+      { key: 'writers', models: data.writers || {} },
+      { key: 'quality_control', models: {} },
+      { key: 'supporting', models: data.supporting || {} }
+    ];
+    
+    // QC has nested critic + aggregator
+    if (data.quality_control) {
+      if (data.quality_control.critic) groups[1].models.critic = data.quality_control.critic;
+      if (data.quality_control.aggregator) groups[1].models.aggregator = data.quality_control.aggregator;
+    }
+    
+    groups.forEach(g => {
+      Object.entries(g.models).forEach(([key, m]) => {
+        const pricing = m.pricing || {};
+        allModels.push({
+          id: key,
+          name: m.name || key,
+          role: m.role || '-',
+          provider: m.provider || '-',
+          inputPrice: pricing.input_per_million || 0,
+          outputPrice: pricing.output_per_million || 0,
+          cachePrice: pricing.cached_input_per_million || 0,
+          context: m.limits?.context_window || 0,
+          maxTokens: m.limits?.max_tokens || 0,
+          status: m.status || 'unknown',
+          group: g.key
+        });
+      });
+    });
+    
+    renderCards();
+    renderTable();
+    calculate();
+    
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  } catch(e) {
+    document.getElementById('loading').innerHTML = '<div class="error">Blad ladowania: ' + e.message + '</div>';
+  }
+}
+
+function getTier(price) {
+  if (price === 0) return { label: 'FREE', cls: 'badge-free' };
+  if (price <= 1) return { label: 'CHEAP', cls: 'badge-cheap' };
+  if (price <= 5) return { label: 'MID', cls: 'badge-mid' };
+  return { label: 'PREMIUM', cls: 'badge-premium' };
+}
+
+function statusBadge(s) {
+  const map = { active: 'badge-active', standby: 'badge-standby', available: 'badge-available' };
+  return '<span class="badge ' + (map[s] || 'badge-standby') + '">' + s + '</span>';
+}
+
+function fmtCtx(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(0) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(0) + 'K';
+  return n;
+}
+
+function renderCards() {
+  const el = document.getElementById('priceCards');
+  el.innerHTML = allModels.map(m => {
+    const tier = getTier(m.outputPrice);
+    return '<div class="model-card"><div class="name">' + m.name + '</div>' +
+      '<div class="role">' + m.role + '</div>' +
+      '<div class="price">$' + m.outputPrice.toFixed(2) + '</div>' +
+      '<div class="price-unit">per 1M output tokens</div>' +
+      '<div class="provider">' + m.provider + ' · <span class="badge ' + tier.cls + '">' + tier.label + '</span></div></div>';
+  }).join('');
+}
+
+function renderTable() {
+  const el = document.getElementById('modelsBody');
+  el.innerHTML = allModels.map(m => {
+    const tier = getTier(m.outputPrice);
+    return '<tr><td class="w">' + m.name + '</td><td>' + m.role + '</td><td>' + m.provider + '</td>' +
+      '<td class="r cost">$' + m.inputPrice.toFixed(2) + '</td>' +
+      '<td class="r cost">$' + m.outputPrice.toFixed(2) + '</td>' +
+      '<td class="r">' + (m.cachePrice ? '$' + m.cachePrice.toFixed(2) : '-') + '</td>' +
+      '<td class="r">' + fmtCtx(m.context) + '</td>' +
+      '<td class="r">' + fmtCtx(m.maxTokens) + '</td>' +
+      '<td>' + statusBadge(m.status) + '</td>' +
+      '<td><span class="badge ' + tier.cls + '">' + tier.label + '</span></td></tr>';
+  }).join('');
+}
+
+function calculate() {
+  const inTok = parseInt(document.getElementById('calcIn').value) || 0;
+  const outTok = parseInt(document.getElementById('calcOut').value) || 0;
+  const el = document.getElementById('calcResults');
+  
+  let total = 0;
+  const lines = allModels.filter(m => m.status === 'active').map(m => {
+    const cost = (inTok / 1e6 * m.inputPrice) + (outTok / 1e6 * m.outputPrice);
+    total += cost;
+    return '<div class="calc-result"><span class="model-name">' + m.name + ' (' + m.role + ')</span>' +
+      '<span class="model-cost">$' + cost.toFixed(4) + '</span></div>';
+  });
+  
+  lines.push('<div class="calc-result" style="border-top:2px solid var(--a);margin-top:4px;font-weight:700">' +
+    '<span class="model-name" style="color:var(--ts)">TOTAL (active models)</span>' +
+    '<span class="model-cost" style="font-size:14px">$' + total.toFixed(4) + '</span></div>');
+  
+  el.innerHTML = lines.join('');
+}
+
+document.getElementById('calcIn').addEventListener('input', calculate);
+document.getElementById('calcOut').addEventListener('input', calculate);
+
+loadModels();
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Zero</title>
+<style>
+:root{--bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--b:rgba(255,255,255,0.07);--a:#00d9ff;--a2:#7c3aed;--g:#4ade80;--y:#facc15;--r:#f87171;--t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);padding:20px;min-height:100vh}
+h2{font-size:1.3rem;font-weight:700;color:var(--ts);margin-bottom:4px}
+.sub{color:var(--m);font-size:12px;margin-bottom:16px}
+.section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--d);margin:20px 0 10px}
+.glass{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-bottom:16px}
+.card{padding:14px;position:relative;overflow:hidden}
+.card-icon{font-size:20px;margin-bottom:6px}
+.card-name{font-size:13px;font-weight:700;color:var(--ts);margin-bottom:4px}
+.card-desc{font-size:10px;color:var(--m);line-height:1.4}
+table{width:100%;border-collapse:separate;border-spacing:0 2px}
+th{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--d);text-align:left;padding:5px 8px}
+td{padding:6px 8px;font-size:11px;background:rgba(255,255,255,0.02);border-top:1px solid rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.03)}
+td:first-child{border-left:1px solid rgba(255,255,255,0.03);border-radius:4px 0 0 4px}
+td:last-child{border-right:1px solid rgba(255,255,255,0.03);border-radius:0 4px 4px 0}
+td.w{color:var(--ts);font-weight:600}
+td.a{color:var(--a);font-family:monospace;font-size:10px}
+.badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600}
+.agent-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--bg2);border:1px solid var(--b);border-radius:6px;font-size:11px;margin:3px;color:var(--ts)}
+.agent-chip.active{border-color:var(--g);background:rgba(74,222,128,.06)}
+.mcp-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(0,217,255,.06);border:1px solid rgba(0,217,255,.15);border-radius:6px;font-size:11px;margin:3px;color:var(--a)}
+.ext-point{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px}
+.ext-point:last-child{border:none}
+.ext-dot{width:6px;height:6px;border-radius:50%;background:var(--a2)}
+.ext-name{color:var(--a);font-family:monospace;font-size:10px}
+.doc-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px}
+.doc-item:last-child{border:none}
+.doc-icon{color:var(--a)}
+.doc-title{color:var(--ts);font-weight:600;min-width:160px}
+.doc-desc{color:var(--m)}
+.api-method{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;font-family:monospace}
+.api-method.GET{background:rgba(74,222,128,.12);color:var(--g)}
+.api-method.POST{background:rgba(99,102,241,.12);color:#818cf8}
+.api-method.SSE{background:rgba(250,204,21,.12);color:var(--y)}
+.api-method.HTTP{background:rgba(0,217,255,.12);color:var(--a)}
+.api-method.A2A{background:rgba(124,58,237,.12);color:#a78bfa}
+</style>
+</head>
+<body>
+<h2>Agent Zero</h2>
+<p class="sub">Architektura, profile agentow, providery, API endpoints, dokumentacja</p>
+
+<!-- Architecture -->
+<div class="section-label">ARCHITEKTURA</div>
+<div class="grid" id="archGrid"></div>
+
+<!-- Agent Profiles -->
+<div class="section-label">PROFILE AGENTOW</div>
+<div class="glass" style="text-align:center" id="agentChips"></div>
+
+<!-- Providers -->
+<div class="section-label">PROVIDERY LLM (21)</div>
+<div class="glass" style="max-height:50vh;overflow-y:auto">
+  <table>
+    <thead><tr><th>ID</th><th>Nazwa</th><th>LiteLLM</th><th>Notatka</th></tr></thead>
+    <tbody id="providersBody"></tbody>
+  </table>
+</div>
+
+<!-- MCP Servers -->
+<div class="section-label">MCP SERVERS</div>
+<div class="glass" style="text-align:center" id="mcpChips"></div>
+
+<!-- API Endpoints -->
+<div class="section-label">API ENDPOINTS</div>
+<div class="glass">
+  <table>
+    <thead><tr><th>Method</th><th>Path</th><th>Opis</th></tr></thead>
+    <tbody id="apiBody"></tbody>
+  </table>
+</div>
+
+<!-- Extension Points -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div>
+    <div class="section-label">EXTENSION POINTS (11)</div>
+    <div class="glass" id="extPoints"></div>
+  </div>
+  <div>
+    <div class="section-label">KONFIGURACJA</div>
+    <div class="glass">
+      <div style="font-size:11px;color:var(--m)">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span>WebUI Port</span><span style="color:var(--a);font-family:monospace">50082 → :80</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span>SSH Port</span><span style="color:var(--a);font-family:monospace">50101 → :22</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span>Kontener</span><span style="color:var(--ts);font-weight:600">bonzo-agent-zero</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span>Obraz</span><span style="color:var(--a);font-family:monospace">agent0ai/agent-zero:latest</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)"><span>Wolumen</span><span style="color:var(--a);font-family:monospace">T:\DOcker_aGENT_zero:/a0/usr</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span>Runtime</span><span style="color:var(--ts);font-weight:600">Podman</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Documentation -->
+<div class="section-label">DOKUMENTACJA</div>
+<div id="docsSection"></div>
+
+<script>
+const ARCH=[{name:"Agents",desc:"Hierarchical agents with CoT, tool use, subordinate delegation",icon:"🤖"},{name:"Tools",desc:"code_execution, memory, call_subordinate, SearXNG, behavior_adjustment",icon:"🔧"},{name:"Memory",desc:"Fragments, solutions, metadata — hybrid model with summarization",icon:"🧠"},{name:"Prompts",desc:"Markdown templates with {{var}} placeholders, file includes, dynamic loaders",icon:"📝"},{name:"Knowledge",desc:"Custom files in /knowledge/custom/main — PDFs, docs, databases",icon:"📚"},{name:"Skills",desc:"SKILL.md standard — cross-platform (Claude Code, Cursor, Copilot, Goose)",icon:"🎯"},{name:"Extensions",desc:"Lifecycle hooks: agent_init, before_main_llm, monologue, reasoning_stream",icon:"⚡"},{name:"Projects",desc:"Isolated workspaces: instructions, memory, secrets, variables, Git",icon:"📁"}];
+
+const AGENTS_LIST=["jimbo","default","developer","hacker","researcher","agent0","_example"];
+
+const PROVIDERS=[{id:"a0_venice",name:"Agent Zero API",litellm:"openai",note:"api_base: llm.agent-zero.ai"},{id:"anthropic",name:"Anthropic",litellm:"anthropic",note:"Claude models"},{id:"deepseek",name:"DeepSeek",litellm:"deepseek",note:"R1, V3"},{id:"github_copilot",name:"GitHub Copilot",litellm:"github_copilot",note:"Editor headers"},{id:"google",name:"Google",litellm:"gemini",note:"Gemini models"},{id:"groq",name:"Groq",litellm:"groq",note:"Fast inference"},{id:"huggingface",name:"HuggingFace",litellm:"huggingface",note:"Open models"},{id:"lm_studio",name:"LM Studio",litellm:"lm_studio",note:"Local"},{id:"mistral",name:"Mistral AI",litellm:"mistral",note:"Mistral/Mixtral"},{id:"moonshot",name:"Moonshot AI",litellm:"moonshot",note:""},{id:"ollama",name:"Ollama",litellm:"ollama",note:"Local models"},{id:"openai",name:"OpenAI",litellm:"openai",note:"GPT models"},{id:"azure",name:"OpenAI Azure",litellm:"azure",note:"Cloud hosted"},{id:"bedrock",name:"AWS Bedrock",litellm:"bedrock",note:"AWS managed"},{id:"openrouter",name:"OpenRouter",litellm:"openrouter",note:"Multi-provider"},{id:"sambanova",name:"Sambanova",litellm:"sambanova",note:""},{id:"venice",name:"Venice.ai",litellm:"openai",note:"api.venice.ai"},{id:"xai",name:"xAI",litellm:"xai",note:"Grok models"},{id:"zai",name:"Z.AI",litellm:"openai",note:"api.z.ai"},{id:"zai_coding",name:"Z.AI Coding",litellm:"openai",note:"api.z.ai/coding"},{id:"other",name:"Other (OpenAI compat)",litellm:"openai",note:"Custom endpoints"}];
+
+const MCP_SERVERS=["Supabase","Brave Search","GitHub","Cloudflare","Tavily","Perplexity","DeepSeek"];
+
+const API=[{method:"POST",path:"/api_message",desc:"Send message, get response (text + attachments)"},{method:"GET",path:"/api_log_get",desc:"Retrieve log data by context ID"},{method:"POST",path:"/api_terminate_chat",desc:"Terminate and remove chat context"},{method:"POST",path:"/api_reset_chat",desc:"Reset chat history, keep context"},{method:"POST",path:"/api_files_get",desc:"Get files as base64 by paths"},{method:"SSE",path:"/mcp/sse",desc:"MCP Server — SSE transport"},{method:"HTTP",path:"/mcp/http/",desc:"MCP Server — Streamable HTTP"},{method:"A2A",path:"/a2a/t-TOKEN",desc:"Agent-to-Agent via FastA2A"}];
+
+const EXT_POINTS=["agent_init","before_main_llm_call","message_loop_start","message_loop_end","message_loop_prompts_before","message_loop_prompts_after","monologue_start","monologue_end","reasoning_stream","response_stream","system_prompt"];
+
+const DOCS={"Quick Start":[{title:"quickstart.md",desc:"Docker install → first chat"},{title:"installation.md",desc:"Docker Desktop, model config, Ollama"},{title:"vps-deployment.md",desc:"VPS + Apache reverse proxy + SSL"},{title:"dev-setup.md",desc:"VS Code + Conda + debugpy"}],"User Guides":[{title:"usage.md",desc:"Browser agent, projects, tasks, voice, backup"},{title:"projects.md",desc:"Isolated workspaces, instructions, memory"},{title:"api-integration.md",desc:"Zero-code API integration via memory"},{title:"mcp-setup.md",desc:"External MCP servers (Playwright, n8n, Gmail)"},{title:"a2a-setup.md",desc:"Agent-to-Agent via FastA2A protocol"},{title:"troubleshooting.md",desc:"FAQ, Docker issues, performance"}],"Developer Docs":[{title:"architecture.md",desc:"System arch, directory structure, components"},{title:"extensions.md",desc:"Extension points, tools, prompts, override"},{title:"connectivity.md",desc:"External API, MCP server, A2A endpoints"},{title:"websockets.md",desc:"SocketIO, state sync, producer/consumer"},{title:"mcp-configuration.md",desc:"Stdio/SSE/HTTP MCP server types"},{title:"notifications.md",desc:"Toast system, groups, backend sync"},{title:"contributing-skills.md",desc:"SKILL.md standard, marketplace"}]};
+
+function init(){
+  // Architecture
+  document.getElementById('archGrid').innerHTML=ARCH.map(a=>`<div class="glass card"><div class="card-icon">${a.icon}</div><div class="card-name">${a.name}</div><div class="card-desc">${a.desc}</div></div>`).join('');
+
+  // Agent profiles
+  document.getElementById('agentChips').innerHTML=AGENTS_LIST.map(a=>`<span class="agent-chip ${a==='jimbo'?'active':''}">${a==='jimbo'?'👑 ':''}${a}</span>`).join('');
+
+  // Providers
+  document.getElementById('providersBody').innerHTML=PROVIDERS.map(p=>`<tr><td class="a">${p.id}</td><td class="w">${p.name}</td><td><span class="badge" style="background:rgba(0,217,255,.08);color:var(--a)">${p.litellm}</span></td><td style="color:var(--m)">${p.note}</td></tr>`).join('');
+
+  // MCP
+  document.getElementById('mcpChips').innerHTML=MCP_SERVERS.map(s=>`<span class="mcp-chip">🔌 ${s}</span>`).join('');
+
+  // API
+  document.getElementById('apiBody').innerHTML=API.map(a=>`<tr><td><span class="api-method ${a.method}">${a.method}</span></td><td class="a">${a.path}</td><td style="color:var(--m)">${a.desc}</td></tr>`).join('');
+
+  // Extension points
+  document.getElementById('extPoints').innerHTML=EXT_POINTS.map(e=>`<div class="ext-point"><div class="ext-dot"></div><span class="ext-name">${e}</span></div>`).join('');
+
+  // Docs
+  let docsHtml='';
+  Object.entries(DOCS).forEach(([cat,items])=>{
+    docsHtml+=`<div class="section-label" style="margin-top:12px">${cat}</div><div class="glass">${items.map(d=>`<div class="doc-item"><span class="doc-icon">📄</span><span class="doc-title">${d.title}</span><span class="doc-desc">${d.desc}</span></div>`).join('')}</div>`;
+  });
+  document.getElementById('docsSection').innerHTML=docsHtml;
+}
+
+init();
+</script>
+</body>
+</html>

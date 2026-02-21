@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recepty & Instrukcje</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#07090f; --bg2:#0b0f1a; --surface:rgba(255,255,255,0.03);
+  --border:rgba(255,255,255,0.07); --accent:#00FF41; --cyan:#00d9ff;
+  --purple:#a855f7; --green:#4ade80; --yellow:#facc15; --red:#f87171;
+  --orange:#fb923c; --pink:#f472b6; --indigo:#6366f1;
+  --text:#e5e5e5; --strong:#fff; --muted:#737373; --dim:#525252;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px;min-height:100vh}
+h2{font-size:1.4rem;font-weight:700;color:var(--strong);margin-bottom:16px}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin:24px 0 12px}
+
+.glass{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.glass:hover{border-color:rgba(255,255,255,0.12)}
+
+/* Recipe cards */
+.recipe{margin-bottom:16px;position:relative;padding-left:4px;border-left:3px solid var(--accent)}
+.recipe.purple{border-left-color:var(--purple)}
+.recipe.pink{border-left-color:var(--pink)}
+.recipe.cyan{border-left-color:var(--cyan)}
+.recipe.orange{border-left-color:var(--orange)}
+.recipe.green{border-left-color:var(--green)}
+.recipe-title{font-size:14px;font-weight:700;color:var(--strong);margin-bottom:6px;padding-left:12px}
+.recipe-desc{font-size:12px;color:var(--muted);margin-bottom:10px;padding-left:12px}
+.recipe-body{padding-left:12px}
+
+.stack{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tag{font-size:9px;padding:3px 10px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.t-green{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.t-blue{background:rgba(0,217,255,.12);color:var(--cyan);border:1px solid rgba(0,217,255,.2)}
+.t-purple{background:rgba(168,85,247,.12);color:var(--purple);border:1px solid rgba(168,85,247,.2)}
+.t-yellow{background:rgba(250,204,21,.12);color:var(--yellow);border:1px solid rgba(250,204,21,.2)}
+.t-orange{background:rgba(251,146,60,.12);color:var(--orange);border:1px solid rgba(251,146,60,.2)}
+.t-red{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.t-pink{background:rgba(244,114,182,.12);color:var(--pink);border:1px solid rgba(244,114,182,.2)}
+.t-indigo{background:rgba(99,102,241,.12);color:var(--indigo);border:1px solid rgba(99,102,241,.2)}
+
+.steps{font-size:12px;line-height:2;color:var(--text)}
+.steps strong{color:var(--cyan)}
+.result{font-size:11px;color:var(--green);border-top:1px solid var(--border);padding-top:8px;margin-top:8px}
+
+/* Tables */
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;font-size:12px;border-bottom:1px solid rgba(255,255,255,0.03)}
+tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* Charts */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;height:320px;display:flex;align-items:center;justify-content:center}
+.chart-box canvas{max-height:280px}
+
+.tip{background:rgba(0,255,65,.06);border-left:3px solid var(--accent);padding:10px 14px;margin:12px 0;font-size:11px;border-radius:0 8px 8px 0}
+.warn{background:rgba(250,204,21,.06);border-left:3px solid var(--yellow);padding:10px 14px;margin:12px 0;font-size:11px;border-radius:0 8px 8px 0;color:var(--yellow)}
+
+@media(max-width:800px){.chart-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<h2>Recepty & Instrukcje — co z czym łączyć</h2>
+<p style="color:var(--muted);font-size:12px;margin-bottom:20px">6 sprawdzonych workflow z kosztorysem i oceną jakości. Zasada: zacznij od najtańszego modelu, eskaluj wyżej gdy jakość niewystarczająca.</p>
+
+<!-- ====== CHART: Model Cost vs Quality ====== -->
+<div class="section-label">Porównanie modeli — koszt vs jakość</div>
+<div class="chart-row">
+  <div class="chart-box"><canvas id="costQualityChart"></canvas></div>
+  <div class="chart-box"><canvas id="costPerTaskChart"></canvas></div>
+</div>
+
+<!-- ====== RECIPES ====== -->
+<div class="section-label">Workflow — sprawdzone recepty</div>
+
+<div class="glass">
+  <div class="recipe green">
+    <div class="recipe-title">1. Masowa produkcja artykułów SEO</div>
+    <div class="recipe-desc">50+ artykułów/tydzień przy minimalnym koszcie</div>
+    <div class="recipe-body">
+      <div class="stack">
+        <span class="tag t-green">DeepSeek R1</span>
+        <span class="tag t-blue">KB: 01_AI_SEO</span>
+        <span class="tag t-purple">Elwirka (agent)</span>
+        <span class="tag t-yellow">Tavily (search)</span>
+      </div>
+      <div class="steps">
+        <strong>Krok 1:</strong> Elwirka → keyword research z Tavily (real-time trendy)<br>
+        <strong>Krok 2:</strong> DeepSeek R1 → outlines z KB: 01_AI_SEO jako kontekst<br>
+        <strong>Krok 3:</strong> DeepSeek R1 → pisanie artykułów (chain-of-thought)<br>
+        <strong>Krok 4:</strong> Gemini Flash → bulk formatowanie, tagi, meta descriptions
+      </div>
+      <div class="result">💰 Koszt: ~$2-5 za 50 artykułów · ⭐ Jakość: 90-94% · ⏱ Czas: 2-4h automatycznie</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass">
+  <div class="recipe purple">
+    <div class="recipe-title">2. Content premium — landing pages, sales copy</div>
+    <div class="recipe-desc">Wysokiej jakości treści sprzedażowe</div>
+    <div class="recipe-body">
+      <div class="stack">
+        <span class="tag t-purple">Claude 4.5 Sonnet</span>
+        <span class="tag t-orange">GPT-4o</span>
+        <span class="tag t-blue">KB: 07_B2B_SALES</span>
+        <span class="tag t-green">Norbert (agent)</span>
+      </div>
+      <div class="steps">
+        <strong>Krok 1:</strong> Norbert → analiza rynku i konkurencji<br>
+        <strong>Krok 2:</strong> Claude 4.5 → strategia i struktura przekazu<br>
+        <strong>Krok 3:</strong> GPT-4o → copywriting, warianty A/B<br>
+        <strong>Krok 4:</strong> Claude 4.5 → review i optymalizacja konwersji
+      </div>
+      <div class="result">💰 Koszt: ~$5-15 za landing page · ⭐ Jakość: 96-97% · ⏱ Czas: 1-2h</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass">
+  <div class="recipe cyan">
+    <div class="recipe-title">3. Kodowanie nowych feature'ów</div>
+    <div class="recipe-desc">Aktywny development z automatycznym code review</div>
+    <div class="recipe-body">
+      <div class="stack">
+        <span class="tag t-purple">Claude Sonnet 4</span>
+        <span class="tag t-blue">FastCode (indexer)</span>
+        <span class="tag t-green">Context7 (MCP)</span>
+        <span class="tag t-yellow">GitHub (MCP)</span>
+      </div>
+      <div class="steps">
+        <strong>Krok 1:</strong> FastCode → indeksacja codebase, AST + embedding<br>
+        <strong>Krok 2:</strong> Context7 → aktualna dokumentacja użytych bibliotek<br>
+        <strong>Krok 3:</strong> Claude Sonnet 4 → pisanie kodu z pełnym kontekstem<br>
+        <strong>Krok 4:</strong> GitHub MCP → automatyczny PR + review
+      </div>
+      <div class="result">💰 Koszt: ~$1-3 za feature · ⭐ Jakość: 96% · ⏱ Czas: zależy od scope</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass">
+  <div class="recipe pink">
+    <div class="recipe-title">4. Deep Research — analiza rynku / technologii</div>
+    <div class="recipe-desc">Głęboka analiza z wielu źródeł + wewnętrzna wiedza</div>
+    <div class="recipe-body">
+      <div class="stack">
+        <span class="tag t-red">Claude 4.5 Sonnet</span>
+        <span class="tag t-green">Angels (agent)</span>
+        <span class="tag t-indigo">Exa (MCP)</span>
+        <span class="tag t-yellow">Brave Search</span>
+        <span class="tag t-purple">ChromaDB</span>
+      </div>
+      <div class="steps">
+        <strong>Krok 1:</strong> Angels → definiuje pytania badawcze<br>
+        <strong>Krok 2:</strong> Exa + Brave → deep web search (academic, company, news)<br>
+        <strong>Krok 3:</strong> ChromaDB → enrichment z wewnętrznej bazy wiedzy<br>
+        <strong>Krok 4:</strong> Claude 4.5 → synteza, wnioski, rekomendacje
+      </div>
+      <div class="result">💰 Koszt: ~$5-20 za raport · ⭐ Jakość: 97% · ⏱ Czas: 30-60 min</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass">
+  <div class="recipe orange">
+    <div class="recipe-title">5. Orkiestracja multi-agentowa</div>
+    <div class="recipe-desc">Złożone zadania wymagające wielu agentów i narzędzi</div>
+    <div class="recipe-body">
+      <div class="stack">
+        <span class="tag t-red">Claude 4.5 (Jimbo)</span>
+        <span class="tag t-green">Sub-agenci (Elwirka, Norbert, Zbychu)</span>
+        <span class="tag t-blue">MCP Tools (all)</span>
+        <span class="tag t-purple">KB + ChromaDB</span>
+      </div>
+      <div class="steps">
+        <strong>Krok 1:</strong> Jimbo (Claude 4.5) → parsuje zadanie, planuje workflow<br>
+        <strong>Krok 2:</strong> Jimbo → deleguje sub-zadania do specjalistów<br>
+        <strong>Krok 3:</strong> Agenci → execution z własnymi modelami i narzędziami<br>
+        <strong>Krok 4:</strong> Jimbo → agregacja wyników, quality check, dostarczenie
+      </div>
+      <div class="result">💰 Koszt: ~$10-50 za task · ⭐ Jakość: najwyższa · ⏱ Czas: 1-4h</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass">
+  <div class="recipe">
+    <div class="recipe-title">6. E-commerce — generowanie opisów produktów</div>
+    <div class="recipe-desc">Automatyzacja treści e-commerce (produkty, FAQ, meta)</div>
+    <div class="recipe-body">
+      <div class="stack">
+        <span class="tag t-green">Qwen 2.5 14B</span>
+        <span class="tag t-yellow">Gemini Flash</span>
+        <span class="tag t-blue">KB: 04_ECOMMERCE</span>
+        <span class="tag t-orange">CF Worker: whitecat-api</span>
+      </div>
+      <div class="steps">
+        <strong>Krok 1:</strong> whitecat-api → pobiera produkty z D1 bazy<br>
+        <strong>Krok 2:</strong> Qwen 2.5 → opisy PL/EN (multilingual)<br>
+        <strong>Krok 3:</strong> Gemini Flash → bulk meta, tagi, FAQ<br>
+        <strong>Krok 4:</strong> whitecat-api → zapis do D1 + R2 (obrazy)
+      </div>
+      <div class="result">💰 Koszt: ~$0.50-2 za 100 produktów · ⭐ Jakość: 91% · ⏱ Czas: 15 min</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== CHART: Cost per workflow ====== -->
+<div class="section-label">Porównanie kosztów workflow — wykres</div>
+<div class="chart-row">
+  <div class="chart-box"><canvas id="workflowCostChart"></canvas></div>
+  <div class="chart-box"><canvas id="workflowQualityChart"></canvas></div>
+</div>
+
+<!-- ====== Model Selection Guide ====== -->
+<div class="section-label">Dobór modelu — tabela decyzyjna</div>
+<div class="glass">
+  <table>
+    <thead><tr><th>Typ zadania</th><th>Optymalny model</th><th>Koszt/1000 zadań</th><th>Dlaczego ten model</th></tr></thead>
+    <tbody>
+      <tr><td>Klasyfikacja, tagi, Q&A</td><td style="color:var(--green)">Gemini Flash</td><td>~$0.05</td><td>Najszybszy, najtańszy</td></tr>
+      <tr><td>Tłumaczenia PL↔EN</td><td style="color:var(--green)">Qwen 2.5</td><td>~$0.30</td><td>Najlepszy multilingual w budżecie</td></tr>
+      <tr><td>SEO, keyword research</td><td style="color:var(--yellow)">DeepSeek R1</td><td>~$2.00</td><td>Chain-of-thought, dobry reasoning</td></tr>
+      <tr><td>Marketing copy, sprzedaż</td><td style="color:var(--orange)">GPT-4o</td><td>~$10.00</td><td>Najlepszy copywriter</td></tr>
+      <tr><td>Kod, refactoring, review</td><td style="color:var(--pink)">Claude Sonnet 4</td><td>~$15.00</td><td>Najlepsza precyzja techniczna</td></tr>
+      <tr><td>Strategia, orkiestracja</td><td style="color:var(--red)">Claude 4.5</td><td>~$15.00</td><td>Najwyższa jakość reasoning</td></tr>
+    </tbody>
+  </table>
+  <div class="tip" style="margin-top:12px">
+    <strong>Reguła kaskady:</strong> Gemini Flash → Qwen → DeepSeek → GPT-4o → Claude 4 → Claude 4.5. 
+    Zawsze zacznij od najtańszego wystarczającego modelu. Eskaluj wyżej gdy jakość < 90%.
+  </div>
+</div>
+
+<!-- ====== Quick Commands ====== -->
+<div class="section-label">Szybkie komendy — uruchomienie serwisów</div>
+<div class="glass">
+  <table>
+    <thead><tr><th>Co</th><th>Komenda</th><th>Wynik</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard</td><td><code>cd U:\JIMBO_NEW_OP_INIT\dashboard; python server.py</code></td><td>http://localhost:4200</td></tr>
+      <tr><td>Agent Zero</td><td><code>cd U:\AGENT_ZERO; python run_ui.py</code></td><td>http://localhost:50001</td></tr>
+      <tr><td>KB API (RAG)</td><td><code>cd U:\The_DEVz_HUB_of_work\knowledge_base; uvicorn kb_server:app --port 7071</code></td><td>http://localhost:7071/docs</td></tr>
+      <tr><td>Indeksowanie KB</td><td><code>cd U:\The_DEVz_HUB_of_work\knowledge_base; python ingest/kb_indexer.py all</code></td><td>4,816+ docs w ChromaDB</td></tr>
+      <tr><td>Caddy proxy</td><td><code>cd U:\The_DEVz_HUB_of_work; .\caddy-proxy.ps1</code></td><td>Auto-routing .dev.localhost</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ====== Development Priorities ====== -->
+<div class="section-label">Priorytety rozwoju</div>
+<div class="glass">
+  <table>
+    <thead><tr><th>#</th><th>Akcja</th><th>Zysk</th><th>Wysiłek</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Zasilić KB: 16_PROMPT_LIBRARY — 50+ reużywalnych promptów</td><td><span class="tag t-green">WYSOKI</span></td><td><span class="tag t-green">NISKI</span></td></tr>
+      <tr><td>2</td><td>Zasilić KB: 05_AGENTS_AND_RAG — konfiguracje, best practices</td><td><span class="tag t-green">WYSOKI</span></td><td><span class="tag t-yellow">ŚREDNI</span></td></tr>
+      <tr><td>3</td><td>Uruchomić KB API (:7071) na stałe → RAG search</td><td><span class="tag t-green">WYSOKI</span></td><td><span class="tag t-green">NISKI</span></td></tr>
+      <tr><td>4</td><td>Zasilić KB: 03_PYTHON_AUTOMATION — skrypty, snippets</td><td><span class="tag t-blue">ŚREDNI</span></td><td><span class="tag t-green">NISKI</span></td></tr>
+      <tr><td>5</td><td>Aktywować Groq jako fast-inference fallback</td><td><span class="tag t-blue">ŚREDNI</span></td><td><span class="tag t-green">NISKI</span></td></tr>
+      <tr><td>6</td><td>Przenieść research_backup → kategorie KB</td><td><span class="tag t-blue">ŚREDNI</span></td><td><span class="tag t-green">NISKI</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+// ====== Chart 1: Cost vs Quality Scatter ======
+const ctx1 = document.getElementById('costQualityChart')?.getContext('2d');
+if (ctx1) {
+  new Chart(ctx1, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Modele AI',
+        data: [
+          { x: 0.10, y: 89, label: 'Gemini Flash' },
+          { x: 0.30, y: 91, label: 'Qwen 2.5' },
+          { x: 0.55, y: 94, label: 'DeepSeek R1' },
+          { x: 2.50, y: 95, label: 'GPT-4o' },
+          { x: 3.00, y: 96, label: 'Claude Sonnet 4' },
+          { x: 3.00, y: 97, label: 'Claude 4.5' }
+        ],
+        backgroundColor: ['#4ade80','#4ade80','#facc15','#fb923c','#f472b6','#f87171'],
+        borderColor: ['#4ade80','#4ade80','#facc15','#fb923c','#f472b6','#f87171'],
+        pointRadius: 8,
+        pointHoverRadius: 12
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        title: { display: true, text: 'Cena vs Jakość ($/1M input → %)', color: '#525252', font: { size: 12 } },
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const names = ['Gemini Flash','Qwen 2.5','DeepSeek R1','GPT-4o','Claude Sonnet 4','Claude 4.5'];
+              return `${names[ctx.dataIndex]}: $${ctx.parsed.x}/1M → ${ctx.parsed.y}%`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: '$/1M tokenów (input)', color: '#525252' }, ticks: { color: '#525252' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { title: { display: true, text: 'Jakość (%)', color: '#525252' }, min: 85, max: 100, ticks: { color: '#525252' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+}
+
+// ====== Chart 2: Cost per Task Type ======
+const ctx2 = document.getElementById('costPerTaskChart')?.getContext('2d');
+if (ctx2) {
+  new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: ['Klasyfikacja', 'Tłumaczenia', 'SEO', 'Marketing', 'Kod', 'Strategia'],
+      datasets: [{
+        label: '$/1000 zadań',
+        data: [0.05, 0.30, 2.00, 10.00, 15.00, 15.00],
+        backgroundColor: ['#4ade8080','#4ade8080','#facc1580','#fb923c80','#f472b680','#f8717180'],
+        borderColor: ['#4ade80','#4ade80','#facc15','#fb923c','#f472b6','#f87171'],
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        title: { display: true, text: 'Koszt na 1000 zadań ($) — optymalny model', color: '#525252', font: { size: 12 } },
+        legend: { display: false }
+      },
+      scales: {
+        y: { type: 'logarithmic', ticks: { color: '#525252', callback: v => '$' + v }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        x: { ticks: { color: '#525252' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ====== Chart 3: Workflow Costs ======
+const ctx3 = document.getElementById('workflowCostChart')?.getContext('2d');
+if (ctx3) {
+  new Chart(ctx3, {
+    type: 'bar',
+    data: {
+      labels: ['SEO (50 art.)', 'Landing Page', 'Feature code', 'Deep Research', 'Multi-agent', 'E-com (100 prod.)'],
+      datasets: [
+        { label: 'Koszt min ($)', data: [2, 5, 1, 5, 10, 0.5], backgroundColor: '#4ade8060', borderColor: '#4ade80', borderWidth: 1, borderRadius: 4 },
+        { label: 'Koszt max ($)', data: [5, 15, 3, 20, 50, 2], backgroundColor: '#f8717160', borderColor: '#f87171', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        title: { display: true, text: 'Koszty workflow (min/max $)', color: '#525252', font: { size: 12 } },
+        legend: { position: 'bottom', labels: { color: '#737373', font: { size: 10 } } }
+      },
+      scales: {
+        y: { ticks: { color: '#525252', callback: v => '$' + v }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        x: { ticks: { color: '#525252', font: { size: 9 }, maxRotation: 45 }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ====== Chart 4: Workflow Quality Radar ======
+const ctx4 = document.getElementById('workflowQualityChart')?.getContext('2d');
+if (ctx4) {
+  new Chart(ctx4, {
+    type: 'radar',
+    data: {
+      labels: ['Jakość', 'Koszt-efektywność', 'Automatyzacja', 'Skalowalność', 'Czas realizacji'],
+      datasets: [
+        { label: 'SEO Masowe', data: [92, 98, 95, 97, 90], borderColor: '#4ade80', backgroundColor: '#4ade8020', pointBackgroundColor: '#4ade80' },
+        { label: 'Content premium', data: [97, 70, 60, 50, 80], borderColor: '#a855f7', backgroundColor: '#a855f720', pointBackgroundColor: '#a855f7' },
+        { label: 'Kodowanie', data: [96, 85, 70, 80, 75], borderColor: '#00d9ff', backgroundColor: '#00d9ff20', pointBackgroundColor: '#00d9ff' },
+        { label: 'Deep Research', data: [97, 65, 80, 60, 70], borderColor: '#f472b6', backgroundColor: '#f472b620', pointBackgroundColor: '#f472b6' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: {
+        title: { display: true, text: 'Profil workflow — radar porównawczy', color: '#525252', font: { size: 12 } },
+        legend: { position: 'bottom', labels: { color: '#737373', font: { size: 10 }, padding: 8 } }
+      },
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { color: '#525252', backdropColor: 'transparent', font: { size: 9 } },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          pointLabels: { color: '#737373', font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>

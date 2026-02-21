@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEVz HUB — System Informacyjny v3.0</title>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://unpkg.com/feather-icons@4.29.1/dist/feather.min.js"></script>
+</head>
+<body>
+
+  <!-- ====== SIDEBAR ====== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">J</div>
+      <div class="brand-text">
+        <h1>DEVz HUB</h1>
+        <span class="brand-version">v3.0 info</span>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle">
+        <i data-feather="menu"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-section-label">MODULES</div>
+    <nav class="sidebar-nav" id="moduleNav">
+      <!-- modules injected by JS -->
+    </nav>
+
+    <div class="sidebar-section-label">EXTERNAL</div>
+    <nav class="sidebar-nav" id="externalNav">
+      <!-- external links injected by JS -->
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-item" id="addModuleBtn" title="How to add a module">
+        <i data-feather="plus-circle"></i>
+        <span>Add Module</span>
+      </div>
+      <div class="sidebar-footer-item" id="settingsBtn" title="Settings">
+        <i data-feather="settings"></i>
+        <span>Settings</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main class="main" id="main">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu" id="mobileMenu"><i data-feather="menu"></i></button>
+        <div class="breadcrumb" id="breadcrumb">
+          <span class="bc-hub" id="bcHome" style="cursor:pointer">DEVz HUB</span>
+          <span class="bc-sep">/</span>
+          <span class="bc-module" id="bcModule">Home</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-stat">
+          <i data-feather="box"></i>
+          <span id="moduleCount">0</span> modules
+        </div>
+        <div class="topbar-stat online">
+          <i data-feather="wifi"></i>
+          <span>Online</span>
+        </div>
+        <div class="clock" id="clock">--:--</div>
+      </div>
+    </div>
+
+    <!-- Welcome / Home screen -->
+    <div class="home-screen" id="homeScreen">
+      <div class="home-hero">
+        <div class="hero-glow"></div>
+        <h2>DEVz HUB — System Informacyjny</h2>
+        <p>Co mamy &middot; Ile kosztuje &middot; Co z czym łączyć &middot; Wybierz moduł z bocznego menu</p>
+      </div>
+
+      <div class="module-grid" id="moduleGrid">
+        <!-- module cards injected by JS -->
+      </div>
+
+      <div class="home-section-label">EXTERNAL LINKS</div>
+      <div class="module-grid" id="externalGrid">
+        <!-- external link cards injected by JS -->
+      </div>
+    </div>
+
+    <!-- Module iframe container -->
+    <div class="module-frame-wrap" id="moduleFrameWrap" style="display:none;">
+      <iframe id="moduleFrame" class="module-frame" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" allowfullscreen></iframe>
+    </div>
+
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

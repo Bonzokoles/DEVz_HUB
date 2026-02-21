@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEVz HUB — System Informacyjny</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#222;--accent:#00d9ff;--accent2:#7c3aed;--green:#4ade80;--yellow:#facc15;--red:#f87171;--orange:#fb923c;--pink:#f472b6;--text:#e5e5e5;--muted:#737373;--dim:#525252}
+body{font-family:'JetBrains Mono','Fira Code','Cascadia Code',monospace;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+
+.header{background:linear-gradient(135deg,#0a0a0a,#111,#0a0a0a);border-bottom:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:16px;font-weight:800;letter-spacing:2px;color:var(--accent)}
+.header-sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+.nav{display:flex;gap:4px;padding:8px 24px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.nav a{padding:6px 14px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);cursor:pointer;border:1px solid transparent;transition:all .2s}
+.nav a:hover,.nav a.active{color:var(--accent);border-color:var(--accent);text-decoration:none;background:rgba(0,217,255,.05)}
+
+.main{padding:16px 24px;max-width:1400px;margin:0 auto}
+.section{display:none}.section.active{display:block}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px;margin-bottom:16px}
+.grid-full{grid-column:1/-1}
+.card{background:var(--bg2);border:1px solid var(--border);padding:16px;position:relative}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent)}
+.card.purple::before{background:var(--accent2)}
+.card.green::before{background:var(--green)}
+.card.yellow::before{background:var(--yellow)}
+.card.red::before{background:var(--red)}
+.card.orange::before{background:var(--orange)}
+
+.card-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:12px}
+.card-value{font-size:24px;font-weight:800}
+.card-sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:left;padding:6px 8px;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);border-bottom:1px solid var(--border)}
+td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.03)}
+tr:hover td{background:rgba(0,217,255,.03)}
+
+.badge{display:inline-block;padding:2px 8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.b-green{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.b-blue{background:rgba(0,217,255,.1);color:var(--accent);border:1px solid rgba(0,217,255,.2)}
+.b-purple{background:rgba(124,58,237,.12);color:#a78bfa;border:1px solid rgba(124,58,237,.2)}
+.b-yellow{background:rgba(250,204,21,.12);color:var(--yellow);border:1px solid rgba(250,204,21,.2)}
+.b-red{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.b-orange{background:rgba(251,146,60,.12);color:var(--orange);border:1px solid rgba(251,146,60,.2)}
+
+.recipe{background:var(--bg3);border:1px solid var(--border);padding:14px;margin-bottom:10px}
+.recipe-title{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.recipe-desc{font-size:11px;color:var(--muted);margin-bottom:8px}
+.recipe-stack{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.recipe-result{font-size:10px;color:var(--green);border-top:1px solid var(--border);padding-top:6px;margin-top:6px}
+
+.tip{background:rgba(0,217,255,.05);border-left:3px solid var(--accent);padding:10px 14px;margin:8px 0;font-size:11px;color:var(--text)}
+.warn{background:rgba(250,204,21,.05);border-left:3px solid var(--yellow);padding:10px 14px;margin:8px 0;font-size:11px;color:var(--yellow)}
+
+.footer{padding:12px 24px;border-top:1px solid var(--border);font-size:9px;color:var(--dim);display:flex;justify-content:space-between}
+
+h2{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:12px;letter-spacing:1px}
+h3{font-size:12px;font-weight:700;color:var(--text);margin:16px 0 8px;letter-spacing:1px}
+
+.stat{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px solid rgba(255,255,255,.03)}
+.stat-label{color:var(--muted)}.stat-val{color:var(--text);font-weight:600}
+
+@media(max-width:800px){.grid{grid-template-columns:1fr}.grid-full{grid-column:1}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <h1>[>>] DEVz HUB — SYSTEM INFORMACYJNY</h1>
+    <div class="header-sub">Co mamy · Ile kosztuje · Co z czym łączyć · v3.0</div>
+  </div>
+  <div style="font-size:10px;color:var(--muted);text-align:right">
+    <div>Aktualizacja: 2026-02-21</div>
+    <div>Workspace: U:\The_DEVz_HUB_of_work</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <a class="active" onclick="show(this,'s-overview')">Przegląd</a>
+  <a onclick="show(this,'s-models')">AI Modele & Ceny</a>
+  <a onclick="show(this,'s-tools')">Narzędzia</a>
+  <a onclick="show(this,'s-knowledge')">Baza Wiedzy</a>
+  <a onclick="show(this,'s-infra')">Infrastruktura</a>
+  <a onclick="show(this,'s-recipes')">Recepty & Instrukcje</a>
+</div>
+
+<div class="main">
+
+<!-- ============================================================ -->
+<!-- PRZEGLĄD                                                      -->
+<!-- ============================================================ -->
+<div class="section active" id="s-overview">
+<h2>Przegląd zasobów systemu</h2>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-title">Zasoby danych</div>
+    <div class="stat"><span class="stat-label">Knowledge Base</span><span class="stat-val">3,892 plików w 21 kategoriach</span></div>
+    <div class="stat"><span class="stat-label">ChromaDB (indeks wektorowy)</span><span class="stat-val">4,816 dokumentów, 26 kolekcji</span></div>
+    <div class="stat"><span class="stat-label">Biblioteki strategiczne</span><span class="stat-val">4 główne + 7 dodatkowych</span></div>
+    <div class="stat"><span class="stat-label">Control Center</span><span class="stat-val">12,721 plików w 25 kategoriach</span></div>
+    <div class="stat"><span class="stat-label">Research Backup</span><span class="stat-val">22 pliki w 7 kategoriach</span></div>
+  </div>
+
+  <div class="card purple">
+    <div class="card-title">AI & Agenci</div>
+    <div class="stat"><span class="stat-label">Modele AI dostępne</span><span class="stat-val">6 (3 tanie + 3 premium)</span></div>
+    <div class="stat"><span class="stat-label">Agenci operacyjni</span><span class="stat-val">5 (Jimbo, Elwirka, Norbert, Zbychu, Angels)</span></div>
+    <div class="stat"><span class="stat-label">MCP Tools</span><span class="stat-val">Brave, GitHub, Context7, Exa</span></div>
+    <div class="stat"><span class="stat-label">External Tools</span><span class="stat-val">5 (smolagents, FastCode, GraphRAG, visual-explainer, noodle-adapter)</span></div>
+    <div class="stat"><span class="stat-label">Embedding model</span><span class="stat-val">all-MiniLM-L6-v2 (CPU)</span></div>
+  </div>
+
+  <div class="card green">
+    <div class="card-title">Infrastruktura</div>
+    <div class="stat"><span class="stat-label">Cloudflare Workers</span><span class="stat-val">4 (whitecat-api, moa, x402, content)</span></div>
+    <div class="stat"><span class="stat-label">Cloudflare Storage</span><span class="stat-val">D1 × 2, R2 × 1</span></div>
+    <div class="stat"><span class="stat-label">API Providerzy</span><span class="stat-val">8 (OpenRouter, Anthropic, OpenAI, DeepSeek, Google, Groq, Perplexity, Tavily)</span></div>
+    <div class="stat"><span class="stat-label">Reverse Proxy</span><span class="stat-val">Caddy (4 domeny)</span></div>
+    <div class="stat"><span class="stat-label">Dashboard server</span><span class="stat-val">Python HTTP :4200</span></div>
+  </div>
+
+  <div class="card yellow">
+    <div class="card-title">Budżet miesięczny</div>
+    <div class="stat"><span class="stat-label">AI API (modele)</span><span class="stat-val">$300/mies.</span></div>
+    <div class="stat"><span class="stat-label">Cloudflare (hosting/infra)</span><span class="stat-val">$100/mies.</span></div>
+    <div class="stat"><span class="stat-label">Buffer (rezerwa)</span><span class="stat-val">$100/mies.</span></div>
+    <div class="stat"><span class="stat-label" style="color:var(--accent)">RAZEM</span><span class="stat-val" style="color:var(--accent)">$500/mies.</span></div>
+    <div class="tip" style="margin-top:10px">Optymalizuj koszt: proste zadania → Gemini Flash ($0.10/1M in), złożone → Claude 4.5 ($3/1M in). Stosunek 80/20 tanie/premium.</div>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- AI MODELE & CENY                                              -->
+<!-- ============================================================ -->
+<div class="section" id="s-models">
+<h2>AI Modele — cennik, rola, kiedy używać</h2>
+
+<div class="grid">
+  <div class="card grid-full">
+    <div class="card-title">Porównanie modeli — ceny za 1M tokenów</div>
+    <table>
+      <tr><th>Model</th><th>Input $/1M</th><th>Output $/1M</th><th>Rola</th><th>Latency</th><th>Jakość</th><th>Tier</th><th>Kiedy używać</th></tr>
+      <tr>
+        <td style="color:var(--green)">Gemini 2.0 Flash</td><td>$0.10</td><td>$0.40</td>
+        <td>Szybkie odpowiedzi</td><td>0.5s</td><td>89%</td>
+        <td><span class="badge b-green">NAJTAŃSZY</span></td>
+        <td style="color:var(--muted)">Masowe przetwarzanie, klasyfikacja, tagi, proste Q&A</td>
+      </tr>
+      <tr>
+        <td style="color:var(--green)">Qwen 2.5 14B</td><td>$0.30</td><td>$0.60</td>
+        <td>Wielojęzyczny</td><td>1.5s</td><td>91%</td>
+        <td><span class="badge b-green">BUDGET</span></td>
+        <td style="color:var(--muted)">Tłumaczenia, treści PL/EN, SEO multilingual</td>
+      </tr>
+      <tr>
+        <td style="color:var(--yellow)">DeepSeek R1 8B</td><td>$0.55</td><td>$2.19</td>
+        <td>SEO, reasoning</td><td>1.2s</td><td>94%</td>
+        <td><span class="badge b-yellow">BUDGET+</span></td>
+        <td style="color:var(--muted)">Optymalizacja SEO, analiza danych, chain-of-thought</td>
+      </tr>
+      <tr>
+        <td style="color:var(--orange)">GPT-4o</td><td>$2.50</td><td>$10.00</td>
+        <td>Marketing copy</td><td>1.0s</td><td>95%</td>
+        <td><span class="badge b-orange">MID</span></td>
+        <td style="color:var(--muted)">Copywriting, artykuły blogowe, sprzedażowe teksty</td>
+      </tr>
+      <tr>
+        <td style="color:var(--pink)">Claude Sonnet 4</td><td>$3.00</td><td>$15.00</td>
+        <td>Kod, precyzja tech</td><td>0.8s</td><td>96%</td>
+        <td><span class="badge b-purple">PREMIUM</span></td>
+        <td style="color:var(--muted)">Kodowanie, refaktoring, code review, techniczne zadania</td>
+      </tr>
+      <tr>
+        <td style="color:var(--red)">Claude 4.5 Sonnet</td><td>$3.00</td><td>$15.00</td>
+        <td>Orkiestrator, najlepsza jakość</td><td>0.9s</td><td>97%</td>
+        <td><span class="badge b-red">TOP</span></td>
+        <td style="color:var(--muted)">Złożone workflow, architektura, strategia, orkiestracja agentów</td>
+      </tr>
+    </table>
+    <div class="tip">Zasada 80/20: 80% zapytań przez tanie modele (Gemini Flash, Qwen, DeepSeek) → ~$50/mies. 20% premium (Claude, GPT-4o) → ~$250/mies.</div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card green">
+    <div class="card-title">API Providerzy — status i routing</div>
+    <table>
+      <tr><th>Provider</th><th>Modele</th><th>Status</th><th>Zastosowanie</th></tr>
+      <tr><td>OpenRouter</td><td>Multi-model routing</td><td><span class="badge b-green">ON</span></td><td>Główny router — fallback + load balancing</td></tr>
+      <tr><td>Anthropic (direct)</td><td>Claude 4 / 4.5</td><td><span class="badge b-green">ON</span></td><td>Agent Zero, kodowanie, orkiestracja</td></tr>
+      <tr><td>OpenAI</td><td>GPT-4o</td><td><span class="badge b-green">ON</span></td><td>Content marketing, copywriting</td></tr>
+      <tr><td>DeepSeek</td><td>R1 8B</td><td><span class="badge b-green">ON</span></td><td>SEO, analiza, reasoning</td></tr>
+      <tr><td>Google</td><td>Gemini Flash</td><td><span class="badge b-green">ON</span></td><td>Masowe przetwarzanie, tanie bulk ops</td></tr>
+      <tr><td>Tavily</td><td>Web search</td><td><span class="badge b-green">ON</span></td><td>Live web search dla agentów</td></tr>
+      <tr><td>Groq</td><td>Fast inference (Llama)</td><td><span class="badge b-yellow">STANDBY</span></td><td>Ultra-szybkie odpowiedzi, prototyping</td></tr>
+      <tr><td>Perplexity</td><td>Search + answer</td><td><span class="badge b-yellow">STANDBY</span></td><td>Research, aktualności, fact-checking</td></tr>
+    </table>
+  </div>
+
+  <div class="card purple">
+    <div class="card-title">Usługi AI — cennik sprzedaży</div>
+    <table>
+      <tr><th>Usługa</th><th>Cena min</th><th>Cena max</th><th>Marża</th><th>Opis</th></tr>
+      <tr><td>AI Consulting (godz.)</td><td>$100</td><td>$500</td><td><span class="badge b-green">HIGH</span></td><td>Doradztwo strategiczne AI</td></tr>
+      <tr><td>Custom Agent Dev</td><td>$50K</td><td>$500K</td><td><span class="badge b-purple">ENTERPRISE</span></td><td>Budowa dedykowanych agentów AI</td></tr>
+      <tr><td>RAG Implementation</td><td>$15K</td><td>$75K</td><td><span class="badge b-blue">MID</span></td><td>Wdrożenie RAG + baza wiedzy</td></tr>
+      <tr><td>AI Strategy</td><td>$10K</td><td>$50K</td><td><span class="badge b-green">HIGH</span></td><td>Strategia transformacji AI</td></tr>
+      <tr><td>MVP Development</td><td>$25K</td><td>$100K</td><td><span class="badge b-blue">MID</span></td><td>Prototyp AI-powered produktu</td></tr>
+    </table>
+    <div class="warn">Rynek AI consulting: $15B (2024) → $45B (2028), CAGR 31.5%. Open-source daje 5-10x oszczędności vs. proprietary.</div>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- NARZĘDZIA                                                     -->
+<!-- ============================================================ -->
+<div class="section" id="s-tools">
+<h2>Narzędzia — co mamy zainstalowane i do czego służy</h2>
+
+<div class="grid">
+  <div class="card grid-full">
+    <div class="card-title">Agenci — flota operacyjna</div>
+    <table>
+      <tr><th>Agent</th><th>Platforma</th><th>Rola</th><th>Model domyślny</th><th>Możliwości</th></tr>
+      <tr>
+        <td style="color:var(--accent)">Jimbo</td><td>Agent Zero</td>
+        <td>Główny orkiestrator</td><td>Claude 4.5 Sonnet</td>
+        <td>Kod, terminal, web search, memory, MCP tools, sub-agenci</td>
+      </tr>
+      <tr>
+        <td style="color:var(--green)">Elwirka</td><td>Agent Zero</td>
+        <td>SEO & content</td><td>DeepSeek R1</td>
+        <td>Optymalizacja SEO, generowanie artykułów, keyword research</td>
+      </tr>
+      <tr>
+        <td style="color:var(--orange)">Norbert</td><td>Agent Zero</td>
+        <td>Business intelligence</td><td>GPT-4o</td>
+        <td>Analiza rynku, raporty, competitive intel</td>
+      </tr>
+      <tr>
+        <td style="color:var(--yellow)">Zbychu</td><td>Agent Zero</td>
+        <td>DevOps & automation</td><td>Claude Sonnet 4</td>
+        <td>Deployment, CI/CD, monitoring, infrastructure</td>
+      </tr>
+      <tr>
+        <td style="color:var(--pink)">Angels</td><td>Agent Zero</td>
+        <td>Research & analysis</td><td>Claude Sonnet 4</td>
+        <td>Deep research, data analysis, fact-checking</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-title">External tools</div>
+    <table>
+      <tr><th>Narzędzie</th><th>Typ</th><th>Do czego</th></tr>
+      <tr><td style="color:var(--green)">smolagents</td><td><span class="badge b-green">agent</span></td><td>HuggingFace framework — workspace_guardian.py, jimbo_scout.py</td></tr>
+      <tr><td style="color:var(--accent)">FastCode</td><td><span class="badge b-blue">indexer</span></td><td>AST parser, graph builder, embedder, RAG retrieval kodu</td></tr>
+      <tr><td style="color:var(--purple)">youtu-graphrag</td><td><span class="badge b-purple">graphrag</span></td><td>Tencent GraphRAG — budowa knowledge graph, jimbo_indexer.py</td></tr>
+      <tr><td style="color:var(--orange)">visual-explainer</td><td><span class="badge b-orange">skill</span></td><td>Terminal output → styled HTML + Mermaid diagrams</td></tr>
+      <tr><td style="color:var(--yellow)">noodle-adapter</td><td><span class="badge b-yellow">adapter</span></td><td>Bridge FastCode indexer ↔ Nodle graph API</td></tr>
+    </table>
+  </div>
+
+  <div class="card purple">
+    <div class="card-title">MCP Tools (Model Context Protocol)</div>
+    <table>
+      <tr><th>Tool</th><th>Możliwości</th><th>Zastosowanie</th></tr>
+      <tr><td>Brave Search</td><td>Web search API</td><td>Live wyszukiwanie w czasie rzeczywistym</td></tr>
+      <tr><td>GitHub</td><td>Repo access, issues, PRs</td><td>Zarządzanie kodem, code review</td></tr>
+      <tr><td>Context7</td><td>Up-to-date docs</td><td>Aktualna dokumentacja bibliotek</td></tr>
+      <tr><td>Exa</td><td>Semantic web search</td><td>Research, company analysis</td></tr>
+      <tr><td>GitKraken</td><td>Git operations</td><td>Branch mgmt, commit, push</td></tr>
+      <tr><td>HuggingFace</td><td>Models, datasets</td><td>Wyszukiwanie modeli i zbiorów danych</td></tr>
+    </table>
+  </div>
+
+  <div class="card green">
+    <div class="card-title">Serwisy lokalne — porty</div>
+    <table>
+      <tr><th>Port</th><th>Serwis</th><th>Język</th><th>Do czego</th></tr>
+      <tr><td>4200</td><td>JIMBO HQ Dashboard</td><td>Python</td><td>Główny dashboard + file browser API</td></tr>
+      <tr><td>7071</td><td>Knowledge Base API</td><td>Python/FastAPI</td><td>RAG search, wektorowe wyszukiwanie w KB</td></tr>
+      <tr><td>8001</td><td>MCP Gateway</td><td>Python/FastAPI</td><td>Brama do MCP narzędzi</td></tr>
+      <tr><td>50001</td><td>Agent Zero</td><td>Python</td><td>Platforma agentów AI</td></tr>
+      <tr><td>5025</td><td>Observable Framework</td><td>Node.js</td><td>Dashboardy observablehq</td></tr>
+      <tr><td>5675</td><td>Movie Review App</td><td>Python</td><td>Recenzje filmowe, GUI</td></tr>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- BAZA WIEDZY                                                   -->
+<!-- ============================================================ -->
+<div class="section" id="s-knowledge">
+<h2>Baza wiedzy — zawartość i struktura</h2>
+
+<div class="grid">
+  <div class="card grid-full">
+    <div class="card-title">Knowledge Base — 21 kategorii tematycznych</div>
+    <table>
+      <tr><th>ID</th><th>Kategoria</th><th>Pliki</th><th>Zindeksowane (ChromaDB)</th><th>Opis</th><th>Status</th></tr>
+      <tr><td>01</td><td>AI_SEO</td><td>3,115</td><td>3,912</td><td>Strategie SEO pod AI, boty, schema.org</td><td><span class="badge b-green">PEŁNA</span></td></tr>
+      <tr><td>02</td><td>WHITECAT_SYSTEM</td><td>0</td><td>0</td><td>Dokumentacja techniczna Whitecat</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>03</td><td>PYTHON_AUTOMATION</td><td>0</td><td>0</td><td>Skrypty Python, narzędzia deweloperskie</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>04</td><td>ECOMMERCE_SHOPS</td><td>4</td><td>23</td><td>E-commerce: Astro, Stripe, IdoSell</td><td><span class="badge b-yellow">MINIMALNA</span></td></tr>
+      <tr><td>05</td><td>AGENTS_AND_RAG</td><td>12</td><td>81</td><td>Architektura agentów i RAG</td><td><span class="badge b-yellow">MINIMALNA</span></td></tr>
+      <tr><td>06</td><td>FINANCE</td><td>4</td><td>26</td><td>Strategie finansowe, cenniki</td><td><span class="badge b-yellow">MINIMALNA</span></td></tr>
+      <tr><td>07</td><td>B2B_SALES</td><td>2</td><td>13</td><td>B2B, lead generation</td><td><span class="badge b-yellow">MINIMALNA</span></td></tr>
+      <tr><td>08</td><td>MARKETPLACE</td><td>0</td><td>0</td><td>Allegro, Amazon, eBay, Empik</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>09</td><td>BUY_AND_SELL</td><td>0</td><td>0</td><td>Flipping, okazje rynkowe</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>10</td><td>MARKET_ANALYSIS</td><td>0</td><td>0</td><td>Raporty, analiza konkurencji</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>11</td><td>OPPORTUNITIES</td><td>0</td><td>0</td><td>Nowe nisze, możliwości biznesowe</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>12</td><td>FORECASTING</td><td>0</td><td>0</td><td>Prognozy rynkowe 2025-2027</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>13</td><td>AI_NEWS</td><td>2</td><td>12</td><td>Nowości AI, update'y modeli</td><td><span class="badge b-yellow">MINIMALNA</span></td></tr>
+      <tr><td>14</td><td>BLOG_TOPICS</td><td>0</td><td>0</td><td>Pomysły na artykuły</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>15</td><td>READY_ARTICLES</td><td>0</td><td>0</td><td>Gotowe artykuły do publikacji</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>16</td><td>PROMPT_LIBRARY</td><td>0</td><td>0</td><td>Kolekcja reużywalnych promptów</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>17</td><td>AGENT_KNOWLEDGE</td><td>0</td><td>0</td><td>Konfiguracje i wiedza agentów</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>18</td><td>MCP_TOOLS</td><td>0</td><td>0</td><td>Integracje MCP</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>19</td><td>PROJECT_PLANS</td><td>0</td><td>0</td><td>Plany projektów, specyfikacje</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>20</td><td>TRAINING_CORPUS</td><td>0</td><td>0</td><td>Dane do fine-tuningu</td><td><span class="badge b-red">PUSTA</span></td></tr>
+      <tr><td>99</td><td>ARCHIVE</td><td>757</td><td>—</td><td>Archiwum starych plików</td><td><span class="badge b-blue">ARCHIWUM</span></td></tr>
+    </table>
+    <div class="warn">14 z 21 kategorii jest pustych. Priorytet zasilania: 05_AGENTS_AND_RAG, 16_PROMPT_LIBRARY, 17_AGENT_KNOWLEDGE, 03_PYTHON_AUTOMATION.</div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-title">ChromaDB — statystyki kolekcji specjalnych</div>
+    <table>
+      <tr><th>Kolekcja</th><th>Dokumenty</th><th>Do czego</th></tr>
+      <tr><td>kb_all</td><td><strong>4,816</strong></td><td>Wszystkie dokumenty łącznie</td></tr>
+      <tr><td>kb_ai_tools</td><td>271</td><td>Narzędzia AI, opisy, porównania</td></tr>
+      <tr><td>kb_agent_reports</td><td>211</td><td>Raporty z działań agentów</td></tr>
+      <tr><td>kb_ml_datasets</td><td>142</td><td>Opisy zbiorów danych ML</td></tr>
+      <tr><td>kb_docs</td><td>96</td><td>Dokumentacja techniczna</td></tr>
+      <tr><td>kb_prompts</td><td>29</td><td>Biblioteka promptów</td></tr>
+    </table>
+    <div class="tip">Indeksowanie: <code>python ingest/kb_indexer.py all</code> — model: all-MiniLM-L6-v2 — ostatnie: 2026-02-17</div>
+  </div>
+
+  <div class="card purple">
+    <div class="card-title">Biblioteki strategiczne — podsumowanie</div>
+    <table>
+      <tr><th>Biblioteka</th><th>Pliki</th><th>Fokus</th></tr>
+      <tr><td style="color:#ff0066">[BIZ] Bucket of Blood</td><td>4</td><td>Retencja klientów, LTV, enterprise sales</td></tr>
+      <tr><td style="color:#00aaff">[BIZ] Shadow Boxing</td><td>11</td><td>Growth hacking, competitive intel, automatyzacja</td></tr>
+      <tr><td style="color:#ffff00">[BIZ] The Now</td><td>21</td><td>Quick cash, arbitraż, viral marketing</td></tr>
+      <tr><td style="color:#00ff88">[BIZ] Money Machine</td><td>21</td><td>AI monetyzacja, e-commerce, płatności</td></tr>
+      <tr style="border-top:1px solid var(--border)"><td style="color:var(--muted)">[PRV] TECH_VAULT</td><td>2,100</td><td>Docs, frameworki, zasoby techniczne</td></tr>
+      <tr><td style="color:var(--muted)">[PRV] TheCHUCKnodle</td><td>1,912</td><td>Nodle graph engine</td></tr>
+      <tr><td style="color:var(--muted)">[PRV] AI_LAB</td><td>8</td><td>Eksperymenty AI, testy modeli</td></tr>
+    </table>
+  </div>
+
+  <div class="card green">
+    <div class="card-title">Control Center — top kategorie</div>
+    <table>
+      <tr><th>Kategoria</th><th>Pliki</th><th>Typ danych</th></tr>
+      <tr><td>movies</td><td>3,222</td><td>Baza filmów, recenzje</td></tr>
+      <tr><td>BUSINESS_INTELLIGENCE</td><td>2,491</td><td>Analizy rynkowe, raporty BI</td></tr>
+      <tr><td>FINANCE_DATA</td><td>1,836</td><td>Dane finansowe, cenniki</td></tr>
+      <tr><td>TECH_RESEARCH</td><td>1,690</td><td>Badania technologiczne</td></tr>
+      <tr><td>FILM_MEDIA</td><td>1,550</td><td>Media filmowe, JSON</td></tr>
+      <tr><td>MARKETING_ECOMMERCE</td><td>1,166</td><td>Marketing, e-commerce dane</td></tr>
+      <tr><td>AI_TOOLS</td><td>272</td><td>Narzędzia AI, porównania</td></tr>
+      <tr><td>ML_AI_DATASETS</td><td>142</td><td>Zbiory danych ML</td></tr>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- INFRASTRUKTURA                                                -->
+<!-- ============================================================ -->
+<div class="section" id="s-infra">
+<h2>Infrastruktura — co działa i jak połączone</h2>
+
+<div class="grid">
+  <div class="card">
+    <div class="card-title">Cloudflare Workers</div>
+    <table>
+      <tr><th>Worker</th><th>Funkcja</th><th>Koszt</th><th>Uwagi</th></tr>
+      <tr><td>whitecat-api</td><td>API sklepu, produkty, SEO</td><td>Free tier (100K req/dzień)</td><td>Główny e-commerce API</td></tr>
+      <tr><td>moa-orchestrator</td><td>Multi-model orchestration</td><td>Free tier</td><td>MOA pipeline, content generation</td></tr>
+      <tr><td>x402-payment</td><td>Płatności crypto</td><td>Free tier</td><td>Standby — do aktywacji</td></tr>
+      <tr><td>content-delivery</td><td>CDN, static content</td><td>Free tier</td><td>Serwowanie contentu</td></tr>
+    </table>
+  </div>
+
+  <div class="card purple">
+    <div class="card-title">Cloudflare Storage</div>
+    <table>
+      <tr><th>Zasób</th><th>Typ</th><th>Funkcja</th><th>Koszt</th></tr>
+      <tr><td>whitecat-products</td><td><span class="badge b-blue">D1</span></td><td>Baza produktów, SQL</td><td>Free 5GB</td></tr>
+      <tr><td>moa-cache</td><td><span class="badge b-blue">D1</span></td><td>Cache wyników AI</td><td>Free 5GB</td></tr>
+      <tr><td>whitecat-images</td><td><span class="badge b-purple">R2</span></td><td>Object storage, obrazy</td><td>Free 10GB</td></tr>
+    </table>
+  </div>
+
+  <div class="card green">
+    <div class="card-title">Caddy — reverse proxy</div>
+    <table>
+      <tr><th>Domena</th><th>Port</th><th>Serwis</th></tr>
+      <tr><td>agent-zero.dev.localhost</td><td>:50001</td><td>Agent Zero</td></tr>
+      <tr><td>dashboard.dev.localhost</td><td>:5025</td><td>Observable Framework</td></tr>
+      <tr><td>movies.dev.localhost</td><td>:5675</td><td>Movie Review App</td></tr>
+      <tr><td>jimbo.dev.localhost</td><td>:4880</td><td>Jimbo Hub</td></tr>
+    </table>
+    <div class="tip">Caddy auto-TLS, HTTP/2. Config: <code>U:\The_DEVz_HUB_of_work\Caddyfile</code>. Start: <code>./caddy-proxy.ps1</code></div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card grid-full yellow">
+    <div class="card-title">Mapa połączeń — co skąd bierze dane</div>
+    <table>
+      <tr><th>Źródło</th><th></th><th>Cel</th><th>Protokół</th><th>Opis</th></tr>
+      <tr><td>Agent Zero (:50001)</td><td style="color:var(--accent)">→</td><td>OpenRouter / Anthropic</td><td>HTTPS</td><td>Wywołania modeli AI</td></tr>
+      <tr><td>Agent Zero (:50001)</td><td style="color:var(--accent)">→</td><td>ChromaDB (lokalny)</td><td>Local</td><td>RAG — wyszukiwanie wektorowe</td></tr>
+      <tr><td>Agent Zero (:50001)</td><td style="color:var(--accent)">→</td><td>MCP Tools</td><td>stdio/SSE</td><td>Brave, GitHub, Context7, Exa</td></tr>
+      <tr><td>Dashboard (:4200)</td><td style="color:var(--accent)">→</td><td>Knowledge Base (pliki)</td><td>FS</td><td>Przeglądanie plików wiedzy</td></tr>
+      <tr><td>Dashboard (:4200)</td><td style="color:var(--accent)">→</td><td>Libraries, CC, A0 (pliki)</td><td>FS</td><td>Browse API po katalogach</td></tr>
+      <tr><td>KB API (:7071)</td><td style="color:var(--accent)">→</td><td>ChromaDB</td><td>Local</td><td>Wektorowe wyszukiwanie semantyczne</td></tr>
+      <tr><td>Caddy proxy</td><td style="color:var(--accent)">→</td><td>Serwisy wewnętrzne</td><td>HTTP</td><td>Reverse proxy z named domains</td></tr>
+      <tr><td>CF Workers</td><td style="color:var(--accent)">→</td><td>D1 / R2</td><td>CF Bindings</td><td>Dane sklepu, cache, obrazy</td></tr>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- RECEPTY & INSTRUKCJE                                          -->
+<!-- ============================================================ -->
+<div class="section" id="s-recipes">
+<h2>Recepty — co z czym łączyć dla najlepszych wyników</h2>
+
+<div class="grid">
+  <div class="card grid-full">
+    <div class="card-title">Workflow: generowanie treści SEO (najlepsza efektywność kosztowa)</div>
+    <div class="recipe">
+      <div class="recipe-title">1. Masowa produkcja artykułów blogowych SEO</div>
+      <div class="recipe-desc">Generuj 50+ artykułów/tydzień przy minimalnym koszcie</div>
+      <div class="recipe-stack">
+        <span class="badge b-green">DeepSeek R1</span>
+        <span class="badge b-blue">KB: 01_AI_SEO</span>
+        <span class="badge b-purple">Elwirka (agent)</span>
+        <span class="badge b-yellow">Tavily (web search)</span>
+      </div>
+      <div style="font-size:11px;color:var(--text);line-height:1.8">
+        <strong>Krok 1:</strong> Elwirka → keyword research z Tavily (real-time trendy)<br>
+        <strong>Krok 2:</strong> DeepSeek R1 → generowanie outlines z KB: 01_AI_SEO jako kontekst<br>
+        <strong>Krok 3:</strong> DeepSeek R1 → pisanie artykułów (chain-of-thought)<br>
+        <strong>Krok 4:</strong> Gemini Flash → bulk poprawa formatowania, tagi, meta descriptions
+      </div>
+      <div class="recipe-result">Koszt: ~$2-5 za 50 artykułów · Jakość: 90-94% · Czas: 2-4h automatycznie</div>
+    </div>
+
+    <div class="recipe">
+      <div class="recipe-title">2. Content premium (landing pages, sales copy)</div>
+      <div class="recipe-desc">Wysokiej jakości treści sprzedażowe dla klientów</div>
+      <div class="recipe-stack">
+        <span class="badge b-purple">Claude 4.5 Sonnet</span>
+        <span class="badge b-orange">GPT-4o</span>
+        <span class="badge b-blue">KB: 07_B2B_SALES</span>
+        <span class="badge b-green">Norbert (agent)</span>
+      </div>
+      <div style="font-size:11px;color:var(--text);line-height:1.8">
+        <strong>Krok 1:</strong> Norbert → analiza rynku i konkurencji (competitive intel)<br>
+        <strong>Krok 2:</strong> Claude 4.5 → strategia i struktura przekazu<br>
+        <strong>Krok 3:</strong> GPT-4o → copywriting, A/B warianty<br>
+        <strong>Krok 4:</strong> Claude 4.5 → review i optymalizacja konwersji
+      </div>
+      <div class="recipe-result">Koszt: ~$5-15 za landing page · Jakość: 96-97% · Czas: 1-2h</div>
+    </div>
+
+    <div class="recipe">
+      <div class="recipe-title">3. Kodowanie nowych feature'ów</div>
+      <div class="recipe-desc">Aktywny development z code review</div>
+      <div class="recipe-stack">
+        <span class="badge b-purple">Claude Sonnet 4</span>
+        <span class="badge b-blue">FastCode (indexer)</span>
+        <span class="badge b-green">Context7 (MCP)</span>
+        <span class="badge b-yellow">GitHub (MCP)</span>
+      </div>
+      <div style="font-size:11px;color:var(--text);line-height:1.8">
+        <strong>Krok 1:</strong> FastCode → indeksuje codebase, buduje AST + embedding<br>
+        <strong>Krok 2:</strong> Context7 → ściąga aktualną dokumentację użytych bibliotek<br>
+        <strong>Krok 3:</strong> Claude Sonnet 4 → pisze kod z pełnym kontekstem (RAG + docs)<br>
+        <strong>Krok 4:</strong> GitHub MCP → automatyczny PR + review
+      </div>
+      <div class="recipe-result">Koszt: ~$1-3 za feature · Jakość: 96% · Czas: zależy od scope</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card grid-full purple">
+    <div class="card-title">Workflow: agenci + RAG (najwyższa jakość)</div>
+
+    <div class="recipe">
+      <div class="recipe-title">4. Deep Research — analiza rynku / technologii</div>
+      <div class="recipe-desc">Głęboka analiza z wielu źródeł + wewnętrzna wiedza</div>
+      <div class="recipe-stack">
+        <span class="badge b-red">Claude 4.5 Sonnet</span>
+        <span class="badge b-green">Angels (agent)</span>
+        <span class="badge b-blue">Exa (MCP)</span>
+        <span class="badge b-yellow">Brave Search (MCP)</span>
+        <span class="badge b-purple">ChromaDB</span>
+      </div>
+      <div style="font-size:11px;color:var(--text);line-height:1.8">
+        <strong>Krok 1:</strong> Angels → definiuje pytania badawcze<br>
+        <strong>Krok 2:</strong> Exa + Brave → deep web search (academic, company, news)<br>
+        <strong>Krok 3:</strong> ChromaDB → enrichment z wewnętrznej bazy wiedzy<br>
+        <strong>Krok 4:</strong> Claude 4.5 → synteza, wnioski, rekomendacje
+      </div>
+      <div class="recipe-result">Koszt: ~$5-20 za raport · Jakość: 97% · Czas: 30-60 min</div>
+    </div>
+
+    <div class="recipe">
+      <div class="recipe-title">5. Agent Zero — orkiestracja multi-agentowa</div>
+      <div class="recipe-desc">Złożone zadania wymagające wielu agentów i narzędzi</div>
+      <div class="recipe-stack">
+        <span class="badge b-red">Claude 4.5 (Jimbo)</span>
+        <span class="badge b-green">Sub-agenci (Elwirka, Norbert, Zbychu)</span>
+        <span class="badge b-blue">MCP Tools (all)</span>
+        <span class="badge b-purple">KB + ChromaDB</span>
+      </div>
+      <div style="font-size:11px;color:var(--text);line-height:1.8">
+        <strong>Krok 1:</strong> Jimbo (Claude 4.5) → parsuje zadanie, planuje workflow<br>
+        <strong>Krok 2:</strong> Jimbo → deleguje sub-zadania do specjalistycznych agentów<br>
+        <strong>Krok 3:</strong> Agenci → execution z własnymi modelami i narzędziami<br>
+        <strong>Krok 4:</strong> Jimbo → agreguje wyniki, quality check, dostarczenie
+      </div>
+      <div class="recipe-result">Koszt: ~$10-50 za złożone zadanie · Jakość: najwyższa · Czas: 1-4h</div>
+    </div>
+
+    <div class="recipe">
+      <div class="recipe-title">6. E-commerce — generowanie opisów produktów</div>
+      <div class="recipe-desc">Automatyzacja treści e-commerce (produkty, FAQ, meta)</div>
+      <div class="recipe-stack">
+        <span class="badge b-green">Qwen 2.5 14B</span>
+        <span class="badge b-yellow">Gemini Flash</span>
+        <span class="badge b-blue">KB: 04_ECOMMERCE</span>
+        <span class="badge b-purple">CF Worker: whitecat-api</span>
+      </div>
+      <div style="font-size:11px;color:var(--text);line-height:1.8">
+        <strong>Krok 1:</strong> whitecat-api → pobiera produkty z D1 bazy<br>
+        <strong>Krok 2:</strong> Qwen 2.5 → generuje opisy PL/EN (multilingual)<br>
+        <strong>Krok 3:</strong> Gemini Flash → bulk generowanie meta, tagi, FAQ<br>
+        <strong>Krok 4:</strong> whitecat-api → zapisuje do D1, R2 (obrazy)
+      </div>
+      <div class="recipe-result">Koszt: ~$0.50-2 za 100 produktów · Jakość: 91% · Czas: 15 min</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card grid-full green">
+    <div class="card-title">Optymalizacja kosztów — zasady doboru modelu</div>
+    <table>
+      <tr><th>Typ zadania</th><th>Optymalny model</th><th>Koszt/1000 zadań</th><th>Dlaczego ten model</th></tr>
+      <tr><td>Klasyfikacja, tagi, proste Q&A</td><td style="color:var(--green)">Gemini Flash</td><td>~$0.05</td><td>Najszybszy, najtańszy, wystarczająca jakość</td></tr>
+      <tr><td>Tłumaczenia PL↔EN, treści wielojęzyczne</td><td style="color:var(--green)">Qwen 2.5</td><td>~$0.30</td><td>Najlepszy multilingual w budżecie</td></tr>
+      <tr><td>SEO, keyword research, analiza</td><td style="color:var(--yellow)">DeepSeek R1</td><td>~$2.00</td><td>Chain-of-thought, dobry reasoning, tani</td></tr>
+      <tr><td>Marketing copy, sprzedaż</td><td style="color:var(--orange)">GPT-4o</td><td>~$10.00</td><td>Najlepszy copywriter, naturalny język</td></tr>
+      <tr><td>Kod, refactoring, review</td><td style="color:var(--pink)">Claude Sonnet 4</td><td>~$15.00</td><td>Najlepsza precyzja techniczna</td></tr>
+      <tr><td>Strategia, orkiestracja, złożone</td><td style="color:var(--red)">Claude 4.5</td><td>~$15.00</td><td>Najwyższa jakość, najlepszy reasoning</td></tr>
+    </table>
+    <div class="tip">
+      <strong>Reguła kaskady:</strong> Zawsze zacznij od najtańszego wystarczającego modelu. Eskaluj wyżej tylko gdy jakość jest niewystarczająca.<br>
+      Gemini Flash → Qwen → DeepSeek → GPT-4o → Claude 4 → Claude 4.5
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card grid-full orange">
+    <div class="card-title">Szybkie komendy — jak uruchomić kluczowe serwisy</div>
+    <table>
+      <tr><th>Co</th><th>Komenda</th><th>Wynik</th></tr>
+      <tr><td>Dashboard JIMBO HQ</td><td><code>cd U:\JIMBO_NEW_OP_INIT\dashboard; python server.py</code></td><td>http://localhost:4200</td></tr>
+      <tr><td>Agent Zero</td><td><code>cd U:\AGENT_ZERO; python run_ui.py</code></td><td>http://localhost:50001</td></tr>
+      <tr><td>Knowledge Base API</td><td><code>cd U:\The_DEVz_HUB_of_work\knowledge_base; uvicorn kb_server:app --port 7071</code></td><td>http://localhost:7071/docs</td></tr>
+      <tr><td>Indeksowanie KB</td><td><code>cd U:\The_DEVz_HUB_of_work\knowledge_base; python ingest/kb_indexer.py all</code></td><td>4,816+ docs w ChromaDB</td></tr>
+      <tr><td>Caddy proxy</td><td><code>cd U:\The_DEVz_HUB_of_work; .\caddy-proxy.ps1</code></td><td>Auto-routing domen .dev.localhost</td></tr>
+      <tr><td>Movie Review</td><td><code>cd U:\The_DEVz_HUB_of_work\movies; python review_assistant_gui.py</code></td><td>http://localhost:5675</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="card grid-full red">
+    <div class="card-title">Priorytety rozwoju — co warto zrobić</div>
+    <table>
+      <tr><th>#</th><th>Akcja</th><th>Zysk</th><th>Wysiłek</th></tr>
+      <tr><td>1</td><td>Zasilić KB: 16_PROMPT_LIBRARY — dodaj 50+ reużywalnych promptów</td><td><span class="badge b-green">WYSOKI</span></td><td><span class="badge b-green">NISKI</span></td></tr>
+      <tr><td>2</td><td>Zasilić KB: 05_AGENTS_AND_RAG — konfiguracje, wzorce, best practices</td><td><span class="badge b-green">WYSOKI</span></td><td><span class="badge b-yellow">ŚREDNI</span></td></tr>
+      <tr><td>3</td><td>Zasilić KB: 03_PYTHON_AUTOMATION — skrypty, snippets, narzędzia</td><td><span class="badge b-blue">ŚREDNI</span></td><td><span class="badge b-green">NISKI</span></td></tr>
+      <tr><td>4</td><td>Uruchomić KB API (:7071) na stałe — RAG search po starcie systemu</td><td><span class="badge b-green">WYSOKI</span></td><td><span class="badge b-green">NISKI</span></td></tr>
+      <tr><td>5</td><td>Aktywować Groq jako fast-inference fallback → sub-sekundowe odpowiedzi</td><td><span class="badge b-blue">ŚREDNI</span></td><td><span class="badge b-green">NISKI</span></td></tr>
+      <tr><td>6</td><td>Przenieść research_backup → do odpowiednich kategorii KB</td><td><span class="badge b-blue">ŚREDNI</span></td><td><span class="badge b-green">NISKI</span></td></tr>
+    </table>
+  </div>
+</div>
+</div>
+
+</div><!-- /main -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>DEVz HUB — System Informacyjny v3.0 · 2026-02-21</span>
+  <span>Czysto informacyjny — zero backendów wymaganych</span>
+</div>
+
+<script>
+function show(el,id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

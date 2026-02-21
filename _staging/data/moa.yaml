@@ -1,0 +1,227 @@
+# MOA Pipeline Configuration
+# JIMBO Dashboard - Mixture of Agents Settings
+
+# ===========================================
+# PIPELINE METADATA
+# ===========================================
+
+metadata:
+  name: "WHITECAT Content Generator"
+  version: "1.0.0"
+  description: "MOA pipeline for e-commerce content generation"
+  created: "2026-02-16"
+  owner: "JIMBO Inc"
+
+# ===========================================
+# PIPELINE FLOW
+# ===========================================
+
+pipeline:
+  stages:
+    - name: "input_processing"
+      description: "Parse product data and prepare prompts"
+      timeout: 10s
+
+    - name: "parallel_writing"
+      description: "Generate content from multiple writers"
+      timeout: 60s
+      parallel: true
+
+    - name: "critique"
+      description: "Quality control and feedback"
+      timeout: 30s
+      iterations: 2
+
+    - name: "aggregation"
+      description: "Synthesize final content"
+      timeout: 45s
+
+    - name: "validation"
+      description: "Final quality check"
+      timeout: 15s
+
+# ===========================================
+# WRITER CONFIGURATION
+# ===========================================
+
+writers:
+  parallel_execution: true
+  max_concurrent: 3
+
+  prompts:
+    seo_writer:
+      system: |
+        Jesteś ekspertem SEO specjalizującym się w polskim rynku e-commerce meblowym.
+        Twoim zadaniem jest optymalizacja treści pod wyszukiwarki.
+        Skup się na: słowach kluczowych, meta opisach, nagłówkach H1-H3.
+      template: |
+        Produkt: {product_name}
+        Kategoria: {category}
+        Opis techniczny: {technical_specs}
+
+        Wygeneruj zoptymalizowany pod SEO opis produktu.
+
+    technical_writer:
+      system: |
+        Jesteś ekspertem technicznym ds. mebli.
+        Twoim zadaniem jest precyzyjny opis parametrów, materiałów i specyfikacji.
+        Skup się na: dokładności, mierzalnych danych, certyfikatach.
+      template: |
+        Produkt: {product_name}
+        Materiały: {materials}
+        Wymiary: {dimensions}
+
+        Wygeneruj szczegółowy opis techniczny.
+
+    marketing_writer:
+      system: |
+        Jesteś copywriterem marketingowym specjalizującym się w branży meblowej.
+        Twoim zadaniem jest stworzenie przekonującej treści sprzedażowej.
+        Skup się na: emocjach, korzyściach, CTA.
+      template: |
+        Produkt: {product_name}
+        Cena: {price}
+        Grupa docelowa: {target_audience}
+
+        Wygeneruj angażujący opis marketingowy.
+
+# ===========================================
+# CRITIC CONFIGURATION
+# ===========================================
+
+critic:
+  model: "gemini-2.0-flash-thinking"
+  max_iterations: 2
+  threshold: 0.85
+
+  criteria:
+    - name: "flesch_readability"
+      description: "Polish Flesch readability score"
+      target: 60-70
+      weight: 0.2
+
+    - name: "keyword_density"
+      description: "SEO keyword density"
+      target: "1-2%"
+      weight: 0.2
+
+    - name: "brand_voice"
+      description: "WHITECAT brand voice consistency"
+      target: 0.9
+      weight: 0.25
+
+    - name: "factual_accuracy"
+      description: "Technical accuracy score"
+      target: 0.95
+      weight: 0.25
+
+    - name: "polish_grammar"
+      description: "Polish language correctness"
+      target: 0.98
+      weight: 0.1
+
+  feedback_template: |
+    Analiza treści:
+    - Czytelność: {readability_score}
+    - Gęstość słów kluczowych: {keyword_density}
+    - Głos marki: {brand_voice_score}
+    - Dokładność faktów: {factual_accuracy}
+
+    Uwagi: {feedback}
+
+    Rekomendowane poprawki: {improvements}
+
+# ===========================================
+# AGGREGATOR CONFIGURATION
+# ===========================================
+
+aggregator:
+  model: "claude-sonnet-4.5"
+  method: "synthesis"
+
+  synthesis_prompt: |
+    Masz do dyspozycji {num_versions} wersje opisu produktu od różnych ekspertów:
+
+    Wersja SEO:
+    {seo_version}
+
+    Wersja Techniczna:
+    {technical_version}
+
+    Wersja Marketingowa:
+    {marketing_version}
+
+    Uwagi krytyka:
+    {critic_feedback}
+
+    Stwórz finalną, spójną wersję opisu produktu, która:
+    1. Łączy najlepsze elementy wszystkich wersji
+    2. Jest zoptymalizowana pod SEO
+    3. Zawiera dokładne dane techniczne
+    4. Ma przekonujący przekaz marketingowy
+    5. Jest poprawna językowo
+
+# ===========================================
+# OUTPUT CONFIGURATION
+# ===========================================
+
+output:
+  format: "markdown"
+  language: "pl"
+
+  structure:
+    - "# {product_name}"
+    - "## Opis produktu"
+    - "{main_description}"
+    - "## Specyfikacja techniczna"
+    - "{technical_specs}"
+    - "## Dlaczego warto?"
+    - "{benefits}"
+    - "## CTA"
+    - "{call_to_action}"
+
+  metadata:
+    include_generation_info: true
+    include_model_versions: true
+    include_cost_estimate: true
+
+# ===========================================
+# CACHING & OPTIMIZATION
+# ===========================================
+
+optimization:
+  cache:
+    enabled: true
+    ttl: 3600  # 1 hour
+    backend: "redis"
+
+  retry:
+    max_attempts: 3
+    backoff: "exponential"
+    base_delay: 2s
+
+  rate_limiting:
+    requests_per_minute: 60
+    tokens_per_minute: 100000
+
+# ===========================================
+# MONITORING
+# ===========================================
+
+monitoring:
+  log_level: "INFO"
+  metrics:
+    - "latency"
+    - "token_usage"
+    - "cost"
+    - "quality_scores"
+
+  alerts:
+    - condition: "cost > $1 per product"
+      action: "notify"
+
+    - condition: "quality_score < 0.8"
+      action: "retry"
+
+    - condition: "latency > 120s"
+      action: "notify"

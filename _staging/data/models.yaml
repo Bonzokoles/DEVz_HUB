@@ -1,0 +1,163 @@
+# AI Models Configuration
+# JIMBO Dashboard - Model Pricing & Settings
+
+# ===========================================
+# WRITER AGENTS (MOA Pipeline)
+# ===========================================
+
+writers:
+  deepseek-r1-8b:
+    name: "DeepSeek R1 8B"
+    role: "SEO Optimization"
+    provider: "deepseek"
+    model_id: "deepseek-reasoner"
+    pricing:
+      input_per_million: 0.55  # USD
+      output_per_million: 2.19  # USD
+      cached_input_per_million: 0.14  # USD
+    limits:
+      max_tokens: 8192
+      context_window: 64000
+    settings:
+      temperature: 0.7
+      top_p: 0.9
+      timeout_seconds: 30
+    status: active
+    priority: 1
+
+  claude-sonnet-4:
+    name: "Claude Sonnet 4"
+    role: "Technical Accuracy"
+    provider: "anthropic"
+    model_id: "claude-sonnet-4-20250514"
+    pricing:
+      input_per_million: 3.00  # USD
+      output_per_million: 15.00  # USD
+      cached_input_per_million: 0.30  # USD
+    limits:
+      max_tokens: 16384
+      context_window: 200000
+    settings:
+      temperature: 0.5
+      top_p: 0.9
+      timeout_seconds: 45
+    status: active
+    priority: 2
+
+  gpt-4o:
+    name: "GPT-4o"
+    role: "Marketing Copy"
+    provider: "openai"
+    model_id: "gpt-4o-2024-11-20"
+    pricing:
+      input_per_million: 2.50  # USD
+      output_per_million: 10.00  # USD
+      cached_input_per_million: 1.25  # USD
+    limits:
+      max_tokens: 16384
+      context_window: 128000
+    settings:
+      temperature: 0.8
+      top_p: 0.95
+      timeout_seconds: 45
+    status: active
+    priority: 3
+
+  qwen-2-5-14b:
+    name: "Qwen 2.5 14B"
+    role: "Backup Writer"
+    provider: "ollama"  # Local/offline
+    model_id: "qwen2.5:14b"
+    pricing:
+      input_per_million: 0.20  # USD (electricity only)
+      output_per_million: 0.60  # USD
+      cached_input_per_million: 0.00  # USD
+    limits:
+      max_tokens: 8192
+      context_window: 32000
+    settings:
+      temperature: 0.7
+      top_p: 0.9
+      timeout_seconds: 60
+    status: standby
+    priority: 4
+
+# ===========================================
+# QUALITY CONTROL
+# ===========================================
+
+quality_control:
+  critic:
+    name: "Gemini 2.0 Flash Thinking"
+    role: "Critic Agent"
+    provider: "google"
+    model_id: "gemini-2.0-flash-thinking-exp-01-21"
+    pricing:
+      input_per_million: 0.10  # USD
+      output_per_million: 0.40  # USD
+    limits:
+      max_tokens: 8192
+      context_window: 1000000
+    settings:
+      temperature: 0.3
+      thinking_budget: 24576
+    status: active
+    iterations: 2
+    threshold: 0.85
+
+  aggregator:
+    name: "Claude Sonnet 4.5"
+    role: "Content Aggregation"
+    provider: "anthropic"
+    model_id: "claude-sonnet-4-5-20250514"
+    pricing:
+      input_per_million: 3.00  # USD
+      output_per_million: 15.00  # USD
+    limits:
+      max_tokens: 16384
+      context_window: 200000
+    settings:
+      temperature: 0.4
+      method: "synthesis"
+    status: active
+
+# ===========================================
+# SUPPORTING MODELS
+# ===========================================
+
+supporting:
+  bielik-7b:
+    name: "Bielik 7B"
+    role: "Polish Language Specialist"
+    provider: "speakleash"
+    model_id: "bielik-7b-v0.1"
+    pricing:
+      input_per_million: 0.00  # Open source
+      output_per_million: 0.00
+    status: available
+
+  embedding-model:
+    name: "text-embedding-3-small"
+    role: "Vector Embeddings"
+    provider: "openai"
+    model_id: "text-embedding-3-small"
+    pricing:
+      input_per_million: 0.02  # USD
+    dimensions: 1536
+    status: active
+
+# ===========================================
+# COST CALCULATION HELPERS
+# ===========================================
+
+cost_calculation:
+  # Example: 10K input tokens + 2K output tokens
+  # DeepSeek R1: (10000/1000000 * 0.55) + (2000/1000000 * 2.19) = $0.0055 + $0.0044 = $0.0099
+
+  formula: "(input_tokens / 1_000_000 * input_price) + (output_tokens / 1_000_000 * output_price)"
+
+  example_product_description:
+    input_tokens: 15000
+    output_tokens: 3000
+    models_used: ["deepseek-r1-8b", "claude-sonnet-4", "gpt-4o", "gemini-2.0-flash", "claude-sonnet-4.5"]
+    estimated_cost: "$0.15 - $0.25 per product"
