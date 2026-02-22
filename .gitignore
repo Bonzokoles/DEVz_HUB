@@ -45,3 +45,5 @@ desktop.ini
 *.sqlite
 *.chroma/
 chroma_db/
+framework-temp/
+observable/src/.observablehq/cache/
