@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Scraper & Data Mining</title>
+<style>
+:root{
+  --bg:#07090f;--bg2:#0b0f1a;--s:rgba(255,255,255,0.03);--sh:rgba(255,255,255,0.06);
+  --b:rgba(255,255,255,0.07);--bh:rgba(255,255,255,0.13);
+  --g:#4ade80;--c:#00d9ff;--a:#a855f7;--y:#facc15;--r:#f87171;--o:#f97316;--pk:#ec4899;
+  --t:#e5e5e5;--ts:#fff;--m:#737373;--d:#525252;
+  --green:#4ade80;--cyan:#00d9ff;--purple:#a855f7;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);font-size:13px;overflow:hidden}
+
+/* ── LAYOUT ── */
+.layout{display:flex;height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:220px;flex-shrink:0;
+  background:linear-gradient(180deg,#0c1020 0%,#080b14 100%);
+  border-right:1px solid var(--b);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-hdr{padding:14px 14px 10px;border-bottom:1px solid var(--b)}
+.sb-hdr h1{font-size:13px;font-weight:700;color:var(--ts);display:flex;align-items:center;gap:7px}
+.sb-hdr .sub{font-size:9px;color:var(--d);margin-top:3px}
+
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sb-nav::-webkit-scrollbar{width:3px}
+.sb-nav::-webkit-scrollbar-thumb{background:var(--b);border-radius:2px}
+
+.nav-section{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--d);padding:10px 14px 4px}
+
+.nav-item{
+  padding:7px 14px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:8px;
+  border-left:2px solid transparent;transition:all .12s;color:var(--m);
+}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--t)}
+.nav-item.active{border-left-color:var(--c);background:rgba(0,217,255,0.05);color:var(--ts)}
+.nav-item .ni{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;
+  justify-content:center;font-size:11px;flex-shrink:0}
+.nav-item .nl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-item .nb{font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;flex-shrink:0}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{
+  display:flex;align-items:center;gap:10px;padding:10px 16px;
+  border-bottom:1px solid var(--b);background:rgba(11,15,26,0.8);flex-shrink:0;
+}
+.topbar-title{font-size:14px;font-weight:700;color:var(--ts);flex:1}
+.topbar-sub{font-size:10px;color:var(--d)}
+
+.content{flex:1;overflow-y:auto;padding:16px}
+.content::-webkit-scrollbar{width:5px}
+.content::-webkit-scrollbar-thumb{background:var(--b);border-radius:3px}
+
+/* ── PANELS ── */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── CARDS GRID ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-bottom:16px}
+.card{
+  background:var(--s);border:1px solid var(--b);border-radius:10px;
+  padding:16px;transition:border-color .15s;
+}
+.card:hover{border-color:var(--bh)}
+.card-hdr{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.card-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0}
+.card-title{font-size:13px;font-weight:700;color:var(--ts);margin-bottom:2px}
+.card-sub{font-size:10px;color:var(--d)}
+.card-body{font-size:11px;color:var(--m);line-height:1.6}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.tag{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600;border:1px solid transparent}
+
+/* ── TOOL TABLE ── */
+.tool-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+.tool-table th{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--d);padding:8px 12px;border-bottom:1px solid var(--b);text-align:left;white-space:nowrap;
+}
+.tool-table td{
+  padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:11px;color:var(--m);vertical-align:top;
+}
+.tool-table tr:hover td{background:rgba(255,255,255,0.02)}
+.tool-table .t-name{font-weight:700;color:var(--t);font-size:12px}
+.tool-table .t-lang{display:flex;gap:3px;flex-wrap:wrap}
+.pill{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:600}
+
+/* ── PIPELINE ── */
+.pipeline{display:flex;flex-direction:column;gap:0;margin-bottom:16px}
+.pipe-step{
+  display:flex;align-items:flex-start;gap:12px;padding:14px 16px;
+  background:var(--s);border:1px solid var(--b);border-radius:0;
+  border-bottom:none;transition:background .12s;position:relative;
+}
+.pipe-step:first-child{border-radius:10px 10px 0 0}
+.pipe-step:last-child{border-radius:0 0 10px 10px;border-bottom:1px solid var(--b)}
+.pipe-step:hover{background:var(--sh)}
+.pipe-num{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;
+}
+.pipe-content{flex:1}
+.pipe-title{font-size:12px;font-weight:700;color:var(--ts);margin-bottom:4px}
+.pipe-desc{font-size:11px;color:var(--m);line-height:1.6}
+.pipe-tools{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.pipe-arrow{
+  position:absolute;left:29px;bottom:-12px;z-index:1;
+  font-size:10px;color:var(--d);width:16px;text-align:center;
+}
+
+/* ── FILTERS ── */
+.filters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:16px}
+.filter-card{
+  background:var(--s);border:1px solid var(--b);border-radius:10px;padding:14px;
+}
+.filter-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.filter-icon{font-size:20px}
+.filter-title{font-size:12px;font-weight:700;color:var(--ts)}
+.filter-sub{font-size:9px;color:var(--d);margin-top:1px}
+.filter-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.filter-list li{
+  font-size:11px;color:var(--m);padding:5px 8px;
+  background:rgba(255,255,255,0.02);border-radius:5px;
+  border-left:2px solid transparent;line-height:1.5;
+}
+.filter-list li.good{border-left-color:var(--g)}
+.filter-list li.warn{border-left-color:var(--y)}
+.filter-list li.bad{border-left-color:var(--r)}
+.filter-list li strong{color:var(--t)}
+
+/* ── CODE BLOCK ── */
+.code-block{
+  background:#0a0f1e;border:1px solid var(--b);border-radius:8px;
+  padding:14px 16px;font-family:'Consolas','Courier New',monospace;
+  font-size:11px;line-height:1.7;color:#a8d8a8;overflow-x:auto;margin:10px 0;
+}
+.code-block .cm{color:#5a6a5a}
+.code-block .ck{color:#00d9ff}
+.code-block .cv{color:#facc15}
+.code-block .cs{color:#f97316}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{
+  display:flex;align-items:center;gap:10px;margin:0 0 12px;
+  padding-bottom:8px;border-bottom:1px solid var(--b);
+}
+.sec-hdr h2{font-size:14px;font-weight:700;color:var(--ts)}
+.sec-hdr .sec-badge{
+  font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;
+  background:rgba(0,217,255,0.1);color:var(--c);border:1px solid rgba(0,217,255,0.2);
+}
+.sec-desc{font-size:11px;color:var(--m);margin-bottom:14px;line-height:1.6}
+
+/* ── MATRIX ── */
+.matrix{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.matrix-cell{
+  background:var(--s);border:1px solid var(--b);border-radius:8px;padding:12px 14px;
+}
+.matrix-cell h4{font-size:11px;font-weight:700;color:var(--ts);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.matrix-cell ul{list-style:none;display:flex;flex-direction:column;gap:3px}
+.matrix-cell ul li{font-size:11px;color:var(--m);padding-left:10px;position:relative;line-height:1.5}
+.matrix-cell ul li::before{content:'•';position:absolute;left:0;color:var(--d)}
+
+/* scroll snap for overview badges */
+.overview-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.ov-badge{
+  padding:8px 14px;border-radius:8px;border:1px solid var(--b);
+  background:var(--s);display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--m);
+}
+.ov-badge .ob-val{font-size:18px;font-weight:700;color:var(--ts)}
+.ov-badge .ob-lbl{font-size:9px;color:var(--d);text-transform:uppercase;letter-spacing:.6px}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ── SIDEBAR ── -->
+<nav class="sidebar">
+  <div class="sb-hdr">
+    <h1>🕷️ Web Scraper</h1>
+    <div class="sub">Data Mining & Enrichment Hub</div>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-section">Przegląd</div>
+    <div class="nav-item active" onclick="showPanel('overview')">
+      <div class="ni" style="background:rgba(0,217,255,0.1);color:var(--c)">🗺️</div>
+      <span class="nl">Mapa narzędzi</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('pipeline')">
+      <div class="ni" style="background:rgba(74,222,128,0.1);color:var(--g)">⚙️</div>
+      <span class="nl">Pipeline danych</span>
+    </div>
+
+    <div class="nav-section">Narzędzia</div>
+    <div class="nav-item" onclick="showPanel('scrapers')">
+      <div class="ni" style="background:rgba(249,115,22,0.1);color:var(--o)">🕸️</div>
+      <span class="nl">Scrapery & Crawlery</span>
+      <span class="nb" style="background:rgba(249,115,22,0.15);color:var(--o)">12</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('apis')">
+      <div class="ni" style="background:rgba(99,102,241,0.1);color:#6366f1">🔌</div>
+      <span class="nl">API & Źródła danych</span>
+      <span class="nb" style="background:rgba(99,102,241,0.15);color:#6366f1">10</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('enrichment')">
+      <div class="ni" style="background:rgba(168,85,247,0.1);color:var(--a)">💎</div>
+      <span class="nl">Wzbogacanie danych</span>
+      <span class="nb" style="background:rgba(168,85,247,0.15);color:var(--a)">8</span>
+    </div>
+
+    <div class="nav-section">Jakość</div>
+    <div class="nav-item" onclick="showPanel('filters')">
+      <div class="ni" style="background:rgba(248,113,113,0.1);color:var(--r)">🚫</div>
+      <span class="nl">Filtry antyśmieciowe</span>
+      <span class="nb" style="background:rgba(248,113,113,0.15);color:var(--r)">15</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('validation')">
+      <div class="ni" style="background:rgba(250,204,21,0.1);color:var(--y)">✅</div>
+      <span class="nl">Walidacja & QA</span>
+    </div>
+
+    <div class="nav-section">Praktyki</div>
+    <div class="nav-item" onclick="showPanel('bestpractices')">
+      <div class="ni" style="background:rgba(74,222,128,0.1);color:var(--g)">📋</div>
+      <span class="nl">Best Practices</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('legal')">
+      <div class="ni" style="background:rgba(250,204,21,0.1);color:var(--y)">⚖️</div>
+      <span class="nl">Legalność & Etyka</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="panelTitle">🗺️ Mapa narzędzi scrapingowych</div>
+    <div class="topbar-sub" id="panelSub">Kompletny przegląd ekosystemu</div>
+  </div>
+  <div class="content">
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- OVERVIEW                                                    -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel active" id="panel-overview">
+      <div class="overview-badges">
+        <div class="ov-badge">
+          <div><div class="ob-val" style="color:var(--o)">12</div><div class="ob-lbl">Scrapery</div></div>
+        </div>
+        <div class="ov-badge">
+          <div><div class="ob-val" style="color:#6366f1">10</div><div class="ob-lbl">API źródła</div></div>
+        </div>
+        <div class="ov-badge">
+          <div><div class="ob-val" style="color:var(--a)">8</div><div class="ob-lbl">Enrichment</div></div>
+        </div>
+        <div class="ov-badge">
+          <div><div class="ob-val" style="color:var(--r)">15</div><div class="ob-lbl">Filtry QA</div></div>
+        </div>
+        <div class="ov-badge">
+          <div><div class="ob-val" style="color:var(--g)">5</div><div class="ob-lbl">Etapów pipeline</div></div>
+        </div>
+      </div>
+
+      <div class="sec-hdr">
+        <h2>Kategorie narzędzi</h2>
+        <span class="sec-badge">ekosystem</span>
+      </div>
+      <div class="cards-grid">
+
+        <div class="card" onclick="showPanel('scrapers')" style="cursor:pointer;border-color:rgba(249,115,22,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(249,115,22,0.12);color:var(--o)">🕸️</div>
+            <div>
+              <div class="card-title">Scrapery & Crawlery</div>
+              <div class="card-sub">Pobieranie danych ze stron WWW</div>
+            </div>
+          </div>
+          <div class="card-body">
+            Narzędzia do automatycznego pobierania treści HTML, renderowania JS, obsługi paginacji i crawlowania całych serwisów. Od lekkich bibliotek HTTP po pełne przeglądarki headless.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(249,115,22,0.1);color:var(--o);border-color:rgba(249,115,22,0.2)">Python</span>
+            <span class="tag" style="background:rgba(249,115,22,0.1);color:var(--o);border-color:rgba(249,115,22,0.2)">Node.js</span>
+            <span class="tag" style="background:rgba(249,115,22,0.1);color:var(--o);border-color:rgba(249,115,22,0.2)">headless</span>
+            <span class="tag" style="background:rgba(249,115,22,0.1);color:var(--o);border-color:rgba(249,115,22,0.2)">12 narzędzi</span>
+          </div>
+        </div>
+
+        <div class="card" onclick="showPanel('apis')" style="cursor:pointer;border-color:rgba(99,102,241,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(99,102,241,0.12);color:#6366f1">🔌</div>
+            <div>
+              <div class="card-title">API & Źródła danych</div>
+              <div class="card-sub">Oficjalne i nieoficjalne API</div>
+            </div>
+          </div>
+          <div class="card-body">
+            Legalne źródła danych: RSS/Atom, publiczne API (Reddit, GitHub, HN, arXiv), agregatory newsów, serwisy badawcze. Strukturyzowane dane bez ryzyka blokady.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2)">REST API</span>
+            <span class="tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2)">RSS</span>
+            <span class="tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2)">GraphQL</span>
+            <span class="tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2)">10 źródeł</span>
+          </div>
+        </div>
+
+        <div class="card" onclick="showPanel('enrichment')" style="cursor:pointer;border-color:rgba(168,85,247,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(168,85,247,0.12);color:var(--a)">💎</div>
+            <div>
+              <div class="card-title">Wzbogacanie danych</div>
+              <div class="card-sub">NLP, embedding, klasyfikacja</div>
+            </div>
+          </div>
+          <div class="card-body">
+            Transformacja surowych danych w wiedzę: ekstrakcja entytów, generowanie embeddingów, klasyfikacja tematyczna, chunking dla RAG, deduplication, metadata tagging.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--a);border-color:rgba(168,85,247,0.2)">NLP</span>
+            <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--a);border-color:rgba(168,85,247,0.2)">Embeddings</span>
+            <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--a);border-color:rgba(168,85,247,0.2)">ChromaDB</span>
+            <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--a);border-color:rgba(168,85,247,0.2)">RAG</span>
+          </div>
+        </div>
+
+        <div class="card" onclick="showPanel('filters')" style="cursor:pointer;border-color:rgba(248,113,113,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(248,113,113,0.12);color:var(--r)">🚫</div>
+            <div>
+              <div class="card-title">Filtry antyśmieciowe</div>
+              <div class="card-sub">Ochrona jakości bazy wiedzy</div>
+            </div>
+          </div>
+          <div class="card-body">
+            15 warstw filtrowania: detekcja spamu, boilerplate removal, minimalny próg słów, duplikaty, niska jakość językowa, strony błędów 404, treści captcha, paywall.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(248,113,113,0.1);color:var(--r);border-color:rgba(248,113,113,0.2)">anti-spam</span>
+            <span class="tag" style="background:rgba(248,113,113,0.1);color:var(--r);border-color:rgba(248,113,113,0.2)">dedup</span>
+            <span class="tag" style="background:rgba(248,113,113,0.1);color:var(--r);border-color:rgba(248,113,113,0.2)">QA</span>
+            <span class="tag" style="background:rgba(248,113,113,0.1);color:var(--r);border-color:rgba(248,113,113,0.2)">15 reguł</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick reference matrix -->
+      <div class="sec-hdr" style="margin-top:8px">
+        <h2>Kiedy co używać</h2>
+        <span class="sec-badge">decision matrix</span>
+      </div>
+      <div class="matrix">
+        <div class="matrix-cell">
+          <h4><span style="color:var(--g)">✅</span> Strona statyczna (HTML)</h4>
+          <ul>
+            <li>requests + BeautifulSoup4</li>
+            <li>httpx + lxml (szybszy parser)</li>
+            <li>Scrapy (masowy crawl)</li>
+          </ul>
+        </div>
+        <div class="matrix-cell">
+          <h4><span style="color:var(--o)">⚡</span> Strona dynamiczna (JS/SPA)</h4>
+          <ul>
+            <li>Playwright (rekomendowany)</li>
+            <li>Puppeteer / Selenium</li>
+            <li>Splash (lekki headless)</li>
+          </ul>
+        </div>
+        <div class="matrix-cell">
+          <h4><span style="color:var(--c)">🔌</span> Dane strukturyzowane</h4>
+          <ul>
+            <li>Oficjalne API (RSS, REST)</li>
+            <li>Reddit PRAW / Twitter API</li>
+            <li>arXiv, PubMed, GitHub API</li>
+          </ul>
+        </div>
+        <div class="matrix-cell">
+          <h4><span style="color:var(--a)">💎</span> Masowe pozyskiwanie</h4>
+          <ul>
+            <li>Scrapy + Scrapy-Redis</li>
+            <li>Common Crawl (gotowe dane)</li>
+            <li>Apify Cloud / ScraperAPI</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- PIPELINE                                                    -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-pipeline">
+      <div class="sec-hdr">
+        <h2>Pipeline pozyskiwania danych do KB</h2>
+        <span class="sec-badge">5 etapów</span>
+      </div>
+      <div class="sec-desc">Kompletny przepływ: od URL → ChromaDB. Każdy etap ma swoje narzędzia i punkty kontroli jakości.</div>
+
+      <div class="pipeline">
+
+        <div class="pipe-step">
+          <div class="pipe-num" style="background:rgba(0,217,255,0.15);color:var(--c)">1</div>
+          <div class="pipe-content">
+            <div class="pipe-title">📥 Zbieranie — Acquisition</div>
+            <div class="pipe-desc">Pobranie surowych danych ze źródeł. Definiujesz seed URLs / API endpoints / RSS feeds. Scraper lub API client pobiera HTML/JSON. Rate limiting: max 1 req/s na domenę.</div>
+            <div class="pipe-tools">
+              <span class="pill" style="background:rgba(0,217,255,0.1);color:var(--c)">Scrapy</span>
+              <span class="pill" style="background:rgba(0,217,255,0.1);color:var(--c)">Playwright</span>
+              <span class="pill" style="background:rgba(0,217,255,0.1);color:var(--c)">httpx</span>
+              <span class="pill" style="background:rgba(0,217,255,0.1);color:var(--c)">feedparser</span>
+              <span class="pill" style="background:rgba(0,217,255,0.1);color:var(--c)">PRAW</span>
+            </div>
+          </div>
+          <div class="pipe-arrow">↓</div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num" style="background:rgba(249,115,22,0.15);color:var(--o)">2</div>
+          <div class="pipe-content">
+            <div class="pipe-title">🧹 Ekstrakcja & Czyszczenie — Extraction</div>
+            <div class="pipe-desc">Wyodrębnienie czystego tekstu z HTML. Usunięcie nawigacji, footerów, reklam, cookiebannerów. Konwersja do Markdown z zachowaniem struktury nagłówków i linków.</div>
+            <div class="pipe-tools">
+              <span class="pill" style="background:rgba(249,115,22,0.1);color:var(--o)">Trafilatura</span>
+              <span class="pill" style="background:rgba(249,115,22,0.1);color:var(--o)">Readability</span>
+              <span class="pill" style="background:rgba(249,115,22,0.1);color:var(--o)">newspaper3k</span>
+              <span class="pill" style="background:rgba(249,115,22,0.1);color:var(--o)">markdownify</span>
+              <span class="pill" style="background:rgba(249,115,22,0.1);color:var(--o)">html2text</span>
+            </div>
+          </div>
+          <div class="pipe-arrow">↓</div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num" style="background:rgba(248,113,113,0.15);color:var(--r)">3</div>
+          <div class="pipe-content">
+            <div class="pipe-title">🚫 Filtrowanie — Quality Gate</div>
+            <div class="pipe-desc">Wielowarstwowe filtrowanie śmieciowych danych. Dokument przechodzi przez wszystkie reguły — odrzucony na każdym etapie nie trafia do bazy. Logowanie odrzutów do pliku.</div>
+            <div class="pipe-tools">
+              <span class="pill" style="background:rgba(248,113,113,0.1);color:var(--r)">langdetect</span>
+              <span class="pill" style="background:rgba(248,113,113,0.1);color:var(--r)">min_words=100</span>
+              <span class="pill" style="background:rgba(248,113,113,0.1);color:var(--r)">deduplikat</span>
+              <span class="pill" style="background:rgba(248,113,113,0.1);color:var(--r)">perplexity score</span>
+              <span class="pill" style="background:rgba(248,113,113,0.1);color:var(--r)">regex rules</span>
+            </div>
+          </div>
+          <div class="pipe-arrow">↓</div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num" style="background:rgba(168,85,247,0.15);color:var(--a)">4</div>
+          <div class="pipe-content">
+            <div class="pipe-title">💎 Wzbogacanie — Enrichment</div>
+            <div class="pipe-desc">Dodanie metadanych i struktury: chunking na fragmenty 512 tokenów z 50-tokenowym overlap, tagowanie kategorii (AI/SEO/BIZ itp.), ekstrakcja entytów, generowanie embeddingów.</div>
+            <div class="pipe-tools">
+              <span class="pill" style="background:rgba(168,85,247,0.1);color:var(--a)">LangChain splitter</span>
+              <span class="pill" style="background:rgba(168,85,247,0.1);color:var(--a)">spaCy NER</span>
+              <span class="pill" style="background:rgba(168,85,247,0.1);color:var(--a)">sentence-transformers</span>
+              <span class="pill" style="background:rgba(168,85,247,0.1);color:var(--a)">OpenAI ada-002</span>
+            </div>
+          </div>
+          <div class="pipe-arrow">↓</div>
+        </div>
+
+        <div class="pipe-step">
+          <div class="pipe-num" style="background:rgba(74,222,128,0.15);color:var(--g)">5</div>
+          <div class="pipe-content">
+            <div class="pipe-title">📦 Zapis do KB — Storage</div>
+            <div class="pipe-desc">Zapis do ChromaDB z pełnymi metadanymi: source URL, data pobrania, kategoria, język, liczba tokenów, hash dokumentu (dla deduplication przy kolejnych crawlach).</div>
+            <div class="pipe-tools">
+              <span class="pill" style="background:rgba(74,222,128,0.1);color:var(--g)">ChromaDB</span>
+              <span class="pill" style="background:rgba(74,222,128,0.1);color:var(--g)">upsert by hash</span>
+              <span class="pill" style="background:rgba(74,222,128,0.1);color:var(--g)">metadata schema</span>
+              <span class="pill" style="background:rgba(74,222,128,0.1);color:var(--g)">batch insert</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-hdr" style="margin-top:16px">
+        <h2>Schemat metadanych dokumentu</h2>
+      </div>
+      <div class="code-block">
+<span class="cm"># Metadata schema — każdy dokument w ChromaDB</span>
+{
+  <span class="ck">"source_url"</span>:     <span class="cv">"https://example.com/article"</span>,
+  <span class="ck">"source_type"</span>:    <span class="cv">"web_scrape"</span>,  <span class="cm"># web_scrape | api | rss | manual</span>
+  <span class="ck">"category"</span>:       <span class="cv">"01_AI_SEO"</span>,
+  <span class="ck">"language"</span>:       <span class="cv">"en"</span>,
+  <span class="ck">"fetched_at"</span>:     <span class="cv">"2026-02-22T10:30:00Z"</span>,
+  <span class="ck">"word_count"</span>:     <span class="cv">847</span>,
+  <span class="ck">"token_count"</span>:    <span class="cv">512</span>,
+  <span class="ck">"chunk_index"</span>:    <span class="cv">2</span>,   <span class="cm"># który chunk z dokumentu</span>
+  <span class="ck">"doc_hash"</span>:       <span class="cv">"sha256:a3f9..."</span>,  <span class="cm"># dedup key</span>
+  <span class="ck">"quality_score"</span>:  <span class="cv">0.87</span>,  <span class="cm"># 0.0–1.0 wynik walidacji</span>
+  <span class="ck">"tags"</span>:           <span class="cv">["AI", "SEO", "content-marketing"]</span>
+}
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- SCRAPERS                                                    -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-scrapers">
+      <div class="sec-hdr">
+        <h2>Scrapery & Crawlery</h2>
+        <span class="sec-badge">12 narzędzi</span>
+      </div>
+      <div class="sec-desc">Narzędzia do pobierania danych ze stron WWW — od lekkich bibliotek HTTP po pełne środowiska cloud.</div>
+
+      <table class="tool-table">
+        <thead>
+          <tr>
+            <th>Narzędzie</th>
+            <th>Typ</th>
+            <th>Język</th>
+            <th>JS?</th>
+            <th>Zastosowanie</th>
+            <th>Szybkość</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="t-name">🕷️ Scrapy</div><div style="font-size:9px;color:var(--d)">scrapy.org</div></td>
+            <td><span class="pill" style="background:rgba(249,115,22,0.1);color:var(--o)">Crawler</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa">Python</span></div></td>
+            <td><span style="color:var(--r)">✗</span></td>
+            <td>Masowy crawl serwisów, paginacja, pipelines</td>
+            <td><span style="color:var(--g)">⚡⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">🎭 Playwright</div><div style="font-size:9px;color:var(--d)">playwright.dev</div></td>
+            <td><span class="pill" style="background:rgba(0,217,255,0.1);color:var(--c)">Headless</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa">Python</span><span class="pill" style="background:rgba(250,204,21,0.1);color:var(--y)">JS</span></div></td>
+            <td><span style="color:var(--g)">✓</span></td>
+            <td>SPA, login flows, dynamiczne treści, screenshots</td>
+            <td><span style="color:var(--y)">⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">🎪 Puppeteer</div><div style="font-size:9px;color:var(--d)">pptr.dev</div></td>
+            <td><span class="pill" style="background:rgba(0,217,255,0.1);color:var(--c)">Headless</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(250,204,21,0.1);color:var(--y)">Node.js</span></div></td>
+            <td><span style="color:var(--g)">✓</span></td>
+            <td>Chrome automation, PDF generation, screenshoty</td>
+            <td><span style="color:var(--y)">⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">🧪 BeautifulSoup4</div><div style="font-size:9px;color:var(--d)">crummy.com/software/bs4</div></td>
+            <td><span class="pill" style="background:rgba(74,222,128,0.1);color:var(--g)">Parser</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa">Python</span></div></td>
+            <td><span style="color:var(--r)">✗</span></td>
+            <td>Parsowanie HTML, proste skrypty, prototypy</td>
+            <td><span style="color:var(--g)">⚡⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">⚡ httpx</div><div style="font-size:9px;color:var(--d)">python-httpx.org</div></td>
+            <td><span class="pill" style="background:rgba(74,222,128,0.1);color:var(--g)">HTTP</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa">Python</span></div></td>
+            <td><span style="color:var(--r)">✗</span></td>
+            <td>Async HTTP, HTTP/2, API calls, batch requests</td>
+            <td><span style="color:var(--g)">⚡⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">🔧 Selenium</div><div style="font-size:9px;color:var(--d)">selenium.dev</div></td>
+            <td><span class="pill" style="background:rgba(0,217,255,0.1);color:var(--c)">Headless</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa">Python</span><span class="pill" style="background:rgba(250,204,21,0.1);color:var(--y)">JS</span></div></td>
+            <td><span style="color:var(--g)">✓</span></td>
+            <td>Legacy automation, cross-browser, testowanie</td>
+            <td><span style="color:var(--r)">⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">📰 Trafilatura</div><div style="font-size:9px;color:var(--d)">trafilatura.readthedocs.io</div></td>
+            <td><span class="pill" style="background:rgba(168,85,247,0.1);color:var(--a)">Extractor</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa">Python</span></div></td>
+            <td><span style="color:var(--r)">✗</span></td>
+            <td>Ekstrakcja głównej treści artykułów, boilerplate removal</td>
+            <td><span style="color:var(--g)">⚡⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">📰 newspaper3k</div><div style="font-size:9px;color:var(--d)">newspaper.readthedocs.io</div></td>
+            <td><span class="pill" style="background:rgba(168,85,247,0.1);color:var(--a)">Extractor</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(59,130,246,0.1);color:#60a5fa">Python</span></div></td>
+            <td><span style="color:var(--r)">✗</span></td>
+            <td>Artykuły newsowe: tytuł, autorzy, daty, NLP</td>
+            <td><span style="color:var(--g)">⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">☁️ Apify</div><div style="font-size:9px;color:var(--d)">apify.com</div></td>
+            <td><span class="pill" style="background:rgba(250,204,21,0.1);color:var(--y)">Cloud</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(250,204,21,0.1);color:var(--y)">SaaS</span></div></td>
+            <td><span style="color:var(--g)">✓</span></td>
+            <td>Managed scraping, gotowe Actors, skalowanie</td>
+            <td><span style="color:var(--g)">⚡⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">🌐 Common Crawl</div><div style="font-size:9px;color:var(--d)">commoncrawl.org</div></td>
+            <td><span class="pill" style="background:rgba(74,222,128,0.1);color:var(--g)">Dataset</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(74,222,128,0.1);color:var(--g)">AWS S3</span></div></td>
+            <td><span style="color:var(--g)">✓</span></td>
+            <td>Petabajty gotowych crawlów, bez scrapingu, S3 access</td>
+            <td><span style="color:var(--g)">⚡⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">🦁 Crawlee</div><div style="font-size:9px;color:var(--d)">crawlee.dev</div></td>
+            <td><span class="pill" style="background:rgba(249,115,22,0.1);color:var(--o)">Crawler</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(250,204,21,0.1);color:var(--y)">Node.js</span></div></td>
+            <td><span style="color:var(--g)">✓</span></td>
+            <td>Nowoczesny crawler od twórców Apify, anti-bot</span></td>
+            <td><span style="color:var(--g)">⚡⚡⚡</span></td>
+          </tr>
+          <tr>
+            <td><div class="t-name">🛡️ ScraperAPI</div><div style="font-size:9px;color:var(--d)">scraperapi.com</div></td>
+            <td><span class="pill" style="background:rgba(250,204,21,0.1);color:var(--y)">Proxy</span></td>
+            <td><div class="t-lang"><span class="pill" style="background:rgba(250,204,21,0.1);color:var(--y)">SaaS</span></div></td>
+            <td><span style="color:var(--g)">✓</span></td>
+            <td>Rotacja proxy, omijanie blokad, zarządzane JS rendering</td>
+            <td><span style="color:var(--g)">⚡⚡</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- APIs & SOURCES                                              -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-apis">
+      <div class="sec-hdr">
+        <h2>API & Źródła danych</h2>
+        <span class="sec-badge">10 źródeł</span>
+      </div>
+      <div class="sec-desc">Legalne, strukturyzowane źródła danych — bez ryzyka blokad, z oficjalnym dostępem. Priorytet nad web scrapingiem gdzie możliwe.</div>
+
+      <div class="cards-grid">
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(255,69,0,0.12);color:#ff6b35">👾</div>
+            <div><div class="card-title">Reddit API (PRAW)</div><div class="card-sub">Dyskusje, komentarze, posty</div></div>
+          </div>
+          <div class="card-body">
+            Python Reddit API Wrapper. Dostęp do subredditów, postów, komentarzy. Darmowy tier: 100 req/min. Świetny do pozyskiwania wiedzy praktycznej z r/MachineLearning, r/SEO.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(255,69,0,0.1);color:#ff6b35;border-color:rgba(255,69,0,0.2)">free tier</span>
+            <span class="tag" style="background:rgba(255,69,0,0.1);color:#ff6b35;border-color:rgba(255,69,0,0.2)">OAuth2</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(255,102,0,0.12);color:#ff6600">🅨</div>
+            <div><div class="card-title">Hacker News API</div><div class="card-sub">Tech news, dyskusje</div></div>
+          </div>
+          <div class="card-body">
+            Publiczne API bez klucza. Dostęp do Top/New/Best stories, komentarzy. Firebase-based, real-time updates. Idealne do śledzenia trendów technologicznych AI/ML.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(255,102,0,0.1);color:#ff6600;border-color:rgba(255,102,0,0.2)">bez klucza</span>
+            <span class="tag" style="background:rgba(255,102,0,0.1);color:#ff6600;border-color:rgba(255,102,0,0.2)">REST</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(99,102,241,0.12);color:#6366f1">📚</div>
+            <div><div class="card-title">arXiv API</div><div class="card-sub">Papers naukowe AI/ML</div></div>
+          </div>
+          <div class="card-body">
+            Bezpłatny dostęp do 2M+ papers. REST API lub OAI-PMH. Filtrowanie po kategoriach: cs.AI, cs.LG, stat.ML. Nowe prace codziennie — idealne do bazy wiedzy AI.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2)">darmowy</span>
+            <span class="tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2)">academic</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(33,33,33,0.2);color:#ccc">🐙</div>
+            <div><div class="card-title">GitHub API</div><div class="card-sub">Repozytoria, README, issues</div></div>
+          </div>
+          <div class="card-body">
+            REST + GraphQL API. 5000 req/h z tokenem. Dostęp do README plików, wiki, dokumentacji projektów open-source. Świetne źródło technicznych how-to.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--m);border-color:var(--b)">token required</span>
+            <span class="tag" style="background:rgba(255,255,255,0.05);color:var(--m);border-color:var(--b)">GraphQL</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(0,168,255,0.12);color:#00a8ff">📡</div>
+            <div><div class="card-title">RSS / Atom Feeds</div><div class="card-sub">Blogi, news, podcasty</div></div>
+          </div>
+          <div class="card-body">
+            feedparser (Python) — parsuje RSS 2.0, Atom, RDF. Hundreds of AI blogs: OpenAI, Anthropic, Google DeepMind, Hugging Face. Bez klucza, polling co X minut.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(0,168,255,0.1);color:#00a8ff;border-color:rgba(0,168,255,0.2)">bez klucza</span>
+            <span class="tag" style="background:rgba(0,168,255,0.1);color:#00a8ff;border-color:rgba(0,168,255,0.2)">polling</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(74,222,128,0.12);color:var(--g)">🤗</div>
+            <div><div class="card-title">Hugging Face Hub API</div><div class="card-sub">Modele, datasets, papers</div></div>
+          </div>
+          <div class="card-body">
+            REST API do wyszukiwania modeli, datasetów, spaces. Daily Papers endpoint. Model cards jako markdown. Idealne do śledzenia nowych modeli i badań.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(74,222,128,0.1);color:var(--g);border-color:rgba(74,222,128,0.2)">darmowy</span>
+            <span class="tag" style="background:rgba(74,222,128,0.1);color:var(--g);border-color:rgba(74,222,128,0.2)">model cards</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(168,85,247,0.12);color:var(--a)">🔍</div>
+            <div><div class="card-title">SerpAPI / Brave Search API</div><div class="card-sub">Wyniki wyszukiwarek</div></div>
+          </div>
+          <div class="card-body">
+            Brave Search API: $3/1000 queries. Wyniki organiczne bez captcha. SerpAPI: Google, Bing, YouTube. Idealne do budowania bazy z top wyników dla słów kluczowych.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--a);border-color:rgba(168,85,247,0.2)">płatny</span>
+            <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--a);border-color:rgba(168,85,247,0.2)">SERP</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(0,217,255,0.12);color:var(--c)">📖</div>
+            <div><div class="card-title">Wikipedia API</div><div class="card-sub">Encyklopedyczna wiedza ogólna</div></div>
+          </div>
+          <div class="card-body">
+            MediaWiki API. Dostęp do treści artykułów, kategorii, linków. Dump całej Wikipedii co miesiąc (XML). Python: wikipedia-api library. Świetna baza faktograficzna.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(0,217,255,0.1);color:var(--c);border-color:rgba(0,217,255,0.2)">darmowy</span>
+            <span class="tag" style="background:rgba(0,217,255,0.1);color:var(--c);border-color:rgba(0,217,255,0.2)">bulk dump</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- ENRICHMENT                                                  -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-enrichment">
+      <div class="sec-hdr">
+        <h2>Wzbogacanie danych</h2>
+        <span class="sec-badge">8 technik</span>
+      </div>
+      <div class="sec-desc">Transformacja surowego tekstu w ustrukturyzowaną wiedzę gotową do RAG i wyszukiwania wektorowego.</div>
+
+      <div class="cards-grid">
+        <div class="card" style="border-color:rgba(168,85,247,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(168,85,247,0.12);color:var(--a)">✂️</div>
+            <div><div class="card-title">Chunking strategiczny</div><div class="card-sub">Podział na fragmenty dla RAG</div></div>
+          </div>
+          <div class="card-body">
+            <strong style="color:var(--t)">RecursiveCharacterTextSplitter</strong> (LangChain): chunk_size=512 tokenów, overlap=50. Zachowuje granice zdań. Alternatywa: semantic chunking wg embeddingów — każdy chunk = spójny temat.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--a);border-color:rgba(168,85,247,0.2)">LangChain</span>
+            <span class="tag" style="background:rgba(168,85,247,0.1);color:var(--a);border-color:rgba(168,85,247,0.2)">512 tokenów</span>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(0,217,255,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(0,217,255,0.12);color:var(--c)">🧮</div>
+            <div><div class="card-title">Embeddingi wektorowe</div><div class="card-sub">Reprezentacja semantyczna</div></div>
+          </div>
+          <div class="card-body">
+            <strong style="color:var(--t)">sentence-transformers</strong> (lokalne, darmowe): <code>all-MiniLM-L6-v2</code> (384 dim, szybki) lub <code>all-mpnet-base-v2</code> (768 dim, lepszy). OpenAI <code>text-embedding-ada-002</code>: $0.0001/1k tokenów.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(0,217,255,0.1);color:var(--c);border-color:rgba(0,217,255,0.2)">lokalne</span>
+            <span class="tag" style="background:rgba(0,217,255,0.1);color:var(--c);border-color:rgba(0,217,255,0.2)">ChromaDB</span>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(74,222,128,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(74,222,128,0.12);color:var(--g)">🏷️</div>
+            <div><div class="card-title">NER — Named Entity Recognition</div><div class="card-sub">Ekstrakcja podmiotów</div></div>
+          </div>
+          <div class="card-body">
+            <strong style="color:var(--t)">spaCy</strong> (<code>en_core_web_trf</code>): wykrywa osoby, organizacje, miejsca, daty, produkty. Wyniki jako metadata → lepsze filtrowanie i wyszukiwanie kontekstowe w KB.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(74,222,128,0.1);color:var(--g);border-color:rgba(74,222,128,0.2)">spaCy</span>
+            <span class="tag" style="background:rgba(74,222,128,0.1);color:var(--g);border-color:rgba(74,222,128,0.2)">metadata</span>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(250,204,21,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(250,204,21,0.12);color:var(--y)">📊</div>
+            <div><div class="card-title">Klasyfikacja tematyczna</div><div class="card-sub">Auto-kategoryzacja</div></div>
+          </div>
+          <div class="card-body">
+            Zero-shot classification z <strong style="color:var(--t)">facebook/bart-large-mnli</strong> lub <strong style="color:var(--t)">KeyBERT</strong> (ekstrakcja słów kluczowych). Automatyczne przypisanie do kategorii KB: AI_SEO, MARKETING, TECH itp.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(250,204,21,0.1);color:var(--y);border-color:rgba(250,204,21,0.2)">zero-shot</span>
+            <span class="tag" style="background:rgba(250,204,21,0.1);color:var(--y);border-color:rgba(250,204,21,0.2)">KeyBERT</span>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(249,115,22,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(249,115,22,0.12);color:var(--o)">📝</div>
+            <div><div class="card-title">Automatyczne streszczenia</div><div class="card-sub">Skrócona forma do indeksu</div></div>
+          </div>
+          <div class="card-body">
+            LLM (Claude Haiku / GPT-4o-mini): wygeneruj 2-zdaniowe streszczenie każdego dokumentu. Koszt ~$0.001/dok. Przechowywane jako metadata <code>summary</code> — ulepsza jakość RAG retrieval.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(249,115,22,0.1);color:var(--o);border-color:rgba(249,115,22,0.2)">LLM</span>
+            <span class="tag" style="background:rgba(249,115,22,0.1);color:var(--o);border-color:rgba(249,115,22,0.2)">$0.001/dok</span>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(236,72,153,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(236,72,153,0.12);color:var(--pk)">🔗</div>
+            <div><div class="card-title">Deduplication (hash + semantic)</div><div class="card-sub">Eliminacja duplikatów</div></div>
+          </div>
+          <div class="card-body">
+            Dwa poziomy: <strong style="color:var(--t)">SHA-256 hash</strong> (exact duplicates) + <strong style="color:var(--t)">MinHash/LSH</strong> (near-duplicates, cosine similarity &gt; 0.95). Zapobiega nadreprezentacji tych samych źródeł.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(236,72,153,0.1);color:var(--pk);border-color:rgba(236,72,153,0.2)">SHA-256</span>
+            <span class="tag" style="background:rgba(236,72,153,0.1);color:var(--pk);border-color:rgba(236,72,153,0.2)">MinHash</span>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(99,102,241,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(99,102,241,0.12);color:#6366f1">🌐</div>
+            <div><div class="card-title">Tłumaczenie do polskiego</div><div class="card-sub">Ujednolicenie języka bazy</div></div>
+          </div>
+          <div class="card-body">
+            Dla polskojęzycznej KB: <strong style="color:var(--t)">DeepL API</strong> (jakość premium, $5.49/mo) lub <strong style="color:var(--t)">Helsinki-NLP/opus-mt-en-pl</strong> (lokalny, darmowy, HuggingFace). Przetłumacz przed embeddingiem — lepsza spójność wyszukiwania.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2)">DeepL</span>
+            <span class="tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2)">opus-mt</span>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:rgba(0,217,255,0.2)">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(0,217,255,0.12);color:var(--c)">📈</div>
+            <div><div class="card-title">Quality Scoring</div><div class="card-sub">Ocena wartości dokumentu</div></div>
+          </div>
+          <div class="card-body">
+            Heurystyczny score 0–1 z wag: długość tekstu (0.3), unikalne słowa (0.2), brak śmieciowych fraz (0.2), czytelność Flesch (0.15), obecność nagłówków (0.15). Dokumenty &lt;0.5 odrzucane.
+          </div>
+          <div class="card-tags">
+            <span class="tag" style="background:rgba(0,217,255,0.1);color:var(--c);border-color:rgba(0,217,255,0.2)">heurystyki</span>
+            <span class="tag" style="background:rgba(0,217,255,0.1);color:var(--c);border-color:rgba(0,217,255,0.2)">Flesch score</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- FILTERS                                                     -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-filters">
+      <div class="sec-hdr">
+        <h2>Filtry antyśmieciowe</h2>
+        <span class="sec-badge">15 reguł</span>
+      </div>
+      <div class="sec-desc">Wielowarstwowy Quality Gate. Dokument przechodzi przez filtry sekwencyjnie — odrzucony na każdym etapie nie trafia do bazy. Każde odrzucenie jest logowane.</div>
+
+      <div class="filters-grid">
+
+        <div class="filter-card">
+          <div class="filter-hdr">
+            <div class="filter-icon">📏</div>
+            <div>
+              <div class="filter-title">Filtry długości</div>
+              <div class="filter-sub">Zbyt mało lub zbyt dużo</div>
+            </div>
+          </div>
+          <ul class="filter-list">
+            <li class="bad"><strong>ODRZUĆ</strong> jeśli &lt;100 słów — zbyt krótki, brak wartości</li>
+            <li class="bad"><strong>ODRZUĆ</strong> jeśli &gt;50 000 słów — prawdopodobnie błąd / dump</li>
+            <li class="good"><strong>OPTYMALNE</strong>: 300–5000 słów na chunk źródłowy</li>
+            <li class="warn"><strong>UWAGA</strong>: chunki &lt;50 tokenów tracą kontekst</li>
+          </ul>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-hdr">
+            <div class="filter-icon">🌍</div>
+            <div>
+              <div class="filter-title">Detekcja języka</div>
+              <div class="filter-sub">langdetect / fastText</div>
+            </div>
+          </div>
+          <ul class="filter-list">
+            <li class="good"><strong>AKCEPTUJ</strong>: en, pl — główne języki bazy</li>
+            <li class="warn"><strong>OPCJONALNIE</strong>: de, fr, es — tylko jeśli masz embeddingi wielojęzyczne</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: confidence &lt; 0.8 — niejasny język / mix</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: &lt;50% liter ASCII — prawdopodobnie śmieć</li>
+          </ul>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-hdr">
+            <div class="filter-icon">🤖</div>
+            <div>
+              <div class="filter-title">Detekcja spamu / boilerplate</div>
+              <div class="filter-sub">Wzorce śmieciowe</div>
+            </div>
+          </ul>
+          <ul class="filter-list">
+            <li class="bad"><strong>ODRZUĆ</strong>: &gt;30% powtarzających się n-gramów</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: regex: "click here", "subscribe now", "buy now" &gt;3x</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: treść nawigacji (menu, breadcrumb, footer)</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: stosunek linków do tekstu &gt;40%</li>
+          </ul>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-hdr">
+            <div class="filter-icon">❌</div>
+            <div>
+              <div class="filter-title">Błędy HTTP & dostęp</div>
+              <div class="filter-sub">Status codes & paywall</div>
+            </div>
+          </div>
+          <ul class="filter-list">
+            <li class="bad"><strong>ODRZUĆ</strong>: HTTP 404, 403, 500 — strona nieistniejąca</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: regex paywall: "subscribe", "premium", "sign in to read"</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: &lt;200 znaków tekstu po ekstrakcji — soft 404</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: CAPTCHA wykryte w treści</li>
+          </ul>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-hdr">
+            <div class="filter-icon">📋</div>
+            <div>
+              <div class="filter-title">Duplikaty</div>
+              <div class="filter-sub">Exact & near-duplicate</div>
+            </div>
+          </div>
+          <ul class="filter-list">
+            <li class="bad"><strong>ODRZUĆ</strong>: SHA-256 hash już istnieje w KB</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: cosine similarity &gt; 0.95 z istniejącym doc</li>
+            <li class="warn"><strong>UWAGA</strong>: URL już w KB ale zmieniona data — rozważ update</li>
+            <li class="good"><strong>AKCEPTUJ</strong>: ten sam temat, inne źródło — różnorodność perspektyw</li>
+          </ul>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-hdr">
+            <div class="filter-icon">📊</div>
+            <div>
+              <div class="filter-title">Quality Score</div>
+              <div class="filter-sub">Heurystyczny próg</div>
+            </div>
+          </div>
+          <ul class="filter-list">
+            <li class="good"><strong>AKCEPTUJ</strong>: score ≥ 0.65 — dobra jakość</li>
+            <li class="warn"><strong>REVIEW</strong>: score 0.50–0.64 — wymaga ręcznego sprawdzenia</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: score &lt; 0.50 — niska jakość</li>
+            <li class="bad"><strong>ODRZUĆ</strong>: stosunek unikalnych słów &lt;30% — powtarzalny tekst</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="sec-hdr" style="margin-top:8px">
+        <h2>Przykładowy kod filtra</h2>
+      </div>
+      <div class="code-block">
+<span class="cm"># quality_filter.py — wielowarstwowy filtr dokumentów</span>
+<span class="ck">import</span> hashlib, re
+<span class="ck">from</span> langdetect <span class="ck">import</span> detect, DetectorFactory
+DetectorFactory.seed = <span class="cv">0</span>
+
+<span class="ck">def</span> <span class="cs">quality_gate</span>(text: str, url: str, existing_hashes: set) -> tuple[bool, str]:
+    <span class="cm">"""Zwraca (passed, reason). False = odrzuć."""</span>
+
+    <span class="cm"># 1. Długość</span>
+    words = text.split()
+    <span class="ck">if</span> len(words) < <span class="cv">100</span>: <span class="ck">return</span> False, <span class="cv">"too_short"</span>
+    <span class="ck">if</span> len(words) > <span class="cv">50000</span>: <span class="ck">return</span> False, <span class="cv">"too_long"</span>
+
+    <span class="cm"># 2. Język</span>
+    <span class="ck">try</span>:
+        lang = detect(text)
+        <span class="ck">if</span> lang <span class="ck">not in</span> [<span class="cv">'en'</span>, <span class="cv">'pl'</span>]: <span class="ck">return</span> False, <span class="cv">f"lang_{lang}"</span>
+    <span class="ck">except</span>: <span class="ck">return</span> False, <span class="cv">"lang_detection_failed"</span>
+
+    <span class="cm"># 3. Duplicate check</span>
+    doc_hash = hashlib.sha256(text.encode()).hexdigest()
+    <span class="ck">if</span> doc_hash <span class="ck">in</span> existing_hashes: <span class="ck">return</span> False, <span class="cv">"duplicate"</span>
+
+    <span class="cm"># 4. Spam patterns</span>
+    spam = [<span class="cv">r'click here'</span>, <span class="cv">r'subscribe now'</span>, <span class="cv">r'sign in to read'</span>, <span class="cv">r'captcha'</span>]
+    <span class="ck">for</span> p <span class="ck">in</span> spam:
+        <span class="ck">if</span> len(re.findall(p, text, re.I)) > <span class="cv">3</span>: <span class="ck">return</span> False, <span class="cv">"spam"</span>
+
+    <span class="cm"># 5. Unikalność słów</span>
+    unique_ratio = len(set(words)) / len(words)
+    <span class="ck">if</span> unique_ratio < <span class="cv">0.30</span>: <span class="ck">return</span> False, <span class="cv">"repetitive"</span>
+
+    <span class="ck">return</span> True, <span class="cv">"ok"</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- VALIDATION & QA                                             -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-validation">
+      <div class="sec-hdr">
+        <h2>Walidacja & QA</h2>
+        <span class="sec-badge">kontrola jakości</span>
+      </div>
+      <div class="sec-desc">Narzędzia i procesy do weryfikacji jakości bazy wiedzy po zapisie.</div>
+      <div class="filters-grid">
+        <div class="filter-card">
+          <div class="filter-hdr"><div class="filter-icon">🔬</div>
+            <div><div class="filter-title">Spot-check sampling</div><div class="filter-sub">Ręczna weryfikacja próbki</div></div>
+          </div>
+          <ul class="filter-list">
+            <li class="good">Co 500 nowych dokumentów — przejrzyj ręcznie 10 losowych</li>
+            <li class="good">Sprawdź: czy treść jest merytoryczna, czy metadata są poprawne</li>
+            <li class="warn">Jeśli &gt;20% próbki jest złej jakości — zatrzymaj pipeline i popraw filtry</li>
+          </ul>
+        </div>
+        <div class="filter-card">
+          <div class="filter-hdr"><div class="filter-icon">📉</div>
+            <div><div class="filter-title">Rejection rate monitoring</div><div class="filter-sub">Śledź odrzucenia</div></div>
+          </div>
+          <ul class="filter-list">
+            <li class="good">Loguj każde odrzucenie z powodem do rejection_log.jsonl</li>
+            <li class="good">Optymalna stopa odrzuceń: 20–40% (za mało = filtry za luźne)</li>
+            <li class="bad">&gt;80% odrzuceń = problem ze źródłem danych — sprawdź URL</li>
+          </ul>
+        </div>
+        <div class="filter-card">
+          <div class="filter-hdr"><div class="filter-icon">🧪</div>
+            <div><div class="filter-title">RAG Retrieval test</div><div class="filter-sub">Weryfikacja skuteczności</div></div>
+          </div>
+          <ul class="filter-list">
+            <li class="good">Zestaw 20 testowych pytań → sprawdź czy KB zwraca właściwe dokumenty</li>
+            <li class="good">Metryka: Recall@5 — czy właściwy doc jest w top-5 wynikach?</li>
+            <li class="warn">Recall &lt;60% — rozważ re-chunking lub zmianę modelu embeddingów</li>
+          </ul>
+        </div>
+        <div class="filter-card">
+          <div class="filter-hdr"><div class="filter-icon">⏰</div>
+            <div><div class="filter-title">Freshness — świeżość danych</div><div class="filter-sub">Starzenie dokumentów</div></div>
+          </div>
+          <ul class="filter-list">
+            <li class="warn">Dokumenty &gt;12 miesięcy — oznacz flagą <code>stale</code></li>
+            <li class="warn">Techniczne how-to &gt;6 miesięcy — zweryfikuj aktualność</li>
+            <li class="bad">Martwe linki (HTTP 404) — usuń lub zastąp nową wersją</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- BEST PRACTICES                                              -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-bestpractices">
+      <div class="sec-hdr">
+        <h2>Best Practices</h2>
+        <span class="sec-badge">sprawdzone metody</span>
+      </div>
+      <div class="sec-desc">Zasady efektywnego i bezpiecznego pozyskiwania danych wypracowane przez społeczność.</div>
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(74,222,128,0.12);color:var(--g)">⏱️</div>
+            <div><div class="card-title">Rate Limiting</div><div class="card-sub">Nie przeciążaj serwerów</div></div>
+          </div>
+          <div class="card-body">
+            Max 1 request/s na domenę. Użyj <code>time.sleep(random.uniform(1,3))</code> między requestami. Scrapy: ustaw <code>DOWNLOAD_DELAY=2</code>. Respektuj crawl-delay z robots.txt.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(0,217,255,0.12);color:var(--c)">🪪</div>
+            <div><div class="card-title">User-Agent i identyfikacja</div><div class="card-sub">Bądź transparentny</div></div>
+          </div>
+          <div class="card-body">
+            Ustaw własny User-Agent: <code>MyBot/1.0 (+kontakt@email.com)</code>. Nie podszywaj się pod przeglądarki w złej wierze. Wiele serwisów daje lepszy dostęp botom, które się identyfikują.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(250,204,21,0.12);color:var(--y)">💾</div>
+            <div><div class="card-title">Cache & incremental</div><div class="card-sub">Nie pobieraj dwa razy</div></div>
+          </div>
+          <div class="card-body">
+            Zapisuj surowe HTML do lokalnego cache przed przetworzeniem. Scrapy HttpCacheMiddleware. Przy kolejnych crawlach: pobieraj tylko strony zmienione od ostatniej wizyty (HTTP ETag / Last-Modified).
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:rgba(168,85,247,0.12);color:var(--a)">🔁</div>
+            <div><div class="card-title">Retry & error handling</div><div class="card-sub">Odporność na błędy</div></div>
+          </div>
+          <div class="card-body">
+            Exponential backoff: czekaj 2^n sekund po błędzie. Max 3 retries. HTTP 429 (Too Many Requests) → poczekaj na Retry-After header. Loguj wszystkie błędy z URL i statusem.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- LEGAL & ETHICS                                              -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="panel" id="panel-legal">
+      <div class="sec-hdr">
+        <h2>Legalność & Etyka</h2>
+        <span class="sec-badge">must read</span>
+      </div>
+      <div class="sec-desc">Scraping bez respektowania zasad może prowadzić do blokad IP, problemów prawnych lub naruszenia ToS. Zawsze sprawdzaj zanim zaczniesz.</div>
+      <div class="filters-grid">
+        <div class="filter-card">
+          <div class="filter-hdr"><div class="filter-icon">📜</div>
+            <div><div class="filter-title">robots.txt — zawsze sprawdź</div></div>
+          </div>
+          <ul class="filter-list">
+            <li class="good">Sprawdź <code>https://example.com/robots.txt</code> przed crawlem</li>
+            <li class="good">Użyj <code>urllib.robotparser.RobotFileParser</code> (Python stdlib)</li>
+            <li class="bad">Ignorowanie robots.txt = naruszenie ToS + ryzyko prawne w UE</li>
+          </ul>
+        </div>
+        <div class="filter-card">
+          <div class="filter-hdr"><div class="filter-icon">⚖️</div>
+            <div><div class="filter-title">Terms of Service</div></div>
+          </div>
+          <ul class="filter-list">
+            <li class="warn">Przeczytaj ToS serwisu przed scrapingiem — wiele zabrania</li>
+            <li class="good">Użyj oficjalnego API jeśli istnieje — to zawsze preferowane</li>
+            <li class="good">Scraping danych publicznych do celów badawczych — zazwyczaj OK</li>
+          </ul>
+        </div>
+        <div class="filter-card">
+          <div class="filter-hdr"><div class="filter-icon">🔒</div>
+            <div><div class="filter-title">Dane osobowe (RODO/GDPR)</div></div>
+          </div>
+          <ul class="filter-list">
+            <li class="bad">NIE scrapuj danych osobowych (email, imię+nazwisko) bez podstawy prawnej</li>
+            <li class="bad">NIE zapisuj danych osobowych do bazy wiedzy</li>
+            <li class="good">Treści merytoryczne (artykuły, dokumentacja) — poza zakresem RODO</li>
+          </ul>
+        </div>
+        <div class="filter-card">
+          <div class="filter-hdr"><div class="filter-icon">🌐</div>
+            <div><div class="filter-title">Bezpieczne źródła (green list)</div></div>
+          </div>
+          <ul class="filter-list">
+            <li class="good">arXiv, Wikipedia, GitHub public repos — zawsze OK</li>
+            <li class="good">RSS feeds, oficjalne API — projektowane do masowego pobierania</li>
+            <li class="good">Common Crawl, OpenWebText — gotowe legalne datasety</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /layout -->
+
+<script>
+// ── Navigation ──
+const PANELS = {
+  overview:      { title:'🗺️ Mapa narzędzi scrapingowych',    sub:'Kompletny przegląd ekosystemu' },
+  pipeline:      { title:'⚙️ Pipeline pozyskiwania danych',    sub:'5 etapów: Acquisition → Storage' },
+  scrapers:      { title:'🕸️ Scrapery & Crawlery',            sub:'12 narzędzi do pobierania danych' },
+  apis:          { title:'🔌 API & Źródła danych',            sub:'Legalne, strukturyzowane źródła' },
+  enrichment:    { title:'💎 Wzbogacanie danych',             sub:'NLP, embeddingi, klasyfikacja' },
+  filters:       { title:'🚫 Filtry antyśmieciowe',           sub:'15 reguł Quality Gate' },
+  validation:    { title:'✅ Walidacja & QA',                 sub:'Kontrola jakości bazy wiedzy' },
+  bestpractices: { title:'📋 Best Practices',                 sub:'Sprawdzone metody i zasady' },
+  legal:         { title:'⚖️ Legalność & Etyka',             sub:'Zasady bezpiecznego scrapingu' },
+};
+
+function showPanel(id) {
+  // Ukryj wszystkie
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  // Pokaż wybrany
+  const panel = document.getElementById('panel-' + id);
+  if (panel) panel.classList.add('active');
+
+  // Aktywuj nav item
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${id}'`)) {
+      n.classList.add('active');
+    }
+  });
+
+  // Aktualizuj topbar
+  const info = PANELS[id] || { title: id, sub: '' };
+  document.getElementById('panelTitle').textContent = info.title;
+  document.getElementById('panelSub').textContent = info.sub;
+}
+</script>
+</body>
+</html>

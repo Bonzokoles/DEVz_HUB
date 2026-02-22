@@ -124,6 +124,16 @@
       "order": 12
     },
     {
+      "id": "web-scraper",
+      "name": "Web Scraper & Mining",
+      "icon": "globe",
+      "color": "#f97316",
+      "description": "Narzędzia, pipeline, filtry antyśmieciowe — pozyskiwanie danych do KB",
+      "path": "modules/web-scraper/index.html",
+      "enabled": true,
+      "order": 13
+    },
+    {
       "id": "observable-viz",
       "name": "Observable Wizualizacje",
       "icon": "bar-chart-2",
@@ -131,7 +141,7 @@
       "description": "Interaktywne wykresy Observable — modele, koszty, KB, architektura",
       "path": "http://localhost:4300",
       "enabled": true,
-      "order": 13
+      "order": 14
     }
   ],
   "external_links": [
